@@ -971,4 +971,18 @@ T["firme: metodo (:) e funzione (.) equivalenti per TextBox, Confirm, Toast, Ope
     BadbUI.ConfigUI:TextBox("X", "y")
 end
 
+T["moduli reali: tutte le pagine dichiarate si costruiscono senza errori"] = function()
+    local UI = BadbUI.ConfigUI
+    local n = 0
+    for _, rec in ipairs(UI:CollectPages()) do
+        eq(UI:Open(rec.key), true, rec.key)
+        local e = UI.pageFrames[rec.key]
+        truthy(e, "pagina costruita: " .. rec.key)
+        eq(e.failed, nil, "pagina " .. rec.key .. ": " .. tostring(e.buildError))
+        n = n + 1
+    end
+    truthy(n >= 5, "almeno le pagine core")
+    noThrow(function() UI:Refresh() end)
+end
+
 return T
