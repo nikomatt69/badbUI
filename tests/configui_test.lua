@@ -89,12 +89,12 @@ end
 
 T["risoluzione: chiave, nome modulo, titolo"] = function()
     local UI = BadbUI.ConfigUI
-    newModule("Guides", { title = "Guide", page = { title = "Libreria guide", build = function() return 10 end } })
+    newModule("LibreriaTest", { title = "Guide", page = { title = "Libreria guide test", build = function() return 10 end } })
     eq(UI:ResolveKey("profiles"), "profiles")
-    eq(UI:ResolveKey("mod:Guides"), "mod:Guides")
-    eq(UI:ResolveKey("Guides"), "mod:Guides")
-    eq(UI:ResolveKey("guides"), "mod:Guides", "case-insensitive sul nome modulo")
-    eq(UI:ResolveKey("LIBRERIA GUIDE"), "mod:Guides", "titolo pagina")
+    eq(UI:ResolveKey("mod:LibreriaTest"), "mod:LibreriaTest")
+    eq(UI:ResolveKey("LibreriaTest"), "mod:LibreriaTest")
+    eq(UI:ResolveKey("libreriatest"), "mod:LibreriaTest", "case-insensitive sul nome modulo")
+    eq(UI:ResolveKey("LIBRERIA GUIDE TEST"), "mod:LibreriaTest", "titolo pagina")
     eq(UI:ResolveKey("profili"), "profiles")
     eq(UI:ResolveKey("xyz"), nil)
     eq(UI:ResolveKey(""), nil)
