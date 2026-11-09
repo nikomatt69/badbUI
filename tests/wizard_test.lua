@@ -57,6 +57,10 @@ local function fakePresets(env)
     function P:Diff(key) if not self:Get(key) then return {} end return { { module = "A" }, { module = "B" }, { module = "C" } } end
     function P:Build(c) return { title = tostring(c.content) .. " " .. tostring(c.role), modules = {} } end
     function P:Describe() return { "riga uno", "riga due" } end
+    function P:RecommendTemplate()
+        if not self.recommendKey then return nil, "nessuna" end
+        return self.recommendKey, { role = "healer", variant = self.recommendVariant }, "test"
+    end
     function P:Recommend() return { content = "dungeon", role = "healer", pixelPerfect = true, hideClutter = false, friendlyPlates = false } end
     local function newProfile(name)
         local DB = BadbUI.DB
@@ -124,12 +128,12 @@ local function fakeContexts(env, opts)
     end
     if not opts.noClassRules then
         function C:AddRulesForClass(class, o)
-            env.log[#env.log + 1] = string.format("classrules:%s:%s:%s", tostring(class), tostring(o and o.pvpProfile ~= nil), tostring(o and o.pveProfile ~= nil))
-            local a, b = self.nextId, self.nextId + 1
-            self.nextId = b + 1
-            self.rules[#self.rules + 1] = { id = a, name = "c1" }
-            self.rules[#self.rules + 1] = { id = b, name = "c2" }
-            return { a, b }
+            env.log[#env.log + 1] = string.format("classrules:%s:%s:%s", tostring(class), tostring(o and o.pvp ~= nil), tostring(o and o.raid ~= nil))
+            local x, y = self.nextId, self.nextId + 1
+            self.nextId = y + 1
+            self.rules[#self.rules + 1] = { id = x, name = "c1" }
+            self.rules[#self.rules + 1] = { id = y, name = "c2" }
+            return { ids = { x, y }, skipped = { "solo" } }
         end
     end
     return C
@@ -179,7 +183,7 @@ local function setup(Mock, opts)
     -- Cattura Compat.After per controllare il ritardo dell'avvio automatico.
     env.timers = {}
     Badb.Compat.After = function(delay, fn) env.timers[#env.timers + 1] = { delay = delay, fn = fn } end
-    -- Mock: gli oggetti Checkbutton leggono lo stato dal flag
+    Mock.Methods.Disable = Mock.Methods.Disable or function() end
     return env
 end
 
@@ -571,7 +575,14 @@ T["Finish in combattimento e' rifiutato senza effetti"] = function(Mock)
     eq(ok, false); truthy(err)
     eq(env.count("apply"), 0)
     eq(env.W:IsCompleted(), false)
+    -- a fine combattimento riprova da solo (dall'ultimo passo)
+    env.W:GoId("summary")
+    Mock.combat = true
+    env.W:Finish()
     Mock.combat = false
+    Mock.Fire("PLAYER_REGEN_ENABLED")
+    truthy(env.W:IsCompleted(), "applicato a fine combattimento")
+    eq(env.count("apply:"), 1)
 end
 
 T["Finish applica i consigliati se l'utente non ha scelto nulla"] = function(Mock)
@@ -817,17 +828,22 @@ T["modulo Wizard: comando wizard, pagina e opzioni"] = function(Mock)
     local W = env.W
     local m = BadbUI.Modules:Get("Wizard")
     truthy(m and m.enabled, "modulo registrato e attivo")
-    truthy(m.commands.wizard and m.commands.wizard.help and m.commands.wizard.fn)
+    truthy(m.commands.wizardreset and m.commands.wizardreset.help and m.commands.wizardreset.fn)
+    eq(m.commands.wizard, nil, "wizard/setup sono comandi base di Slash: nessuna collisione")
     eq(m.page.title, "Setup guidato")
     local h = m.page.build(CreateFrame("Frame"), {})
     eq(type(h), "number")
     m.page.refresh()
-    m.commands.wizard.fn("")
-    eq(W.wasOpen, true, "/badb wizard riapre anche se completato")
-    W:Skip()
-    m.commands.wizard.fn("status")
-    m.commands.wizard.fn("reset")
+    W:Start(true); W:Skip()
+    m.commands.wizardreset.fn("status")
+    eq(W:IsCompleted(), true, "status non cambia nulla")
+    m.commands.wizardreset.fn("")
     eq(W:IsCompleted(), false)
+    -- il comando base /badb wizard apre la finestra anche se completato
+    W:Skip()
+    BadbUI.Slash:Dispatch("wizard")
+    eq(W.wasOpen, true, "/badb wizard")
+    W:Close()
     m.options[1].func()
     eq(W.wasOpen, true)
     W:Close()
@@ -843,6 +859,20 @@ T["Start in combattimento: differito"] = function(Mock)
     Mock.combat = false
     Mock.Fire("PLAYER_REGEN_ENABLED")
     eq(W.wasOpen, true)
+end
+
+T["template raccomandato da Presets:RecommendTemplate (modo e variante)"] = function(Mock)
+    local env = setup(Mock)
+    BadbUI.Presets.recommendKey, BadbUI.Presets.recommendVariant = "priest-pve-raid", "40"
+    env.W:Start(true)
+    eq(env.W.choices.templateMode, "pve")
+    eq(env.W.choices.templatePve, "priest-pve-raid")
+    eq(env.W.choices.raidVariant, "40")
+    env.W:Reset()
+    BadbUI.Presets.recommendKey = "priest-pvp-av"
+    env.W:Start(true)
+    eq(env.W.choices.templateMode, "pvp")
+    eq(env.W.choices.templatePvp, "priest-pvp-av")
 end
 
 T["i passi hanno la struttura data-driven"] = function(Mock)

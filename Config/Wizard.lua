@@ -382,6 +382,13 @@ function Wizard:EnsureChoices()
     if templatesSupported() then
         if c.useTemplate == nil then c.useTemplate = true end
         local pve, pvp = classTemplates("pve"), classTemplates("pvp")
+        -- Presets:RecommendTemplate() (se esiste) sa gia' scegliere template e variante dal contesto attuale.
+        local called, rkey, ropts = invoke("Presets", "RecommendTemplate")
+        if called and type(rkey) == "string" then
+            rec.key = rkey
+            if findDef(pve, rkey) then rec.mode = "pve" elseif findDef(pvp, rkey) then rec.mode = "pvp" end
+            if type(ropts) == "table" and ropts.variant ~= nil then rec.variant = tostring(ropts.variant) end
+        end
         if c.templateMode == nil then
             local want = (rec.mode == "pvp" or rec.content == "pvp") and "pvp" or "pve"
             if want == "pve" and #pve == 0 then want = "pvp" end
@@ -394,7 +401,10 @@ function Wizard:EnsureChoices()
         if #vs > 0 then
             local ok = false
             for _, v in ipairs(vs) do if v == c.raidVariant then ok = true end end
-            if not ok then c.raidVariant = vs[math.min(2, #vs)] end
+            if not ok then
+                c.raidVariant = vs[math.min(2, #vs)]
+                for _, v in ipairs(vs) do if v == rec.variant then c.raidVariant = v end end
+            end
         end
     end
     if self.mode == "short" then
@@ -647,11 +657,13 @@ local function classRulesAction(names)
                 end)
             end
             if avail("Contexts", "AddRulesForClass") then
+                -- Nomi profilo scelti da noi: BG/AV -> PvP; raid, dungeon e mondo -> PvE.
                 local called, r1, r2 = invoke("Contexts", "AddRulesForClass", class,
-                    { pveProfile = names.pve, pvpProfile = names.pvp })
+                    { pvp = names.pvp, raid = names.pve, party = names.pve, solo = names.pve })
                 if not success(called, r1, r2) then return false, errText(r1, r2) end
-                if type(r1) == "table" then
-                    for _, id in ipairs(r1) do if type(id) == "string" or type(id) == "number" then removeUndo(id) end end
+                local ids = type(r1) == "table" and (r1.ids or r1) or nil
+                if type(ids) == "table" then
+                    for _, id in ipairs(ids) do if type(id) == "string" or type(id) == "number" then removeUndo(id) end end
                 end
                 return true
             end
@@ -962,7 +974,15 @@ end
 -- Conclude: valida, esegue il piano (backup incluso), segna il completamento e annuncia BADB_WIZARD_DONE.
 -- Ritorna true, resoconto | false, errore [, chiave del passo da correggere].
 function Wizard:Finish()
-    if InCombatLockdown() then return false, "Non disponibile in combattimento: riprova a fine combattimento." end
+    if InCombatLockdown() then
+        -- Presets rifiuta di applicare in combattimento: nulla viene toccato, si riprova da soli a fine combattimento.
+        local msg = "Sei in combattimento: la configurazione verra' applicata appena finisce."
+        self:SetError(msg)
+        Events:RunOutOfCombat("wizardFinish", function()
+            if Wizard.wasOpen and not InCombatLockdown() then Wizard:Next() end
+        end)
+        return false, msg
+    end
     self.choices = state().answers
     self:EnsureChoices()
     local ok, err, badStep = self:Validate()
@@ -1021,10 +1041,19 @@ local FALLBACK = {
     success = { 0.40, 0.80, 0.60, 1 }, danger = { 1, 0.38, 0.38, 1 },
 }
 local WHITE = "Interface\\Buttons\\WHITE8X8"
+local W_WIDTH, W_HEIGHT, RAIL = 760, 500, 180
+local BODY_W = W_WIDTH - RAIL - 48
+
+-- Il design system (Badb.Theme) risolve le chiavi sconosciute con il colore del testo:
+-- per questo si usa il suo colore solo se la chiave esiste davvero, altrimenti il fallback locale.
+local function themeHas(key)
+    local T = Badb.Theme
+    return T ~= nil and type(T.GetColor) == "function" and T:GetColor(key) ~= nil
+end
 
 local function color(key)
     local T = Badb.Theme
-    if T and T.Get then
+    if themeHas(key) then
         local r, g, b, a = T:Get(key)
         if r then return r, g, b, a or 1 end
     end
@@ -1039,7 +1068,7 @@ end
 
 local function skin(f, bgKey, borderKey)
     local T = Badb.Theme
-    if T and T.Skin then
+    if T and T.Skin and themeHas(bgKey or "panel") and themeHas(borderKey or "border") then
         T:Skin(f, { bg = bgKey, border = borderKey })
         return
     end
@@ -1088,7 +1117,11 @@ end
 
 local function toggle(parent, text, get, set)
     local UI = Badb.UI
-    if UI and UI.Toggle then return UI:Toggle(parent, text, get, set) end
+    if UI and UI.Toggle then
+        local row = UI:Toggle(parent, text, get, set, { width = BODY_W })
+        if row.Refresh then row:Refresh() end
+        return row
+    end
     local cb = CreateFrame("CheckButton", nil, parent, "UICheckButtonTemplate")
     local t = cb.text or cb.Text
     if t then t:SetText(text); t:SetTextColor(color("text")) end
@@ -1178,8 +1211,6 @@ end
 ------------------------------------------------------------------------------
 -- Finestra
 ------------------------------------------------------------------------------
-local W_WIDTH, W_HEIGHT, RAIL = 760, 500, 180
-local BODY_W = W_WIDTH - RAIL - 48
 
 local function onRefresh(fn) refreshers[#refreshers + 1] = fn end
 
@@ -1773,7 +1804,7 @@ function Wizard:Refresh()
         end
     end
     for _, fn in ipairs(refreshers) do pcall(fn) end
-    frame.back:SetEnabled(idx > 1)
+    pcall(frame.back.SetEnabled, frame.back, idx > 1)
     setButtonText(frame.next, idx >= #steps and "Applica" or "Avanti")
 end
 
@@ -1946,20 +1977,18 @@ local M = Badb.Modules:New("Wizard", {
         end,
         refresh = function() if pageStatus then pageStatus:SetText(statusText()) end end,
     },
+    -- "/badb wizard" e "/badb setup" sono comandi base di Slash.lua (aprono la finestra via Wizard:Toggle):
+    -- qui solo i sottocomandi aggiuntivi, per non collidere con i base.
     commands = {
-        wizard = {
-            help = "wizard [reset | status]  (setup guidato)",
+        wizardreset = {
+            help = "wizardreset [status] - reimposta il setup guidato (o ne mostra lo stato)",
             fn = function(args)
-                local sub = trim(args):lower()
-                if sub == "reset" then
-                    Wizard:Reset()
-                    Logger:Info("Setup guidato reimpostato: ripartira' al prossimo accesso.")
-                elseif sub == "status" then
+                if trim(args):lower() == "status" then
                     Logger:Info("%s", statusText())
-                else
-                    local ok, err = Wizard:Start(true)
-                    if not ok then Logger:Warn("Setup guidato non avviato: %s", tostring(err)) end
+                    return
                 end
+                Wizard:Reset()
+                Logger:Info("Setup guidato reimpostato: ripartira' al prossimo accesso.")
             end,
         },
     },
