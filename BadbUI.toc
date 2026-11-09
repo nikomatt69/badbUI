@@ -34,6 +34,10 @@ Modules\ActionBars.lua
 Modules\Cooldowns.lua
 Modules\Nameplates.lua
 Modules\GroupFrames.lua
+Data\Auras.lua
+Modules\Auras.lua
+Modules\NameplateAuras.lua
+Modules\Alerts.lua
 Modules\UnitFrames\Style.lua
 Modules\UnitFrames\Elements.lua
 Modules\UnitFrames\UnitFrames.lua

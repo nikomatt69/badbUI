@@ -57,6 +57,7 @@ Presets:RegisterContent("leveling", {
     modules = {
         Nameplates = { enabled = true, showEnemies = true, showFriends = false, showAlways = false,
             showMinions = false, maxDistance = 41, stacking = "stack", globalScale = 1.0, minAlpha = 0.7 },
+        NameplateAuras = { enabled = true, ownDebuffs = "curated", friendly = "off", maxBuffs = 2 },
         GroupFrames = { enabled = true, raidStyleParty = true, powerBars = false, showPets = false,
             resizeFrames = true, partyWidth = 120, partyHeight = 56 },
         Scaling = { enabled = true, pixelPerfect = true },
@@ -70,6 +71,7 @@ Presets:RegisterContent("dungeon", {
     modules = {
         Nameplates = { enabled = true, showEnemies = true, showAlways = true, showMinions = true,
             stacking = "stack", overlapV = 1.1, selectedScale = 1.25, minAlpha = 0.55, targetBorder = true },
+        NameplateAuras = { enabled = true, ownDebuffs = "curated", friendly = "cc" },
         GroupFrames = { enabled = true, raidStyleParty = true, powerBars = true, aggroHighlight = true,
             resizeFrames = true, partyWidth = 132, partyHeight = 64, healthText = "none" },
         Scaling = { enabled = true, pixelPerfect = true },
@@ -83,6 +85,7 @@ Presets:RegisterContent("raid", {
     modules = {
         Nameplates = { enabled = true, showEnemies = true, showAlways = true, showMinions = false,
             stacking = "stack", overlapV = 1.0, globalScale = 0.9, minAlpha = 0.5, occludedAlpha = 0.3 },
+        NameplateAuras = { enabled = true, ownDebuffs = "curated", friendly = "off", maxBuffs = 2, maxOwn = 4 },
         GroupFrames = { enabled = true, raidStyleParty = true, powerBars = false, showPets = false,
             mainTankAssist = true, onlyDispellable = true, resizeFrames = true,
             raidWidth = 88, raidHeight = 44, partyWidth = 120, partyHeight = 56 },
@@ -98,6 +101,9 @@ Presets:RegisterContent("pvp", {
         Nameplates = { enabled = true, showEnemies = true, showFriends = true, showAlways = true,
             showMinions = true, classColorEnemies = true, classColorFriends = true, maxDistance = 41,
             stacking = "stack", globalScale = 1.1, selectedScale = 1.3, minAlpha = 0.6, targetBorder = true },
+        NameplateAuras = { enabled = true, ownDebuffs = "curated", friendly = "cc", ccSize = 34, buffSize = 26,
+            maxBuffs = 3, categories = { snare = true, utility = true } },
+        Alerts = { enabled = true, healerCC = true, when = "pvp", sound = true },
         GroupFrames = { enabled = true, raidStyleParty = true, powerBars = true, showPets = false,
             resizeFrames = true, partyWidth = 128, partyHeight = 60, raidWidth = 92, raidHeight = 44 },
         Scaling = { enabled = true, pixelPerfect = true },
@@ -125,6 +131,7 @@ Presets:RegisterRole("healer", {
         Nameplates = { globalScale = 0.9, minAlpha = 0.45 },
         GroupFrames = { powerBars = true, incomingHeals = true, onlyDispellable = true, healthText = "losthealth",
             partyWidth = 144, partyHeight = 72, raidWidth = 100, raidHeight = 52 },
+        NameplateAuras = { maxOwn = 3 },
     },
 })
 
@@ -1072,6 +1079,12 @@ function Presets:Describe(spec)
         if gf.powerBars then add("Barre risorse sui frame di gruppo") end
         if gf.onlyDispellable then add("Solo debuff dissipabili") end
     end
+    local na, al = spec.modules.NameplateAuras, spec.modules.Alerts
+    if na and na.enabled then
+        add("Aure curate sulle nameplate: CC grande, difensivi nemici, i tuoi debuff %s",
+            na.ownDebuffs == "all" and "(tutti)" or "curati per classe")
+    end
+    if al and al.enabled and al.healerCC then add("Avviso quando l'healer del gruppo finisce in CC") end
     if sc and sc.enabled then add(sc.pixelPerfect and "Scala UI pixel perfect" or "Scala UI manuale") end
     if spec.editMode then
         local n = type(spec.editMode) == "table" and spec.editMode.systems and #spec.editMode.systems or 0

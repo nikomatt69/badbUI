@@ -34,4 +34,4 @@ Il modulo e' **spento di default** (come gli altri moduli che sostituiscono fram
 ## Limiti noti
 - Non ancora verificato in gioco su Forever: i nomi delle API secret-aware sono quelli di Midnight e sono tutti sondati prima dell'uso.
 - Niente frame arena, DR o trinket: Forever non ha arene e senza combat log i DR non si possono calcolare.
-- Le aure non hanno ancora una priorita' "CC prima, poi difensivi": oggi l'ordine e' debuff poi buff, con filtro "solo i miei debuff".
+- La fila di aure resta "debuff poi buff" (con filtro "solo i miei debuff"); la priorita' "CC prima, poi difensivi" e' nell'**aura grande** al centro del frame (`showBigAura`, attiva su bersaglio, focus e gruppo), dal database condiviso `Badb.Auras` (vedi docs/auras.md).
