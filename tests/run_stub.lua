@@ -8,7 +8,9 @@ local FILES = {
     "Core/Init.lua", "Core/Compat.lua", "Core/Logger.lua", "Core/Events.lua", "Core/Serializer.lua",
     "Core/Database.lua", "Core/Modules.lua", "Core/FrameManager.lua", "Core/CVars.lua",
     "Modules/EditModeBridge.lua", "Modules/Hider.lua", "Modules/Scaling.lua",
-    "Modules/Nameplates.lua", "Modules/GroupFrames.lua", "Modules/Presets.lua",
+    "Modules/Nameplates.lua", "Modules/GroupFrames.lua",
+    "Data/Auras.lua", "Modules/Auras.lua", "Modules/NameplateAuras.lua", "Modules/Alerts.lua",
+    "Modules/Presets.lua",
 }
 for _, path in ipairs(FILES) do
     local chunk = assert(loadfile(path))
