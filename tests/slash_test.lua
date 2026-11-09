@@ -229,13 +229,14 @@ end
 T["Register: validazione, sovrascrittura, riservati, Unregister"] = function()
     local S = BadbUI.Slash
     local got
+    local before = #S.registeredOrder -- altri file (es. Import/Export) registrano comandi propri
     eq(S:Register("ciao", function(a) got = a end, "saluta"), true)
     S:Dispatch("ciao mondo")
     eq(got, "mondo")
     eq(S:Register("ciao", function(a) got = "v2:" .. a end), true, "ri-registrazione sostituisce")
     S:Dispatch("ciao x")
     eq(got, "v2:x")
-    eq(#S.registeredOrder, 1, "nessun duplicato")
+    eq(#S.registeredOrder, before + 1, "nessun duplicato")
     local ok, err = S:Register("config", function() end)
     eq(ok, false); truthy(err, "nome base riservato")
     eq((S:Register("", function() end)), false)

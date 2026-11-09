@@ -643,28 +643,10 @@ local function notify(ok, err, okText)
     UI:Refresh()
 end
 
-function UI:RenameProfile(old, new)
-    new = strtrim(tostring(new or ""))
-    if new == "" or new == old then return false, "nome non valido" end
-    if not DB.sv.profiles[old] then return false, "profilo inesistente" end
-    if DB.sv.profiles[new] then return false, "esiste gia' un profilo con questo nome" end
-    local ok, err = DB:CopyProfile(old, new)
-    if not ok then return false, err end
-    -- Riallinea chi puntava al vecchio nome (personaggi e specializzazioni) prima di eliminarlo.
-    for k, v in pairs(DB.sv.profileKeys) do if v == old then DB.sv.profileKeys[k] = new end end
-    for _, map in pairs(DB.sv.specProfiles) do
-        if type(map) == "table" then for i, v in pairs(map) do if v == old then map[i] = new end end end
-    end
-    if DB:GetProfileName() == old then DB:SetProfile(new) end
-    return DB:DeleteProfile(old)
-end
+-- Wrapper storici: la logica (validazione nomi, riallineamento personaggi/spec) vive in DB.
+function UI:RenameProfile(old, new) return DB:RenameProfile(old, new) end
 
-function UI:CopyProfile(src, name)
-    name = strtrim(tostring(name or ""))
-    if name == "" then return false, "nome non valido" end
-    if DB.sv.profiles[name] then return false, "esiste gia' un profilo con questo nome" end
-    return DB:CopyProfile(src, name)
-end
+function UI:CopyProfile(src, name) return DB:CopyProfile(src, name) end
 
 function UI:ImportProfileString(str)
     local name = uniqueProfileName("Importato " .. date("%Y-%m-%d %H:%M"))
@@ -683,7 +665,8 @@ local function profileRows()
                 { label = "Attiva", width = 54, disabled = isActive, func = function() DB:SetProfile(name) end },
                 { label = "Copia", width = 48, func = function()
                     UI.TextBox("Nome della copia di '" .. name .. "'", "", function(txt)
-                        notify(UI:CopyProfile(name, txt)) -- ok, err
+                        local ok, res = UI:CopyProfile(name, txt)
+                        notify(ok, res, "Profilo copiato")
                     end)
                 end },
                 { label = "Rinomina", width = 62, func = function()
@@ -733,13 +716,17 @@ P.profiles = function(parent, ctx)
     S:Buttons({
         { "Nuovo / Copia", function()
             UI.TextBox("Nome del nuovo profilo (copia dell'attivo)", "", function(name)
-                local ok, err = UI:CopyProfile(DB:GetProfileName(), name)
-                if ok then DB:SetProfile(strtrim(name)) end
+                local ok, res = UI:CopyProfile(DB:GetProfileName(), name)
+                if ok then DB:SetProfile(res) end
+                local err = not ok and res or nil
                 notify(ok, err, "Profilo creato")
             end)
         end },
         { "Esporta attivo", function() UI.TextBox("Esporta profilo", DB:ExportProfile()) end },
         { "Importa", function()
+            -- Pagina Import / Export con anteprima; fallback alla finestra di testo se assente.
+            local IO = Badb.ImportExport
+            if IO and IO:OpenImport() then return end
             UI.TextBox("Incolla la stringa BadbUI", "", function(str)
                 local ok, err = UI:ImportProfileString(str)
                 if not ok then Logger:Error("Import fallito: %s", tostring(err)) end

@@ -57,3 +57,4 @@ Config\Widgets.lua
 Config\ConfigUI.lua
 Config\Wizard.lua
 Config\Slash.lua
+Config\ImportExport.lua
