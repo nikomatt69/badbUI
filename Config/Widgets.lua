@@ -649,7 +649,7 @@ raw.list = function(parent, _, opt)
             for j = #acts + 1, #row.actionButtons do row.actionButtons[j]:Hide() end
             row.detail:ClearAllPoints()
             row.detail:SetPoint("RIGHT", row, "RIGHT", x - 6, 0)
-            row.text:SetWidth(WIDTH - 28 + x - 120)
+            row.text:SetWidth(math.max(40, WIDTH - 28 + x - 92))
         end
         for i = n + 1, #box.rows do box.rows[i]:Hide() end
         empty:SetShown(n == 0)
