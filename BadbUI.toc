@@ -27,6 +27,9 @@ Locales\itIT.lua
 Modules\EditModeBridge.lua
 Modules\Hider.lua
 Modules\Scaling.lua
+Modules\ActionBarsShared.lua
+Modules\ActionBars.lua
+Modules\Cooldowns.lua
 
 # Configurazione
 Config\Widgets.lua
