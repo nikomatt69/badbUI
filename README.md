@@ -17,6 +17,7 @@ Copia la cartella `BadbUI` in `World of Warcraft\_classic_\Interface\AddOns\` (o
 | Database | `Core/Database.lua` | Profili per personaggio, profilo per spec, migrazioni di schema versionate, import/export |
 | Moduli | `Core/Modules.lua` | Ciclo di vita `OnInitialize/OnEnable/OnDisable/OnProfileChanged`, dipendenze, attivazione a runtime |
 | Frame | `Core/FrameManager.lua` | Registro frame: posizione, scala, alpha, visibilità, snapshot e ripristino originale, modalità sblocco con griglia |
+| Design system | `UI/*` | `Badb.Theme` (token di colore, font, spaziature, schemi notte/crepuscolo/grafite, accento) e `Badb.UI` (finestre, bottoni, toggle, slider, dropdown, tab, liste virtualizzate). Doc: [docs/UI.md](docs/UI.md), anteprima dal vivo: `/badb gallery` |
 | Config | `Config/*` | Pannello in Opzioni > AddOns generato dai descrittori dei moduli, slash `/badb` `/bui` |
 
 ### Regole specifiche di Forever
@@ -67,10 +68,10 @@ I test verificano che ogni chiave di un preset esista nei default del modulo.
 Tutto passa dalle API aure (niente combat log) e tollera i secret values: dettagli in [docs/auras.md](docs/auras.md). Gli unit frame mostrano la stessa "aura grande" al centro di bersaglio, focus e gruppo.
 
 ## Test
-`lua5.1 tests/run.lua` dalla root del repo (eseguito anche dalla CI su ogni PR). `tests/lua/wowstub.lua` simula l'API WoW necessaria: CVar, combattimento, nameplate, layout Edit Mode, secret values.
+`lua5.1 tests/run.lua` dalla root del repo (eseguito anche dalla CI su ogni PR). Il design system ha una suite propria con un mock che registra punti, dimensioni e colori dei widget: `lua5.1 tests/ui/run.lua`. `tests/lua/wowstub.lua` simula l'API WoW necessaria: CVar, combattimento, nameplate, layout Edit Mode, secret values.
 
 ## Comandi
-`/badb` config · `/badb setup` configurazione guidata · `/badb undo` annulla ultimo preset · `/badb unlock` · `/badb profile <nome>` · `/badb export` · `/badb enable|disable <modulo>` · `/badb debug` · `/badb log`
+`/badb` config · `/badb setup` configurazione guidata · `/badb undo` annulla ultimo preset · `/badb unlock` · `/badb profile <nome>` · `/badb export` · `/badb enable|disable <modulo>` · `/badb debug` · `/badb log` · `/badb gallery` galleria del design system · `/badb theme <schema> <accento>`
 
 ## Barre azioni e cooldown
 
