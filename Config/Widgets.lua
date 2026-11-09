@@ -1,6 +1,6 @@
 -- BadbUI - Widget dichiarativi per la ConfigUI.
 -- Ogni modulo descrive le opzioni come dati: { type, path | get/set, label, ... }
--- Tipi supportati: toggle, range, execute, header. Nuovi tipi = nuova funzione in Builders.
+-- Tipi supportati: toggle, range, select, execute, header. Nuovi tipi = nuova funzione in Builders.
 local _, ns = ...
 local Badb = ns.Badb
 
@@ -63,6 +63,27 @@ W.Builders.execute = function(parent, _, opt)
     b:SetText(opt.label)
     b:SetScript("OnClick", function() opt.func() end)
     return b, 30
+end
+
+-- select: { type = "select", path, label, values = { { value, text }, ... } }
+W.Builders.select = function(parent, module, opt)
+    local holder = CreateFrame("Frame", nil, parent)
+    holder:SetSize(320, 44)
+    local get, set = getter(module, opt), setter(module, opt)
+    local label = holder:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
+    label:SetPoint("TOPLEFT", 4, 0)
+    label:SetText(opt.label)
+    local dd = CreateFrame("DropdownButton", nil, holder, "WowStyle1DropdownTemplate")
+    dd:SetPoint("TOPLEFT", 0, -14)
+    dd:SetWidth(220)
+    dd:SetupMenu(function(_, root)
+        local values = type(opt.values) == "function" and opt.values() or opt.values
+        for _, v in ipairs(values) do
+            root:CreateRadio(v.text, function() return get() == v.value end, function() set(v.value) end)
+        end
+    end)
+    holder.Refresh = function() if dd.GenerateMenu then dd:GenerateMenu() end end
+    return holder, 48
 end
 
 -- Costruisce in colonna tutte le opzioni di un modulo; restituisce l'altezza totale.

@@ -20,6 +20,7 @@ Core\Serializer.lua
 Core\Database.lua
 Core\Modules.lua
 Core\FrameManager.lua
+Core\CVars.lua
 
 Locales\itIT.lua
 
@@ -30,6 +31,8 @@ Modules\Scaling.lua
 Modules\ActionBarsShared.lua
 Modules\ActionBars.lua
 Modules\Cooldowns.lua
+Modules\Nameplates.lua
+Modules\GroupFrames.lua
 Modules\Backups.lua
 Modules\Presets.lua
 Data\Presets.lua

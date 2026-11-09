@@ -8,6 +8,16 @@ hub di integrazione con gli altri addon, libreria di guide in-game, backup/diagn
 Il codice esistente (Core/*, ActionBars, Cooldowns, Hider, Scaling, EditModeBridge) e' stabile: **non va riscritto**.
 Estendere solo tramite le API pubbliche sotto. Lingua: commenti e testo UI in italiano, identificatori in inglese.
 
+
+## AGGIORNAMENTO (merge PR #2 su main) — leggere
+`main` contiene ora implementazioni **reali e testate** da estendere, NON da riscrivere/sostituire (nessun `Modules:New` duplicato: asserisce!):
+- `Modules/Presets.lua` (modulo "Presets"): preset componibili contenuto+ruolo, Apply = nuovo profilo copia dell'attuale, `/badb undo`, `Recommend()`. L'agente **presets** deve AGGIUNGERE l'API del contratto (Diff, only/modi merge|replace, custom export/import, page, validazione) sopra quella esistente, preservando comportamento e test di `tests/lua/test_presets.lua`.
+- `Config/Wizard.lua`: wizard a 5 passi in stile hub (`/badb setup`). L'agente **wizard** deve estenderlo (passi opzionali Contexts/Integrations, API Start/Reset/IsCompleted, esecuzione con backup/annulla), preservando look, "Applica consigliato" e il comportamento esistente.
+- `Config/Widgets.lua` ha gia' il builder `select`, `Config/Slash.lua` ha `setup` e `undo`: l'agente **shell** li mantiene (compatibili) mentre costruisce la v2.
+- `Core/CVars.lua`, `Modules/Nameplates.lua`, `Modules/GroupFrames.lua` sono nuovi moduli di main: usare `Badb.CVars:Set(modulo, cvar, valore)` per ogni CVar (salva/ripristina l'originale).
+- Due runner di test: `lua5.1 tests/run.lua .` (wow_mock, auto-discovery `tests/*_test.lua`) e `lua5.1 tests/run_stub.lua` (suite `tests/lua/`). **Entrambi devono restare verdi.**
+- Prima di consegnare: `git fetch origin && git merge origin/main` nel tuo worktree e risolvi i conflitti sui TUOI file.
+
 ## Regole di ownership (anti-conflitto)
 Ogni agente lavora in un proprio worktree e modifica **solo i file che possiede** (vedi tabella).
 **Vietato** modificare: `BadbUI.toc`, `tests/run.lua`, `tests/wow_mock.lua`, `Core/*`, `README.md`, file di altri agenti.

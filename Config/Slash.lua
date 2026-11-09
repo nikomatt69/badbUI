@@ -25,8 +25,11 @@ end
 commands.log = function()
     Badb.ConfigUI.TextBox("Log BadbUI", table.concat(Logger.buffer, "\n"))
 end
+commands.setup = function() Badb.Wizard:Toggle() end
+commands.wizard = commands.setup
+commands.undo = function() Badb.Presets:Undo() end
 commands.help = function()
-    Logger:Info("/badb [config | unlock | profile <nome> | export | enable <modulo> | disable <modulo> | debug | log]")
+    Logger:Info("/badb [config | unlock | profile <nome> | export | enable <modulo> | disable <modulo> | setup | undo | debug | log]")
 end
 
 SLASH_BADBUI1, SLASH_BADBUI2 = "/badb", "/bui"
