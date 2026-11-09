@@ -1,16 +1,16 @@
--- AegisUI - Database e profili
--- Struttura di AegisUIDB:
+-- BadbUI - Database e profili
+-- Struttura di BadbUIDB:
 --   schema        numero versione per le migrazioni
 --   profiles      { [nome] = { modules = { [modulo] = {...} }, frames = { [frameKey] = {...} } } }
 --   profileKeys   { ["Personaggio - Reame"] = nomeProfilo }
 --   specProfiles  { ["Personaggio - Reame"] = { [specIndex] = nomeProfilo } } (dual spec)
 --   global        impostazioni non legate al profilo
 local _, ns = ...
-local Aegis = ns.Aegis
-local Events, Logger = Aegis.Events, Aegis.Logger
+local Badb = ns.Badb
+local Events, Logger = Badb.Events, Badb.Logger
 
 local DB = { defaults = { modules = {}, frames = {} }, migrations = {} }
-Aegis.DB = DB
+Badb.DB = DB
 
 local SCHEMA = 1
 
@@ -23,7 +23,7 @@ function DB:RegisterDefaults(moduleName, defaults)
     self.defaults.modules[moduleName] = defaults
     if self.profile then
         self.profile.modules[moduleName] = self.profile.modules[moduleName] or {}
-        Aegis.MergeDefaults(self.profile.modules[moduleName], defaults)
+        Badb.MergeDefaults(self.profile.modules[moduleName], defaults)
     end
 end
 
@@ -47,8 +47,8 @@ local function migrate(sv)
 end
 
 function DB:Initialize()
-    AegisUIDB = AegisUIDB or {}
-    local sv = AegisUIDB
+    BadbUIDB = BadbUIDB or {}
+    local sv = BadbUIDB
     sv.profiles = sv.profiles or {}
     sv.profileKeys = sv.profileKeys or {}
     sv.specProfiles = sv.specProfiles or {}
@@ -72,16 +72,16 @@ function DB:SetProfile(name, silent)
     local sv = self.sv
     sv.profiles[name] = sv.profiles[name] or {}
     local p = sv.profiles[name]
-    Aegis.MergeDefaults(p, self.defaults)
+    Badb.MergeDefaults(p, self.defaults)
     sv.profileKeys[self.char] = name
     self.profileName, self.profile = name, p
-    if not silent then Events:Fire("AEGIS_PROFILE_CHANGED", name) end
+    if not silent then Events:Fire("BADB_PROFILE_CHANGED", name) end
 end
 
 function DB:CopyProfile(from, to)
     local src = self.sv.profiles[from]
     if not src then return false, "profilo inesistente" end
-    self.sv.profiles[to] = Aegis.CopyTable(src)
+    self.sv.profiles[to] = Badb.CopyTable(src)
     return true
 end
 
@@ -96,31 +96,31 @@ end
 
 function DB:ResetProfile()
     wipe(self.profile)
-    Aegis.MergeDefaults(self.profile, self.defaults)
-    Events:Fire("AEGIS_PROFILE_CHANGED", self.profileName)
+    Badb.MergeDefaults(self.profile, self.defaults)
+    Events:Fire("BADB_PROFILE_CHANGED", self.profileName)
 end
 
 -- Accesso tipizzato alle opzioni di un modulo
 function DB:Get(moduleName, path)
-    return Aegis.GetPath(self.profile.modules[moduleName], path)
+    return Badb.GetPath(self.profile.modules[moduleName], path)
 end
 
 function DB:Set(moduleName, path, value)
-    Aegis.SetPath(self.profile.modules[moduleName], path, value)
-    Events:Fire("AEGIS_OPTION_CHANGED", moduleName, path, value)
+    Badb.SetPath(self.profile.modules[moduleName], path, value)
+    Events:Fire("BADB_OPTION_CHANGED", moduleName, path, value)
 end
 
 -- Import/export
 function DB:ExportProfile(name)
     local p = self.sv.profiles[name or self.profileName]
-    return Aegis.Serializer:Export("profile", p)
+    return Badb.Serializer:Export("profile", p)
 end
 
 function DB:ImportProfile(str, newName)
-    local data, err = Aegis.Serializer:Import(str, "profile")
+    local data, err = Badb.Serializer:Import(str, "profile")
     if not data then return false, err end
     if self.sv.profiles[newName] then return false, "esiste gia' un profilo con questo nome" end
-    self.sv.profiles[newName] = Aegis.MergeDefaults(data, self.defaults)
+    self.sv.profiles[newName] = Badb.MergeDefaults(data, self.defaults)
     return true
 end
 

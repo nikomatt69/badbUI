@@ -1,13 +1,13 @@
--- AegisUI - Compat
+-- BadbUI - Compat
 -- Unico punto in cui si gestiscono le particolarita' del client.
 -- Target: WoW Forever (interface 16001), che condivide l'architettura UI Mainline
 -- ma con restrizioni "stile Midnight" (secret values, combat log non disponibile).
--- Il resto dell'addon usa Aegis.Compat.* invece di sondare le API direttamente.
+-- Il resto dell'addon usa Badb.Compat.* invece di sondare le API direttamente.
 local _, ns = ...
-local Aegis = ns.Aegis
+local Badb = ns.Badb
 
 local Compat = {}
-Aegis.Compat = Compat
+Badb.Compat = Compat
 
 local interface = select(4, GetBuildInfo()) or 0
 Compat.interface = interface

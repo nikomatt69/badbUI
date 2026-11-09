@@ -1,15 +1,15 @@
 ## Interface: 16001
-## Title: |cff3fa7ffAegis|rUI
+## Title: |cff3fa7ffBadb|rUI
 ## Notes: Gestione completa e modulare dell'interfaccia: profili, layout Edit Mode, frame Blizzard, import/export.
 ## Author: Nikoemme
 ## Version: 0.1.0
-## SavedVariables: AegisUIDB
+## SavedVariables: BadbUIDB
 ## IconTexture: Interface\Icons\INV_Shield_06
 ## Category: Interface Enhancements
 
 # Target: World of Warcraft: Forever (client 1.60.x, interface 16001, architettura UI Mainline).
 # Verifica in gioco con: /dump select(4, GetBuildInfo())
-# Il client legge anche AegisUI_Forever.toc / AegisUI_Camelot.toc se presenti (stesso contenuto).
+# Il client legge anche BadbUI_Forever.toc / BadbUI_Camelot.toc se presenti (stesso contenuto).
 
 # Core (ordine di caricamento significativo)
 Core\Init.lua

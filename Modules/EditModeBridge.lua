@@ -1,13 +1,13 @@
--- AegisUI - Edit Mode Bridge
+-- BadbUI - Edit Mode Bridge
 -- Su Forever i frame principali (barre, unit frame, minimappa...) sono gestiti dall'Edit Mode.
--- Invece di combatterlo, AegisUI lo usa come motore: ogni profilo AegisUI incorpora un layout
+-- Invece di combatterlo, BadbUI lo usa come motore: ogni profilo BadbUI incorpora un layout
 -- Edit Mode (stringa ufficiale Blizzard) e lo attiva automaticamente al cambio profilo.
--- Risultato: un'unica stringa di import contiene layout Blizzard + tutte le opzioni AegisUI.
+-- Risultato: un'unica stringa di import contiene layout Blizzard + tutte le opzioni BadbUI.
 local _, ns = ...
-local Aegis = ns.Aegis
-local Compat, Logger, Events = Aegis.Compat, Aegis.Logger, Aegis.Events
+local Badb = ns.Badb
+local Compat, Logger, Events = Badb.Compat, Badb.Logger, Badb.Events
 
-local M = Aegis.Modules:New("EditModeBridge", {
+local M = Badb.Modules:New("EditModeBridge", {
     title = "Layout Edit Mode",
     category = "Layout",
     defaults = {
@@ -18,7 +18,7 @@ local M = Aegis.Modules:New("EditModeBridge", {
     },
     options = {
         { type = "toggle", path = "autoActivate", label = "Attiva il layout al cambio profilo" },
-        { type = "execute", label = "Cattura layout attuale", func = function() Aegis.Modules:Get("EditModeBridge"):Capture() end },
+        { type = "execute", label = "Cattura layout attuale", func = function() Badb.Modules:Get("EditModeBridge"):Capture() end },
     },
 })
 
@@ -43,7 +43,7 @@ function M:Capture()
     end
     self:Set("layoutName", info.layoutName)
     self:Set("layoutString", C_EditMode.ConvertLayoutInfoToString(info))
-    Logger:Info("Layout '%s' associato al profilo %s", info.layoutName, Aegis.DB:GetProfileName())
+    Logger:Info("Layout '%s' associato al profilo %s", info.layoutName, Badb.DB:GetProfileName())
 end
 
 -- Attiva il layout del profilo; se non esiste sull'account lo ricrea dalla stringa salvata.
@@ -80,7 +80,7 @@ function M:OnEnable()
         Logger:Warn("Edit Mode non disponibile su questo client: modulo inattivo")
         return
     end
-    self:On("AEGIS_PROFILE_CHANGED", function()
+    self:On("BADB_PROFILE_CHANGED", function()
         if self:Get("autoActivate") then self:Activate() end
     end)
 end

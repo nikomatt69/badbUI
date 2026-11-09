@@ -1,4 +1,4 @@
--- AegisUI - Sistema moduli
+-- BadbUI - Sistema moduli
 -- Ogni funzionalita' e' un modulo isolato con ciclo di vita esplicito:
 --   OnInitialize()  una volta, dopo il caricamento del DB
 --   OnEnable()      quando il modulo viene attivato (anche a runtime)
@@ -6,11 +6,11 @@
 --   OnProfileChanged() dopo un cambio profilo
 -- Dipendenze dichiarate: un modulo non si abilita se una dipendenza e' disattivata.
 local ADDON_NAME, ns = ...
-local Aegis = ns.Aegis
-local Events, Logger, DB = Aegis.Events, Aegis.Logger, Aegis.DB
+local Badb = ns.Badb
+local Events, Logger, DB = Badb.Events, Badb.Logger, Badb.DB
 
 local Modules = { list = {}, order = {} }
-Aegis.Modules = Modules
+Badb.Modules = Modules
 
 local ModuleProto = {}
 ModuleProto.__index = ModuleProto
@@ -23,7 +23,7 @@ function ModuleProto:IsEnabled() return self.enabled end
 function ModuleProto:Debug(...) Logger:Debug("[" .. self.name .. "] " .. tostring((...)), select(2, ...)) end
 
 --[[ Esempio:
-local M = Aegis.Modules:New("Hider", {
+local M = Badb.Modules:New("Hider", {
     title = "Nascondi elementi", category = "Interfaccia",
     defaults = { enabled = true, ... },
     dependencies = { "Layout" },
@@ -65,7 +65,7 @@ function Modules:Enable(name)
     end
     if safeCall(m, "OnEnable") then
         m.enabled = true
-        Events:Fire("AEGIS_MODULE_ENABLED", name)
+        Events:Fire("BADB_MODULE_ENABLED", name)
     end
 end
 
@@ -81,7 +81,7 @@ function Modules:Disable(name)
     safeCall(m, "OnDisable")
     Events:OffAll(m)
     m.enabled = false
-    Events:Fire("AEGIS_MODULE_DISABLED", name)
+    Events:Fire("BADB_MODULE_DISABLED", name)
 end
 
 function Modules:SetEnabled(name, value)
@@ -109,9 +109,9 @@ end)
 
 Events:On(Modules, "PLAYER_LOGIN", function()
     Modules:ApplyAll()
-    Logger:Info("v%s caricato - profilo '%s'. Digita /aegis", Aegis.version, DB:GetProfileName())
+    Logger:Info("v%s caricato - profilo '%s'. Digita /badb", Badb.version, DB:GetProfileName())
 end)
 
-Events:On(Modules, "AEGIS_PROFILE_CHANGED", function()
+Events:On(Modules, "BADB_PROFILE_CHANGED", function()
     Events:RunOutOfCombat("applyModules", function() Modules:ApplyAll() end)
 end)

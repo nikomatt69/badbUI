@@ -1,12 +1,12 @@
--- AegisUI - Event bus
+-- BadbUI - Event bus
 -- Unifica eventi di gioco (RegisterEvent) e messaggi interni (Fire) in un'unica API.
 -- Gli errori nei listener sono isolati: un modulo rotto non blocca gli altri.
 local _, ns = ...
-local Aegis = ns.Aegis
-local Logger = Aegis.Logger
+local Badb = ns.Badb
+local Logger = Badb.Logger
 
 local Events = { listeners = {} }
-Aegis.Events = Events
+Badb.Events = Events
 
 local frame = CreateFrame("Frame")
 Events.frame = frame
@@ -30,8 +30,8 @@ function Events:On(owner, event, fn)
     if not list then
         list = {}
         self.listeners[event] = list
-        -- I messaggi interni usano il prefisso "AEGIS_" e non vanno registrati sul frame.
-        if not event:find("^AEGIS_") then pcall(frame.RegisterEvent, frame, event) end
+        -- I messaggi interni usano il prefisso "BADB_" e non vanno registrati sul frame.
+        if not event:find("^BADB_") then pcall(frame.RegisterEvent, frame, event) end
     end
     list[owner] = fn
 end
@@ -42,7 +42,7 @@ function Events:Off(owner, event)
     list[owner] = nil
     if next(list) == nil then
         self.listeners[event] = nil
-        if not event:find("^AEGIS_") then frame:UnregisterEvent(event) end
+        if not event:find("^BADB_") then frame:UnregisterEvent(event) end
     end
 end
 

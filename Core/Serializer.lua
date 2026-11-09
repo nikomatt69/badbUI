@@ -1,14 +1,14 @@
--- AegisUI - Serializer
+-- BadbUI - Serializer
 -- Converte tabelle in stringhe stampabili per import/export dei profili.
--- Formato: "AEGIS1:" .. base64(serializzazione) .. ":" .. checksum
+-- Formato: "BADB1:" .. base64(serializzazione) .. ":" .. checksum
 -- Nessun loadstring sull'input: il parser e' scritto a mano, quindi un import malevolo non esegue codice.
 local _, ns = ...
-local Aegis = ns.Aegis
+local Badb = ns.Badb
 
 local S = {}
-Aegis.Serializer = S
+Badb.Serializer = S
 
-local PREFIX, VERSION = "AEGIS", 1
+local PREFIX, VERSION = "BADB", 1
 
 -- Serializzazione compatta: tipi n (number), s (string), b (bool), t (table).
 local function ser(v, out)
@@ -101,7 +101,7 @@ end
 -- kind: "profile", "layout", "module:<nome>" ecc. Permette di rifiutare import del tipo sbagliato.
 function S:Export(kind, data)
     local out = {}
-    ser({ v = VERSION, kind = kind, addon = Aegis.version, data = data }, out)
+    ser({ v = VERSION, kind = kind, addon = Badb.version, data = data }, out)
     local raw = table.concat(out)
     return string.format("%s%d:%s:%s", PREFIX, VERSION, b64enc(raw), checksum(raw))
 end
@@ -111,7 +111,7 @@ function S:Import(str, expectedKind)
     str = str:gsub("%s", "")
     local ver, body, sum = str:match("^" .. PREFIX .. "(%d+):([^:]+):(%x+)$")
     if not ver then return nil, "formato non riconosciuto" end
-    if tonumber(ver) > VERSION then return nil, "stringa creata da una versione piu' recente di AegisUI" end
+    if tonumber(ver) > VERSION then return nil, "stringa creata da una versione piu' recente di BadbUI" end
     local ok, raw = pcall(b64dec, body)
     if not ok then return nil, raw end
     if checksum(raw) ~= sum then return nil, "checksum non valido (stringa incompleta o modificata)" end

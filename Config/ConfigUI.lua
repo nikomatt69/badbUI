@@ -1,11 +1,11 @@
--- AegisUI - Pannello di configurazione (Settings > AddOns > AegisUI)
+-- BadbUI - Pannello di configurazione (Settings > AddOns > BadbUI)
 -- Sezioni: Profili (cambio/copia/reset/import/export), Moduli (attiva + opzioni generate).
 local _, ns = ...
-local Aegis = ns.Aegis
-local DB, Modules, Compat, W, Events = Aegis.DB, Aegis.Modules, Aegis.Compat, Aegis.Widgets, Aegis.Events
+local Badb = ns.Badb
+local DB, Modules, Compat, W, Events = Badb.DB, Badb.Modules, Badb.Compat, Badb.Widgets, Badb.Events
 
 local UI = {}
-Aegis.ConfigUI = UI
+Badb.ConfigUI = UI
 
 local panel = CreateFrame("Frame")
 panel:Hide()
@@ -22,7 +22,7 @@ scroll:SetScrollChild(content)
 local box
 local function textBox(title, text, onAccept)
     if not box then
-        box = Compat.CreateFrame("Frame", "AegisUITextBox", UIParent, "BasicFrameTemplateWithInset")
+        box = Compat.CreateFrame("Frame", "BadbUITextBox", UIParent, "BasicFrameTemplateWithInset")
         box:SetSize(520, 300); box:SetPoint("CENTER"); box:SetFrameStrata("DIALOG")
         box:SetMovable(true); box:EnableMouse(true); box:RegisterForDrag("LeftButton")
         box:SetScript("OnDragStart", box.StartMoving); box:SetScript("OnDragStop", box.StopMovingOrSizing)
@@ -35,7 +35,7 @@ local function textBox(title, text, onAccept)
         box.edit = sf.EditBox
         box.ok = CreateFrame("Button", nil, box, "UIPanelButtonTemplate")
         box.ok:SetSize(120, 22); box.ok:SetPoint("BOTTOM", 0, 12)
-        tinsert(UISpecialFrames, "AegisUITextBox")
+        tinsert(UISpecialFrames, "BadbUITextBox")
     end
     box.title:SetText(title)
     box.edit:SetText(text or "")
@@ -67,7 +67,7 @@ local built, refreshers = false, {}
 local function build()
     local y = 8
     local title = content:CreateFontString(nil, "ARTWORK", "GameFontHighlightHuge")
-    title:SetPoint("TOPLEFT", 16, -y); title:SetText("AegisUI  |cff888888v" .. Aegis.version .. "|r")
+    title:SetPoint("TOPLEFT", 16, -y); title:SetText("BadbUI  |cff888888v" .. Badb.version .. "|r")
     y = y + 40
 
     -- Profili
@@ -94,10 +94,10 @@ local function build()
     end)
     button("Esporta", 152, y, function() textBox("Esporta profilo", DB:ExportProfile()) end)
     button("Importa", 288, y, function()
-        textBox("Incolla la stringa AegisUI", "", function(str)
+        textBox("Incolla la stringa BadbUI", "", function(str)
             local name = "Importato " .. date("%Y-%m-%d %H:%M")
             local ok, err = DB:ImportProfile(str, name)
-            if ok then DB:SetProfile(name) else Aegis.Logger:Error("Import fallito: %s", err) end
+            if ok then DB:SetProfile(name) else Badb.Logger:Error("Import fallito: %s", err) end
         end)
     end)
     button("Reset", 424, y, function() DB:ResetProfile() end)
@@ -137,8 +137,8 @@ end)
 
 function UI:Open() Compat.OpenOptionsPanel(panel) end
 
-Compat.RegisterOptionsPanel(panel, "AegisUI")
+Compat.RegisterOptionsPanel(panel, "BadbUI")
 
-Events:On(UI, "AEGIS_PROFILE_CHANGED", function() if built then UI:Refresh() end end)
-Events:On(UI, "AEGIS_MODULE_ENABLED", function() if built then UI:Refresh() end end)
-Events:On(UI, "AEGIS_MODULE_DISABLED", function() if built then UI:Refresh() end end)
+Events:On(UI, "BADB_PROFILE_CHANGED", function() if built then UI:Refresh() end end)
+Events:On(UI, "BADB_MODULE_ENABLED", function() if built then UI:Refresh() end end)
+Events:On(UI, "BADB_MODULE_DISABLED", function() if built then UI:Refresh() end end)

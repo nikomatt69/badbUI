@@ -1,9 +1,9 @@
--- AegisUI - Scaling: UI scale globale "pixel perfect" e scala per singolo frame non-Edit Mode.
+-- BadbUI - Scaling: UI scale globale "pixel perfect" e scala per singolo frame non-Edit Mode.
 local _, ns = ...
-local Aegis = ns.Aegis
-local Events, Logger = Aegis.Events, Aegis.Logger
+local Badb = ns.Badb
+local Events, Logger = Badb.Events, Badb.Logger
 
-local M = Aegis.Modules:New("Scaling", {
+local M = Badb.Modules:New("Scaling", {
     title = "Scala interfaccia",
     category = "Interfaccia",
     defaults = { enabled = false, pixelPerfect = true, uiScale = 0.71 },
@@ -30,7 +30,7 @@ function M:Apply()
 end
 
 function M:OnEnable()
-    self:On("AEGIS_OPTION_CHANGED", function(_, module)
+    self:On("BADB_OPTION_CHANGED", function(_, module)
         if module == self.name then self:Apply() end
     end)
     self:On("UI_SCALE_CHANGED", function() self:Apply() end)

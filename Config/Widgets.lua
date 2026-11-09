@@ -1,11 +1,11 @@
--- AegisUI - Widget dichiarativi per la ConfigUI.
+-- BadbUI - Widget dichiarativi per la ConfigUI.
 -- Ogni modulo descrive le opzioni come dati: { type, path | get/set, label, ... }
 -- Tipi supportati: toggle, range, execute, header. Nuovi tipi = nuova funzione in Builders.
 local _, ns = ...
-local Aegis = ns.Aegis
+local Badb = ns.Badb
 
 local W = { Builders = {} }
-Aegis.Widgets = W
+Badb.Widgets = W
 
 local function getter(module, opt)
     if opt.get then return opt.get end

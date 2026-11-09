@@ -1,11 +1,11 @@
--- AegisUI - Comandi slash. /aegis o /aui
+-- BadbUI - Comandi slash. /badb o /bui
 local _, ns = ...
-local Aegis = ns.Aegis
-local DB, FM, Modules, Logger = Aegis.DB, Aegis.FrameManager, Aegis.Modules, Aegis.Logger
+local Badb = ns.Badb
+local DB, FM, Modules, Logger = Badb.DB, Badb.FrameManager, Badb.Modules, Badb.Logger
 
 local commands = {}
 
-commands[""] = function() Aegis.ConfigUI:Open() end
+commands[""] = function() Badb.ConfigUI:Open() end
 commands.config = commands[""]
 commands.unlock = function() FM:SetUnlocked(not FM.unlocked) end
 commands.profile = function(name)
@@ -15,7 +15,7 @@ commands.profile = function(name)
         DB:SetProfile(name)
     end
 end
-commands.export = function() Aegis.ConfigUI.TextBox("Esporta profilo", DB:ExportProfile()) end
+commands.export = function() Badb.ConfigUI.TextBox("Esporta profilo", DB:ExportProfile()) end
 commands.enable = function(name) Modules:SetEnabled(name, true) end
 commands.disable = function(name) Modules:SetEnabled(name, false) end
 commands.debug = function()
@@ -23,14 +23,14 @@ commands.debug = function()
     Logger:Info("Debug %s", Logger.level == 1 and "attivo" or "disattivo")
 end
 commands.log = function()
-    Aegis.ConfigUI.TextBox("Log AegisUI", table.concat(Logger.buffer, "\n"))
+    Badb.ConfigUI.TextBox("Log BadbUI", table.concat(Logger.buffer, "\n"))
 end
 commands.help = function()
-    Logger:Info("/aegis [config | unlock | profile <nome> | export | enable <modulo> | disable <modulo> | debug | log]")
+    Logger:Info("/badb [config | unlock | profile <nome> | export | enable <modulo> | disable <modulo> | debug | log]")
 end
 
-SLASH_AEGISUI1, SLASH_AEGISUI2 = "/aegis", "/aui"
-SlashCmdList.AEGISUI = function(msg)
+SLASH_BADBUI1, SLASH_BADBUI2 = "/badb", "/bui"
+SlashCmdList.BADBUI = function(msg)
     local cmd, rest = strtrim(msg or ""):match("^(%S*)%s*(.-)$")
     local fn = commands[(cmd or ""):lower()] or commands.help
     fn(rest or "")

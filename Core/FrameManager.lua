@@ -1,13 +1,13 @@
--- AegisUI - Frame Manager
--- Registro centrale dei frame gestibili (Blizzard o di AegisUI).
+-- BadbUI - Frame Manager
+-- Registro centrale dei frame gestibili (Blizzard o di BadbUI).
 -- Per ogni frame salva nel profilo: posizione, scala, alpha, visibilita' e condizioni.
 -- Ripristina sempre lo stato originale quando un frame viene "rilasciato".
 local _, ns = ...
-local Aegis = ns.Aegis
-local Events, Logger, DB, Compat = Aegis.Events, Aegis.Logger, Aegis.DB, Aegis.Compat
+local Badb = ns.Badb
+local Events, Logger, DB, Compat = Badb.Events, Badb.Logger, Badb.DB, Badb.Compat
 
 local FM = { registry = {}, movers = {}, unlocked = false }
-Aegis.FrameManager = FM
+Badb.FrameManager = FM
 
 --[[ Descrittore:
 FM:Register("PlayerFrame", {
@@ -100,7 +100,7 @@ end
 function FM:SetOption(key, field, value)
     conf(key)[field] = value
     self:Apply(key)
-    Events:Fire("AEGIS_FRAME_CHANGED", key, field, value)
+    Events:Fire("BADB_FRAME_CHANGED", key, field, value)
 end
 
 -- Modalita' sblocco: overlay trascinabili sopra ogni frame registrato, con snap a griglia.
@@ -147,7 +147,7 @@ function FM:SetUnlocked(state)
             self.movers[key]:SetShown(state)
         end
     end
-    Events:Fire("AEGIS_UNLOCK_CHANGED", state)
+    Events:Fire("BADB_UNLOCK_CHANGED", state)
 end
 
 Events:On(FM, "PLAYER_REGEN_DISABLED", function()
@@ -159,7 +159,7 @@ Events:On(FM, "PLAYER_ENTERING_WORLD", function()
     FM:ApplyAll()
 end)
 
-Events:On(FM, "AEGIS_PROFILE_CHANGED", function()
+Events:On(FM, "BADB_PROFILE_CHANGED", function()
     for key, desc in pairs(FM.registry) do
         if desc.original then FM:Restore(key) end
     end
