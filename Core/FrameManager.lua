@@ -83,18 +83,44 @@ function FM:ApplyAll()
     for key in pairs(self.registry) do self:Apply(key) end
 end
 
-function FM:Restore(key)
-    local desc = self.registry[key]
-    local f = desc and resolve(desc)
-    if not f or not desc.original then return end
-    Events:RunOutOfCombat("restore:" .. key, function()
-        local o = desc.original
+-- Riporta il frame allo stato Blizzard originale. Non tocca la configurazione del profilo.
+-- I frame Edit Mode non hanno mai punti/scala riscritti da noi: restano all'Edit Mode.
+local function restoreNow(desc, f)
+    local o = desc.original
+    if not o then return end
+    if not Compat.IsEditModeFrame(f) then
         f:ClearAllPoints()
         for _, p in ipairs(o.points) do f:SetPoint(unpack(p)) end
-        f:SetScale(o.scale); f:SetAlpha(o.alpha)
-        if o.shown then f:Show() end
-    end)
+        f:SetScale(o.scale)
+    end
+    f:SetAlpha(o.alpha)
+    if o.shown then f:Show() end
+end
+
+-- Rilascio esplicito (azione dell'utente): azzera la configurazione e ripristina lo stato originale.
+-- La configurazione va azzerata PRIMA di Show(): l'hook "hidden" altrimenti rileggerebbe hidden=true e richiuderebbe il frame.
+function FM:Restore(key)
+    local desc = self.registry[key]
+    if not desc then return end
     DB.profile.frames[key] = {}
+    local f = resolve(desc)
+    if f and desc.original then
+        Events:RunOutOfCombat("restore:" .. key, function() restoreNow(desc, f) end)
+    end
+    Events:Fire("BADB_FRAME_CHANGED", key, "restore")
+end
+
+-- Cambio profilo: ripristina lo stato originale e applica la configurazione del NUOVO profilo, senza modificarla.
+-- Ripristino e applicazione stanno nella stessa azione differita, cosi' in combattimento l'ordine e' sempre corretto.
+function FM:Reapply(key)
+    local desc = self.registry[key]
+    local f = desc and resolve(desc)
+    if not f then return end
+    if not desc.original then return self:Apply(key) end
+    Events:RunOutOfCombat("frame:" .. key, function()
+        restoreNow(desc, f)
+        applyNow(desc, f, conf(key))
+    end)
 end
 
 function FM:SetOption(key, field, value)
@@ -127,6 +153,7 @@ local function createMover(desc, f)
         c.point, c.relPoint, c.x, c.y = "CENTER", "CENTER", x, y
         FM:Apply(desc.key)
         self:ClearAllPoints(); self:SetAllPoints(f)
+        Events:Fire("BADB_FRAME_CHANGED", desc.key, "position", c)
     end)
     m:SetScript("OnMouseUp", function(_, button)
         if button == "RightButton" then FM:Restore(desc.key) end
@@ -160,8 +187,5 @@ Events:On(FM, "PLAYER_ENTERING_WORLD", function()
 end)
 
 Events:On(FM, "BADB_PROFILE_CHANGED", function()
-    for key, desc in pairs(FM.registry) do
-        if desc.original then FM:Restore(key) end
-    end
-    FM:ApplyAll()
+    for key in pairs(FM.registry) do FM:Reapply(key) end
 end)

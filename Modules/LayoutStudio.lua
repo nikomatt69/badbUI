@@ -1196,25 +1196,19 @@ M.commands = {
 -------------------------------------------------------------------------------
 -- Ciclo di vita
 -------------------------------------------------------------------------------
--- hooksecurefunc non si puo' rimuovere: l'hook resta installato ma e' inerte da disattivato.
-local function installRestoreHook()
-    if M._restoreHooked or type(FM.Restore) ~= "function" then return end
-    M._restoreHooked = true
-    hooksecurefunc(FM, "Restore", function(_, key)
-        -- FM:Restore azzera lo stato senza emettere eventi (es. Hider, clic destro sul mover).
-        M:_onChanged(key)
-    end)
-end
-
 function M:OnEnable()
     self._active = true
     self._kb = self._kb or createKeyboardOverlay()
     self._undo, self._redo, self._last = {}, {}, nil
     self._txn, self._depth, self._drag, self._selection = nil, 0, {}, {}
     self:_resync()
-    installRestoreHook()
 
-    self:On("BADB_FRAME_CHANGED", function(_, key) self:_onChanged(key) end)
+    -- Il drag di un mover emette "position" PRIMA del nostro hook OnDragStop, che registra gia' il passo
+    -- (con lo stato di partenza e lo snap intelligente): durante un drag l'evento si ignora per non duplicarlo.
+    self:On("BADB_FRAME_CHANGED", function(_, key, field)
+        if field == "position" and self._drag and self._drag[key] then return end
+        self:_onChanged(key)
+    end)
     self:On("BADB_PROFILE_CHANGED", function()
         self:_reset()
         -- FM ripristina i frame (con Restore) nello stesso dispatch: ignora quei Restore.
