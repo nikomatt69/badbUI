@@ -97,6 +97,7 @@ T["comandi base: setup e undo con guardie"] = function(Mock)
 end
 
 T["help: elenca comandi base e di modulo"] = function(Mock)
+    BadbUI.Modules:Get("Presets").commands = nil -- isola il modulo finto dal vero comando "preset"
     newModule("Pr", { commands = { preset = { help = "preset <chiave> | list", fn = function() end } } })
     BadbUI.Slash:Register("extra", function() end, "comando esterno")
     BadbUI.Slash:Dispatch("help")
@@ -113,6 +114,7 @@ T["help: elenca comandi base e di modulo"] = function(Mock)
 end
 
 T["moduli: comandi scoperti a ogni invocazione, args passati"] = function()
+    BadbUI.Modules:Get("Presets").commands = nil -- isola il modulo finto dal vero comando "preset"
     local got
     BadbUI.Slash:Dispatch("preset prova") -- ancora inesistente
     newModule("Pr", { commands = { Preset = { help = "h", fn = function(args) got = args end } } })
