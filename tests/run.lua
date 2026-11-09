@@ -7,7 +7,7 @@ local ns = {}
 local FILES = {
     "Core/Init.lua", "Core/Compat.lua", "Core/Logger.lua", "Core/Events.lua", "Core/Serializer.lua",
     "Core/Database.lua", "Core/Modules.lua", "Core/FrameManager.lua", "Core/CVars.lua",
-    "Modules/Hider.lua", "Modules/Scaling.lua",
+    "Modules/EditModeBridge.lua", "Modules/Hider.lua", "Modules/Scaling.lua",
     "Modules/Nameplates.lua", "Modules/GroupFrames.lua", "Modules/Presets.lua",
 }
 for _, path in ipairs(FILES) do

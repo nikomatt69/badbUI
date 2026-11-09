@@ -16,7 +16,10 @@ Badb.Presets = Presets
 ------------------------------------------------------------------------------
 -- Registri
 ------------------------------------------------------------------------------
--- spec = { title, description, icon, modules = { [Modulo] = { opzioni } } }
+-- spec = { title, description, icon, modules = { [Modulo] = { opzioni } },
+--          editMode = "<stringa layout Edit Mode>" oppure { default = "...", tank = "...", healer = "...", dps = "..." } }
+-- Il layout Edit Mode del ruolo vince su quello del contenuto; per ciascuno, la voce del ruolo
+-- scelto vince su "default".
 function Presets:RegisterContent(id, spec)
     spec.id = id
     if not self.content[id] then self.contentOrder[#self.contentOrder + 1] = id end
@@ -134,6 +137,11 @@ Presets:RegisterRole("dps", {
 ------------------------------------------------------------------------------
 -- Composizione e applicazione
 ------------------------------------------------------------------------------
+local function pickLayout(def, roleId)
+    if type(def) == "string" then return def end
+    if type(def) == "table" then return def[roleId] or def.default end
+end
+
 -- choices = { content = "dungeon", role = "healer", hideClutter = bool, pixelPerfect = bool, friendlyPlates = bool }
 function Presets:Build(choices)
     choices = choices or {}
@@ -154,6 +162,7 @@ function Presets:Build(choices)
     end
     spec.hideClutter = choices.hideClutter
     spec.title = string.format("%s %s", c and c.title or "?", r and r.title or "")
+    spec.editMode = pickLayout(r and r.editMode, r and r.id) or pickLayout(c and c.editMode, r and r.id)
     return spec
 end
 
@@ -174,6 +183,7 @@ function Presets:Describe(spec)
         if gf.onlyDispellable then add("Solo debuff dissipabili") end
     end
     if sc and sc.enabled then add(sc.pixelPerfect and "Scala UI pixel perfect" or "Scala UI manuale") end
+    if spec.editMode then add("Layout Edit Mode dedicato (posizioni di barre e frame)") end
     if spec.hideClutter then add("Nasconde micro menu, barra borse e barra esperienza") end
     return lines
 end
@@ -209,6 +219,13 @@ function Presets:Apply(spec)
             p.frames[key] = p.frames[key] or {}
             p.frames[key].hidden = true
         end
+    end
+    if spec.editMode then
+        -- EditModeBridge ricrea il layout dalla stringa e lo attiva al cambio profilo.
+        p.modules.EditModeBridge = p.modules.EditModeBridge or {}
+        local bridge = p.modules.EditModeBridge
+        bridge.enabled, bridge.autoActivate = true, true
+        bridge.layoutName, bridge.layoutString = name, spec.editMode
     end
     DB.sv.global.presetUndo = previous
     DB:SetProfile(name)

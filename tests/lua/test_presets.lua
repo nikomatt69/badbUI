@@ -111,3 +111,20 @@ test("al login i CVar orfani vengono ripristinati", function()
     eq(S.cvars.nameplateMotion, "0")
     eq(DB.sv.global.cvarOriginals.nameplateMotion, nil)
 end)
+
+test("layout Edit Mode: ruolo > contenuto, voce ruolo > default", function()
+    P:RegisterContent("ztest", { title = "Z", modules = {}, editMode = { default = "C-def", tank = "C-tank" } })
+    P:RegisterRole("ztestrole", { title = "R", modules = {}, editMode = "R-all" })
+    eq(P:Build({ content = "ztest", role = "tank" }).editMode, "C-tank")
+    eq(P:Build({ content = "ztest", role = "dps" }).editMode, "C-def")
+    eq(P:Build({ content = "ztest", role = "ztestrole" }).editMode, "R-all")
+    eq(P:Build({ content = "raid", role = "dps" }).editMode, nil)
+    local name = P:Apply(P:Build({ content = "ztest", role = "healer" }))
+    eq(DB:Get("EditModeBridge", "layoutString"), "C-def")
+    eq(DB:Get("EditModeBridge", "layoutName"), name)
+    P:Undo()
+    P.content.ztest, P.roles.ztestrole = nil, nil
+    for _, list in ipairs({ P.contentOrder, P.roleOrder }) do
+        for i = #list, 1, -1 do if list[i]:find("^ztest") then table.remove(list, i) end end
+    end
+end)
