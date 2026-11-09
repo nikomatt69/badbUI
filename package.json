@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "badb",
+  "description": "Badb: sito di gilda, app mobile, bot Discord e addon WoW collegati a un unico server centrale",
+  "private": true,
+  "type": "module",
+  "version": "0.3.0",
+  "packageManager": "bun@1.4.4",
+  "scripts": {
+    "dev": "bun run --cwd packages/server dev",
+    "web:dev": "bun run --cwd packages/web dev",
+    "web:build": "bun run --cwd packages/web build",
+    "mobile:dev": "bun run --cwd packages/mobile start",
+    "discord:dev": "bun run --cwd packages/discord dev",
+    "companion:dev": "bun run --cwd packages/companion dev",
+    "seed": "bun run --cwd packages/server seed",
+    "typecheck": "bun turbo typecheck",
+    "test": "bun turbo test",
+    "test:addon": "cd packages/addon && luajit tests/run.lua . && luajit tests/run_stub.lua && luajit tests/ui/run.lua .",
+    "addon:package": "bun run script/package-addon.ts"
+  },
+  "workspaces": {
+    "packages": ["packages/*"],
+    "catalog": {
+      "@types/bun": "1.4.4",
+      "hono": "4.13.17",
+      "typescript": "5.8.2",
+      "zod": "4.6.7",
+      "solid-js": "1.9.18",
+      "vite": "8.3.7"
+    }
+  },
+  "devDependencies": {
+    "@types/bun": "catalog:",
+    "turbo": "2.11.10",
+    "typescript": "catalog:"
+  }
+}
