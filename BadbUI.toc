@@ -34,6 +34,9 @@ Modules\ActionBars.lua
 Modules\Cooldowns.lua
 Modules\Nameplates.lua
 Modules\GroupFrames.lua
+Modules\UnitFrames\Style.lua
+Modules\UnitFrames\Elements.lua
+Modules\UnitFrames\UnitFrames.lua
 Modules\Backups.lua
 Modules\Presets.lua
 Data\Presets.lua
