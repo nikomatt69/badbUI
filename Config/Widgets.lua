@@ -1,6 +1,6 @@
 -- BadbUI - Widget dichiarativi per la ConfigUI.
 -- Ogni modulo descrive le opzioni come dati: { type, path | get/set, label, ... }
--- Tipi: header, toggle, range, execute (storici) + dropdown, text, color, label, separator, list.
+-- Tipi: header, toggle, range, execute, select (storici) + dropdown, text, color, label, separator, list.
 -- Campi comuni: hidden = bool|fn, disabled = bool|fn, tooltip = stringa|fn.
 -- Nuovi tipi = nuova funzione in W.Builders (firma: builder(parent, module, opt) -> frame, altezza[, xoff, yoff]).
 -- Tutti i builder ufficiali sono "a prova di errore": un descrittore errato produce una riga rossa, mai un errore Lua.
@@ -154,6 +154,7 @@ function W.NormalizeChoices(values)
                 local value = v.value
                 if value == nil then value = v[1] end
                 local label = v.label
+                if label == nil then label = v.text end -- formato del builder storico "select"
                 if label == nil then label = v[2] end
                 if value ~= nil then out[#out + 1] = { value = value, label = tostring(label ~= nil and label or value) } end
             elseif v ~= nil then
@@ -212,7 +213,7 @@ function W.Validate(opt, module)
         if type(opt.items) ~= "function" and type(opt.items) ~= "table" then return false, "list: 'items' mancante" end
         return true
     end
-    if t == "toggle" or t == "range" or t == "text" or t == "color" or t == "dropdown" then
+    if t == "toggle" or t == "range" or t == "text" or t == "color" or t == "dropdown" or t == "select" then
         local name = tostring(opt.label or opt.path or t)
         if not hasAccess(opt) and not (type(opt.get) == "function" and not module) then
             if not (module and type(opt.path) == "string") then return false, "'" .. name .. "': servono path oppure get+set" end
@@ -220,7 +221,7 @@ function W.Validate(opt, module)
         if t == "range" and not (tonumber(opt.min) and tonumber(opt.max) and tonumber(opt.min) < tonumber(opt.max)) then
             return false, "'" .. name .. "': min/max non validi"
         end
-        if t == "dropdown" and type(opt.values) ~= "table" and type(opt.values) ~= "function" then
+        if (t == "dropdown" or t == "select") and type(opt.values) ~= "table" and type(opt.values) ~= "function" then
             return false, "'" .. name .. "': values mancante"
         end
         return true
@@ -397,6 +398,10 @@ raw.dropdown = function(parent, module, opt)
     box:Refresh()
     return box, 46
 end
+
+-- "select" (da main, usato da Wizard/Presets): { type="select", path|get/set, label, values = { {value=, text=}, ... } | fn }.
+-- Alias compatibile di dropdown.
+raw.select = raw.dropdown
 
 raw.text = function(parent, module, opt)
     local get, set = getter(module, opt), setter(module, opt)
