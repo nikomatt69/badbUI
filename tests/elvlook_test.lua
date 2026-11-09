@@ -270,30 +270,34 @@ T["/badb elv: tema ElvUI e moduli visibili attivi, backup creato"] = function(Mo
     eq(made, "pre-elvui", "backup mancante")
 end
 
-T["primo avvio: lo stile si applica una sola volta"] = function(Mock)
+T["primo avvio: non applica nulla da solo (decide il wizard), suggerisce /badb elv una volta"] = function(Mock)
     stubSystem(Mock)
-    BadbUI.Modules:SetEnabled("UnitFrames", false)
-    BadbUI.DB.sv.global.elvStyleApplied = nil
-    Mock.Fire("PLAYER_ENTERING_WORLD", true, false)
-    truthy(BadbUI.DB.sv.global.elvStyleApplied)
-    truthy(BadbUI.DB:Get("UnitFrames", "enabled"), "primo avvio non applicato")
-    BadbUI.Modules:SetEnabled("UnitFrames", false)
-    Mock.Fire("PLAYER_ENTERING_WORLD", true, false)
-    eq(BadbUI.DB:Get("UnitFrames", "enabled"), false, "riapplicato al secondo avvio")
-end
-
-T["primo avvio: con un'altra UI caricata (es. Skill Capped) non applica nulla"] = function(Mock)
-    stubSystem(Mock)
-    C_AddOns.IsAddOnLoaded = function(name) return name == "SkillCapped" end
     BadbUI.Modules:SetEnabled("UnitFrames", false)
     BadbUI.Theme:SetScheme("night")
-    BadbUI.DB.sv.global.elvStyleApplied = nil
+    local made = 0
+    BadbUI.Backups.Create = function() made = made + 1 end
+    BadbUI.DB.sv.global.elvStyleHinted = nil
     Mock.Fire("PLAYER_ENTERING_WORLD", true, false)
-    truthy(BadbUI.DB.sv.global.elvStyleApplied, "il primo avvio va comunque segnato")
-    eq(BadbUI.DB:Get("UnitFrames", "enabled"), false, "ha acceso i unit frame sopra un'altra UI")
-    eq(BadbUI.Theme.state.scheme, "night", "ha cambiato il tema")
+    truthy(BadbUI.DB.sv.global.elvStyleHinted, "suggerimento non segnato")
+    eq(BadbUI.DB:Get("UnitFrames", "enabled"), false, "ha acceso i unit frame da solo")
+    eq(BadbUI.Theme.state.scheme, "night", "ha cambiato il tema da solo")
+    eq(made, 0, "ha creato un backup da solo")
+    local hints = 0
+    for _, l in ipairs(Mock.chat) do if l:find("/badb elv", 1, true) then hints = hints + 1 end end
+    Mock.Fire("PLAYER_ENTERING_WORLD", true, false)
+    local after = 0
+    for _, l in ipairs(Mock.chat) do if l:find("/badb elv", 1, true) then after = after + 1 end end
+    eq(after, hints, "suggerimento ripetuto")
+end
+
+T["OtherUI rileva un'altra UI caricata (es. Skill Capped)"] = function(Mock)
+    stubSystem(Mock)
+    C_AddOns.IsAddOnLoaded = function(name) return name == "SkillCapped" end
     eq(elv():OtherUI(), "SkillCapped")
+    C_AddOns.IsAddOnLoaded = function() return false end
+    eq(elv():OtherUI(), nil)
     -- il comando manuale funziona comunque
+    BadbUI.Theme:SetScheme("night")
     elv():ApplyElvStyle(true)
     eq(BadbUI.Theme.state.scheme, "elvui")
 end

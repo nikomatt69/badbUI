@@ -11,7 +11,7 @@ local API = { "IsInInstance", "IsInGroup", "IsInRaid", "GetNumGroupMembers", "Un
     "GetSpecialization", "GetActiveTalentGroup", "GetSpecializationRole", "GetSpecializationInfo",
     "UnitClass", "UnitLevel", "UnitIsPVP", "IsResting", "C_PvP", "LE_PARTY_CATEGORY_INSTANCE",
     "GetNumRaidMembers", "GetNumPartyMembers", "GetNumTalentTabs", "GetTalentTabInfo", "GetNumTalentGroups",
-    "GetClassInfo" }
+    "GetClassInfo", "GetInstanceInfo" }
 
 -- Prepara ambiente: modulo caricato e riavviato con timer finti, mondo simulato.
 local function setup(Mock)
@@ -950,12 +950,25 @@ T["BADB_PLAYER_CHANGED: il cambio di ruolo/talenti rivaluta le regole"] = case(f
     BadbUI.Player:SetRoleOverride("healer") -- Invalidate => BADB_PLAYER_CHANGED
     env.settle()
     eq(env.DB:GetProfileName(), "Raid", "ruolo dal servizio Player")
-    BadbUI.Player:SetRoleOverride(nil)
+    BadbUI.Player:SetRoleOverride("dps") -- override: confidenza alta (un dps solo ipotizzato non farebbe scattare la regola)
     env.W.spec = 2 -- secondo gruppo talenti (dual spec)
     env.settle()
     eq(env.DB:GetProfileName(), "Solo", "spec = gruppo talenti")
     eq(M.stats.switches, sw + 2)
     eq(M:GetCurrent().spec, 2)
+end)
+
+T["ruolo ipotizzato (confidenza bassa) non fa scattare regole per ruolo; l'override si"] = case(function(_, env)
+    local M = env.M
+    M:AddRule({ profile = "Raid", when = { role = "dps" } })
+    env.settle()
+    local c = M:GetCurrent()
+    eq(c.role, "dps"); eq(c.roleConfidence, "low", "nessun dato sui talenti")
+    eq(env.DB:GetProfileName(), "Default", "ruolo solo ipotizzato: nessun cambio")
+    eq(M:Evaluate(), nil)
+    BadbUI.Player:SetRoleOverride("dps")
+    env.settle()
+    eq(env.DB:GetProfileName(), "Raid", "ruolo scelto dall'utente: la regola scatta")
 end)
 
 T["flag PvP: world PvP cambia profilo"] = case(function(Mock, env)
@@ -977,7 +990,7 @@ end)
 T["AddRulesForClass: regole base idempotenti"] = case(function(_, env)
     local M = env.M
     local res = M:AddRulesForClass("warrior", { pvp = "PvP", raid = "Raid", party = "Default" })
-    eq(#res.ids, 3, "pvp, raid, party"); eq(#res.skipped, 1, "solo non indicato => saltato")
+    eq(#res.ids, 3, "pvp, raid, party"); eq(#res.skipped, 2, "av e solo non indicati => saltati")
     local rules = M:ListRules()
     eq(#rules, 3)
     for _, r in ipairs(rules) do eq(r.when.class, "WARRIOR"); eq(r.broken, false) end
@@ -1008,7 +1021,7 @@ T["AddRulesForClass: input errato e Presets solo con guardia"] = case(function(_
     bad(nil, {}); bad(5, {}); bad("", {}); bad("due parole", {}); bad("WARRIOR"); bad("WARRIOR", "x")
     bad("NONESISTE", { pvp = "PvP" })
     local res = M:AddRulesForClass("MAGE", { pvp = 5, raid = {}, party = "" })
-    eq(#res.ids, 0); eq(#res.skipped, 4)
+    eq(#res.ids, 0); eq(#res.skipped, 5)
     eq(#M:ListRules(), 0)
     -- Presets assente o che lancia errori: nessun problema
     BadbUI.Presets = nil
@@ -1020,6 +1033,37 @@ T["AddRulesForClass: input errato e Presets solo con guardia"] = case(function(_
     M:AddRulesForClass("DRUID", { pvp = "PvP", raid = "Raid" })
     eq(M:GetRule("cls-druid-pvp").name, "BG Druido")
     eq(M:GetRule("cls-druid-raid").name, "Raid DRUID")
+end)
+
+T["Alterac Valley: pvpKind per ID e per nome; la regola av ha la precedenza su pvp"] = case(function(_, env)
+    local M = env.M
+    M:AddRulesForClass("WARRIOR", { pvp = "PvP", av = "Solo", raid = "Raid", party = "Default" })
+    env.W.instance, env.W.inInstance = "pvp", true
+    local function info(name, id) GetInstanceInfo = function() return name, "pvp", 0, "", 0, 0, false, id end end
+    info("Warsong Gulch", 489)
+    eq(M:GetCurrent().pvpKind, "bg"); eq(M:Evaluate(), "PvP")
+    info("Alterac Valley", 30)
+    eq(M:GetCurrent().pvpKind, "av", "per ID istanza"); eq(M:Evaluate(), "Solo", "precedenza di av")
+    info("Valle d'Alterac", 0)
+    eq(M:GetCurrent().pvpKind, "av", "per nome (itIT)")
+    info(nil, nil)
+    eq(M:GetCurrent().pvpKind, "bg", "informazioni mancanti: campo generico")
+    GetInstanceInfo = function() error("boom") end
+    eq(M:GetCurrent().pvpKind, "bg", "API che lancia errori")
+    GetInstanceInfo = nil
+    eq(M:GetCurrent().pvpKind, "bg", "API assente")
+    env.W.instance, env.W.inInstance = "raid", true
+    eq(M:GetCurrent().pvpKind, "", "fuori dal PvP nessun tipo")
+    -- Senza profilo av: Alterac ricade sulla regola pvp
+    M:AddRulesForClass("WARRIOR", { pvp = "PvP", raid = "Raid", party = "Default" })
+    env.W.instance = "pvp"
+    info("Alterac Valley", 30)
+    eq(M:Evaluate(), "Solo", "la regola av esistente resta finche' non viene rimossa")
+    M:RemoveRule("cls-warrior-av")
+    eq(M:Evaluate(), "PvP", "senza regola av vale pvp")
+    -- Condizione non valida
+    local id, err = M:AddRule({ profile = "PvP", when = { instance = "pvp", pvpKind = "arena" } })
+    eq(id, nil); assert(type(err) == "string")
 end)
 
 T["pagina: ciclo istanza senza arena, classi di Forever, flag PvP"] = case(function(_, env)

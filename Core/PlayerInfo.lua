@@ -40,7 +40,7 @@ local CLASSES = {
       trees = { { key = "assassination", role = "dps", names = { "assassination", "assassinio" } },
                 { key = "combat", role = "dps", names = { "combat", "combattimento" } },
                 { key = "subtlety", role = "dps", names = { "subtlety", "furtivit" } } } },
-    { token = "PRIEST", primary = "healer", roles = { "healer", "dps" },
+    { token = "PRIEST", primary = "healer", roles = { "healer", "dps" }, ranged = true,
       trees = { { key = "discipline", role = "healer", names = { "discipline", "disciplina" } },
                 { key = "holy", role = "healer", names = { "holy", "sacro" } },
                 { key = "shadow", role = "dps", names = { "shadow", "ombra" } } } },

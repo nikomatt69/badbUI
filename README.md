@@ -67,8 +67,28 @@ I test verificano che ogni chiave di un preset esista nei default del modulo.
 
 Tutto passa dalle API aure (niente combat log) e tollera i secret values: dettagli in [docs/auras.md](docs/auras.md). Gli unit frame mostrano la stessa "aura grande" al centro di bersaglio, focus e gruppo.
 
+## Suite di gestione (v0.2)
+
+BadbUI non e' solo un insieme di moduli grafici: e' la **console unica** per gestire l'interfaccia di WoW: Forever. Ogni area ha API pubblica, test e documento dedicato.
+
+| Area | File | Cosa fa | Doc |
+|---|---|---|---|
+| Giocatore | `Core/PlayerInfo.lua` | Classe, talenti (3 alberi, dual spec lv 40) e **ruolo** con fonte e confidenza; override dell'utente (`/badb role`) | [FOREVER_FACTS](docs/FOREVER_FACTS.md) |
+| Preset | `Modules/Presets.lua`, `Data/Presets.lua` | 6 template per classe (PvE: dungeon, raid 10/20/40, solo; PvP: campo di battaglia, Alterac Valley, world PvP), per ruolo, con anteprima e annulla | [presets](docs/presets.md) |
+| Contesti | `Modules/Contexts.lua` | Cambio profilo automatico per istanza, Alterac vs altri BG, ruolo, spec, classe, flag PvP | [contexts](docs/contexts.md) |
+| Layout | `Modules/LayoutStudio.lua` | Undo/redo, nudge da tastiera, allineamento, distribuzione, gruppi | [layoutstudio](docs/layoutstudio.md) |
+| Integrazioni | `Modules/Integrations.lua` | Cattura e riapplica i profili di ElvUI, Details, Plater, Bartender4, BigWigs, DBM, Clique (best-effort) | [integrations](docs/integrations.md) |
+| Guide | `Modules/Guides.lua` | Libreria in-game con ricerca, segnalibri, progresso, suggerimento per zona | [guides](docs/guides.md) |
+| Operativita' | `Modules/Backups.lua`, `Modules/Diagnostics.lua` | Backup con rotazione e ripristino atomico; controlli, conflitti, report senza dati personali | [ops](docs/ops.md) |
+| Interfaccia | `Config/ConfigUI.lua`, `Config/Slash.lua` | Finestra con sidebar, pagine fornite dai moduli, ricerca, comandi slash estensibili | [configui](docs/configui.md) |
+| Primo avvio | `Config/Wizard.lua` | Setup guidato: ruolo, PvE/PvP, regole automatiche, backup, annulla | [wizard](docs/wizard.md) |
+
+Contratto condiviso tra i moduli (API, eventi, regole di qualita'): [docs/CONTRACT.md](docs/CONTRACT.md). Ricerca su Forever con fonti e livello di affidabilita': [docs/FOREVER_FACTS.md](docs/FOREVER_FACTS.md). Confronto con Skill Capped UI: [docs/research/skillcapped.md](docs/research/skillcapped.md).
+
+**Principi**: nessuna API presunta (si sonda tutto, in `pcall`); ogni operazione distruttiva fa prima un backup; ogni modulo ripristina lo stato Blizzard alla disattivazione; nessun `loadstring` sulle stringhe di import (il parser `BADB1:` non esegue codice): l'unico codice compilato e' quello degli script scritti dall'utente nell'editor del modulo Scripts, e gli script importati partono sempre spenti (vedi [docs/scripts.md](docs/scripts.md)); ruolo incerto = si chiede conferma, non si indovina.
+
 ## Stile ElvUI e gestione addon
-* **Stile ElvUI** (`Modules/ElvLook.lua`): tema `elvui` predefinito (grigio carbone, bordo nero da 1px, accento azzurro), due pannelli datatext 412x22 in basso, minimappa quadrata, sfondo scuro per chat e barre azioni, unit frame con le misure e le posizioni di ElvUI. Confronto dettagliato e comandi per spostare/scalare tutto (frecce, Maiusc+rotella): [docs/elvlook.md](docs/elvlook.md). `/badb elv` applica tutto in un click (con backup `pre-elvui`); al primo avvio viene applicato una sola volta.
+* **Stile ElvUI** (`Modules/ElvLook.lua`): tema `elvui` predefinito (grigio carbone, bordo nero da 1px, accento azzurro), due pannelli datatext 412x22 in basso, minimappa quadrata, sfondo scuro per chat e barre azioni, unit frame con le misure e le posizioni di ElvUI. Confronto dettagliato e comandi per spostare/scalare tutto (frecce, Maiusc+rotella): [docs/elvlook.md](docs/elvlook.md). `/badb elv` applica tutto in un click (con backup `pre-elvui`); non si applica da solo: il primo avvio e' del wizard e al login c'e' solo un suggerimento.
 * **Script** (`Modules/Scripts.lua`): Lua dentro l'addon, con trigger (avvio, evento, combattimento, timer), `script.on/after/every/data`, editor in gioco (`/badb script edit`) e import/export. Guida: [docs/scripts.md](docs/scripts.md).
 * **Pagina principale** (`/badb`): azioni rapide, tutti i moduli, script, aspetto e addon installati in un'unica finestra ([docs/configui.md](docs/configui.md)).
 * **Addon terzi** (`scripts/addons.py`): X-Perl, BigWigs, Details!, Plater, ElvUI... da riga di comando, con backup e senza includere il loro codice. Guida: [docs/addons.md](docs/addons.md).
@@ -77,7 +97,7 @@ Tutto passa dalle API aure (niente combat log) e tollera i secret values: dettag
 `lua5.1 tests/run.lua` dalla root del repo (eseguito anche dalla CI su ogni PR). Il design system ha una suite propria con un mock che registra punti, dimensioni e colori dei widget: `lua5.1 tests/ui/run.lua`. `tests/lua/wowstub.lua` simula l'API WoW necessaria: CVar, combattimento, nameplate, layout Edit Mode, secret values.
 
 ## Comandi
-`/badb` config · `/badb setup` configurazione guidata · `/badb undo` annulla ultimo preset · `/badb unlock` · `/badb profile <nome>` · `/badb export` · `/badb enable|disable <modulo>` · `/badb debug` · `/badb log` · `/badb gallery` galleria del design system · `/badb theme <schema> <accento>`
+`/badb` config · `/badb help` elenco completo (i comandi dei moduli compaiono da soli: `preset`, `context`, `layout`, `backup`, `doctor`, `integration`, `guide`) · `/badb role <tank|healer|dps|auto>` · `/badb setup` configurazione guidata · `/badb undo` annulla ultimo preset · `/badb unlock` · `/badb profile <nome>` · `/badb export` · `/badb enable|disable <modulo>` · `/badb debug` · `/badb log` · `/badb gallery` galleria del design system · `/badb theme <schema> <accento>`
 
 ## Barre azioni e cooldown
 
@@ -106,7 +126,12 @@ Tutto passa dalle API aure (niente combat log) e tollera i secret values: dettag
 - Spento di default. Anteprima con dati finti (`/badb uf preview`), posizioni con `/badb unlock`, `/badb uf reset <unita'>`. Un solo pannello di opzioni con selettore dell'unita'.
 
 ## Test
-`lua5.1 tests/run.lua .` carica la TOC con API WoW simulate (`tests/wow_mock.lua`) ed esegue `tests/*_test.lua`, con l'addon ricaricato da zero per ogni test. La CI (`.github/workflows/lua-tests.yml`) esegue controllo sintassi e test su ogni PR. I casi limite coperti includono secret values, combattimento, barre mancanti, pulsanti creati dopo il login, cambio profilo, temi malformati e ripristino completo alla disattivazione.
+Tre runner, tutti eseguiti dalla CI su ogni PR (insieme al controllo di sintassi `luac5.1 -p`):
+- `lua5.1 tests/run.lua .`: carica la TOC con API WoW simulate (`tests/wow_mock.lua`), ricarica l'addon da zero per ogni test ed esegue `tests/*_test.lua` (auto-discovery).
+- `lua5.1 tests/run_stub.lua`: suite stub (CVar, nameplate, group frame, preset).
+- `lua5.1 tests/ui/run.lua .`: design system.
+
+Casi limite coperti: secret values, combattimento, API mancanti o che lanciano errori, dati salvati corrotti, import malevoli, cambio profilo, dual spec, disattivazione con ripristino completo.
 
 ## Stato
-v0.1.0, scaffold: core completo, moduli EditModeBridge, Hider, Scaling. Non ancora testato in gioco.
+v0.2: core, moduli grafici e suite di gestione completi. **Tutto verificato solo con API WoW simulate: nessuna prova nel client Forever.** Le assunzioni sul client (API dei talenti, ID di Alterac, adapter degli addon terzi) sono elencate in [FOREVER_FACTS](docs/FOREVER_FACTS.md) con il loro livello di confidenza; il primo passo in gioco e' `/badb doctor run`.

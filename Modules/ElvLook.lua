@@ -464,16 +464,11 @@ function M:OnEnable()
     end)
     self:On("PLAYER_ENTERING_WORLD", function(_, isLogin, isReload)
         M:Apply()
+        -- Nessuna applicazione automatica: il primo avvio e' del wizard (Config/Wizard.lua). Un solo suggerimento.
         local sv = Badb.DB.sv
-        if sv and sv.global and not sv.global.elvStyleApplied and (isLogin or isReload) then
-            sv.global.elvStyleApplied = true
-            local other = M:OtherUI()
-            if other then
-                -- Un'altra UI e' gia' caricata (es. Skill Capped, BetterBlizzFrames, ElvUI): non la scavalchiamo da soli.
-                Logger:Info("Stile ElvUI non applicato in automatico: rilevato %s. Usa /badb elv per applicarlo.", other)
-            else
-                M:ApplyElvStyle(true)
-            end
+        if sv and sv.global and not sv.global.elvStyleHinted and (isLogin or isReload) then
+            sv.global.elvStyleHinted = true
+            Logger:Info("Stile ElvUI: /badb elv applica tema, unit frame e barre in un click (con backup).")
         end
     end)
 end
@@ -510,6 +505,10 @@ end
 local ELV_MODULES = { "ElvLook", "DataBars", "Tooltip", "UnitFrames", "ActionBars", "Cooldowns" }
 
 function M:ApplyElvStyle(silent)
+    local other = self:OtherUI()
+    if other and not silent then
+        Logger:Warn("Rilevato %s: puo' sovrapporsi allo stile ElvUI di BadbUI (unit frame, barre, nameplate).", other)
+    end
     local Backups = Badb.Backups
     if Backups and Backups.Create then pcall(Backups.Create, Backups, "pre-elvui") end
     local T = theme()
