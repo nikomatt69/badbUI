@@ -71,7 +71,7 @@ local LABELS = {
     role = { tank = "Tank", healer = "Guaritore", dps = "DPS", none = "Nessun ruolo" },
     group = { solo = "Solo", party = "Gruppo", raid = "Raid" },
 }
-local WHEN_ORDER = { "instance", "group", "role", "spec", "class", "resting", "pvpFlag" }
+local WHEN_ORDER = { "instance", "pvpKind", "group", "role", "spec", "class", "resting", "pvpFlag" }
 
 local function describeWhen(when)
     local parts = {}
@@ -81,6 +81,7 @@ local function describeWhen(when)
             if key == "spec" then parts[#parts + 1] = "spec " .. v
             elseif key == "class" then parts[#parts + 1] = v
             elseif key == "resting" then parts[#parts + 1] = v and "a riposo" or "non a riposo"
+            elseif key == "pvpKind" then parts[#parts + 1] = v == "av" and "Alterac Valley" or "campo di battaglia 10-15"
             elseif key == "pvpFlag" then parts[#parts + 1] = v and "flag PvP" or "senza flag PvP"
             else parts[#parts + 1] = (LABELS[key] and LABELS[key][v]) or tostring(v) end
         end
@@ -154,6 +155,18 @@ local function detectInstance()
     return inst
 end
 
+-- Distingue Alterac Valley (40v40) dagli altri campi di battaglia (WSG, AB, Darkspear Islands: 10-15 giocatori).
+-- NON VERIFICATO in gioco: si usa l'ID istanza storico di Alterac (30) oppure il nome della zona ("Alterac"
+-- vale per en e it: "Alterac Valley" / "Valle d'Alterac"). Se l'API manca si ricade su "bg".
+local ALTERAC_INSTANCE_ID = 30
+local function detectPvpKind(instance)
+    if instance ~= "pvp" then return "" end
+    local name, _, _, _, _, _, _, instanceID = probe(_G.GetInstanceInfo)
+    if isNumber(instanceID) and instanceID == ALTERAC_INSTANCE_ID then return "av" end
+    if type(name) == "string" and not isSecret(name) and name:lower():find("alterac", 1, true) then return "av" end
+    return "bg"
+end
+
 local function detectGroup()
     local inRaid = probe(_G.IsInRaid) == true
     local inGroup = probe(_G.IsInGroup) == true
@@ -183,10 +196,12 @@ function M:GetCurrent()
     local ctx = {
         instance = detectInstance(),
         group = detectGroup(),
+        pvpKind = "",
         role = "none", spec = 0, class = "", roleConfidence = "low",
         resting = probe(_G.IsResting) == true,
         pvpFlag = probe(_G.UnitIsPVP, "player") == true,
     }
+    ctx.pvpKind = detectPvpKind(ctx.instance)
     if snap then
         if snap.role == "tank" or snap.role == "healer" or snap.role == "dps" then ctx.role = snap.role end
         if CONFIDENCE[snap.roleConfidence] then ctx.roleConfidence = snap.roleConfidence end
@@ -202,7 +217,7 @@ end
 local function ctxEqual(a, b)
     if type(a) ~= "table" or type(b) ~= "table" then return false end
     return a.instance == b.instance and a.group == b.group and a.role == b.role
-        and a.spec == b.spec and a.class == b.class and a.resting == b.resting and a.pvpFlag == b.pvpFlag
+        and a.spec == b.spec and a.class == b.class and a.resting == b.resting and a.pvpFlag == b.pvpFlag and a.pvpKind == b.pvpKind
 end
 
 ---------------------------------------------------------------------------
@@ -230,6 +245,7 @@ local CONDITIONS = {
     end,
     resting = function(v) if type(v) == "boolean" then return v end end,
     pvpFlag = function(v) if type(v) == "boolean" then return v end end,
+    pvpKind = oneOf({ bg = true, av = true }), -- solo con instance = "pvp"
 }
 
 -- Ritorna (when pulito, errore|nil). Le chiavi non valide sono scartate e segnalate.
@@ -344,6 +360,10 @@ local function matches(when, ctx)
     for key, want in pairs(when) do
         local have = ctx[key]
         if key == "resting" or key == "pvpFlag" then have = have and true or false end
+        -- Un ruolo solo ipotizzato dalla classe (talenti illeggibili, confidenza bassa) non basta per scegliere un
+        -- profilo: un Sacerdote Shadow letto come "healer" cambierebbe profilo sbagliato. L'utente lo sblocca
+        -- impostando il ruolo a mano (/badb role), che ha confidenza alta.
+        if key == "role" and ctx.roleConfidence == "low" and have ~= "none" then return false end
         if have ~= want then return false end
     end
     return true
@@ -506,6 +526,7 @@ end
 ---------------------------------------------------------------------------
 -- Schema: kind, condizioni, priorita', chiave template Presets "<classe>-<mode>-<scenario>"
 local CLASS_RULE_KINDS = {
+    { kind = "av", when = { instance = "pvp", pvpKind = "av" }, priority = 30, preset = "pvp-av", label = "Alterac Valley" },
     { kind = "pvp", when = { instance = "pvp" }, priority = 20, preset = "pvp-bg", label = "Campo di battaglia" },
     { kind = "raid", when = { instance = "raid" }, priority = 20, preset = "pve-raid", label = "Raid" },
     { kind = "party", when = { instance = "party" }, priority = 10, preset = "pve-dungeon", label = "Dungeon" },
@@ -515,7 +536,7 @@ local CLASS_RULE_KINDS = {
 -- Crea (o aggiorna, mai duplica) le regole base di una classe: BG -> PvP, raid -> PvE raid,
 -- dungeon -> dungeon, (opz.) mondo da solo. `profiles` = { pvp=, raid=, party=, solo= } con i NOMI profilo
 -- scelti dal chiamante (es. quelli creati da Presets:Apply in modalita' "new-profile"); i tipi senza nome
--- sono saltati. AV e BG condividono instance="pvp": il client non li distingue in modo verificato.
+-- sono saltati. Alterac (kind "av", condizione pvpKind=av, priorita' maggiore) ha un profilo a parte; senza `profiles.av` vale la regola "pvp" anche li'. Il rilevamento di Alterac non e' verificato in gioco.
 -- Ritorna { ids = {...}, skipped = {...} } oppure nil, err.
 function M:AddRulesForClass(classToken, profiles)
     if type(classToken) ~= "string" then return nil, "classe non valida" end
