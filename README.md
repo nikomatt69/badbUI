@@ -37,8 +37,30 @@ function M:OnDisable() ... end -- deve ripristinare lo stato Blizzard
 ```
 Il modulo appare automaticamente nella config, nei profili e nell'export.
 
+## Nameplate, raid frame e configurazione guidata
+
+| Modulo | File | Cosa fa |
+|---|---|---|
+| CVar | `Core/CVars.lua` | Salva il valore originale di ogni CVar modificato (persistente tra `/reload`), sa quale modulo lo possiede, rimanda le modifiche fuori dal combattimento, ripristina tutto quando il modulo si spegne. Al login riporta indietro i CVar di moduli spenti nel profilo attuale. |
+| Nameplate | `Modules/Nameplates.lua` | Visibilita' (nemici, alleati, pet/totem, barra personale), distanza, impilamento, scala, trasparenza; stile (texture, dimensione nome, bordo sul bersaglio). Salta le nameplate forbidden e tratta `UnitIsUnit` come possibile secret value. |
+| Raid e party | `Modules/GroupFrames.lua` | Opzioni Blizzard via CVar (colore classe, risorse, pet, aggro, testo vita, solo dissipabili...), larghezza/altezza scritte nel **layout Edit Mode** attivo (mai `SetSize`), stile con `hooksecurefunc` sui setup Blizzard. Se il layout attivo e' un preset Blizzard avvisa senza scrivere. |
+| Preset | `Modules/Presets.lua` | Preset componibili: contenuto (Leveling, Dungeon, Raid, PvP) + ruolo (Tank, Healer, DPS) + scelte. Applicare un preset crea un **nuovo profilo** partendo da una copia dell'attuale; `/badb undo` torna indietro. `Presets:Recommend()` sceglie in base a spec, livello e gruppo. |
+| Wizard | `Config/Wizard.lua` | Finestra di onboarding in 5 passi (rail a sinistra, card selezionabili, riepilogo, barra di avanzamento). Si apre al primo login; "Applica consigliato" in un click. Usa `Badb.Theme`/`Badb.UI` se presenti, con fallback sulla stessa palette. |
+
+Nameplate e Raid e party sono spenti di default: si attivano dal wizard, da un preset o dal pannello.
+
+Aggiungere un preset:
+```lua
+Badb.Presets:RegisterContent("arena", { title = "Arena", description = "...", icon = "Interface\\Icons\\...",
+    modules = { Nameplates = { enabled = true, globalScale = 1.2 } } })
+```
+I test verificano che ogni chiave di un preset esista nei default del modulo.
+
+## Test
+`lua5.1 tests/run.lua` dalla root del repo (eseguito anche dalla CI su ogni PR). `tests/lua/wowstub.lua` simula l'API WoW necessaria: CVar, combattimento, nameplate, layout Edit Mode, secret values.
+
 ## Comandi
-`/badb` config · `/badb unlock` · `/badb profile <nome>` · `/badb export` · `/badb enable|disable <modulo>` · `/badb debug` · `/badb log`
+`/badb` config · `/badb setup` configurazione guidata · `/badb undo` annulla ultimo preset · `/badb unlock` · `/badb profile <nome>` · `/badb export` · `/badb enable|disable <modulo>` · `/badb debug` · `/badb log`
 
 ## Stato
 v0.1.0, scaffold: core completo, moduli EditModeBridge, Hider, Scaling. Non ancora testato in gioco.

@@ -20,6 +20,7 @@ Core\Serializer.lua
 Core\Database.lua
 Core\Modules.lua
 Core\FrameManager.lua
+Core\CVars.lua
 
 Locales\itIT.lua
 
@@ -27,8 +28,12 @@ Locales\itIT.lua
 Modules\EditModeBridge.lua
 Modules\Hider.lua
 Modules\Scaling.lua
+Modules\Nameplates.lua
+Modules\GroupFrames.lua
+Modules\Presets.lua
 
 # Configurazione
 Config\Widgets.lua
 Config\ConfigUI.lua
+Config\Wizard.lua
 Config\Slash.lua

@@ -1,0 +1,18 @@
+name: Lua tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Installa Lua 5.1 (stessa versione del client WoW)
+        run: sudo apt-get update && sudo apt-get install -y lua5.1
+      - name: Controllo sintassi
+        run: for f in $(git ls-files '*.lua'); do luac5.1 -p "$f" || exit 1; done
+      - name: Test
+        run: lua5.1 tests/run.lua
