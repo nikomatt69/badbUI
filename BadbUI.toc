@@ -20,6 +20,7 @@ Core\Serializer.lua
 Core\Database.lua
 Core\Modules.lua
 Core\FrameManager.lua
+Core\CVars.lua
 
 Locales\itIT.lua
 
@@ -30,8 +31,12 @@ Modules\Scaling.lua
 Modules\ActionBarsShared.lua
 Modules\ActionBars.lua
 Modules\Cooldowns.lua
+Modules\Nameplates.lua
+Modules\GroupFrames.lua
+Modules\Presets.lua
 
 # Configurazione
 Config\Widgets.lua
 Config\ConfigUI.lua
+Config\Wizard.lua
 Config\Slash.lua
