@@ -21,6 +21,7 @@ Core\Database.lua
 Core\Modules.lua
 Core\FrameManager.lua
 Core\CVars.lua
+Core\PlayerInfo.lua
 
 Locales\itIT.lua
 

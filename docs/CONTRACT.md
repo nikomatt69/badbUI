@@ -18,13 +18,33 @@ Estendere solo tramite le API pubbliche sotto. Lingua: commenti e testo UI in it
 - Due runner di test: `lua5.1 tests/run.lua .` (wow_mock, auto-discovery `tests/*_test.lua`) e `lua5.1 tests/run_stub.lua` (suite `tests/lua/`). **Entrambi devono restare verdi.**
 - Prima di consegnare: `git fetch origin && git merge origin/main` nel tuo worktree e risolvi i conflitti sui TUOI file.
 
-## REQUISITO CONTENUTO: 3 template PvE + 3 PvP per OGNI classe
-- Il `def` di un preset ha due campi nuovi: `class` (token inglese maiuscolo come `UnitClass` secondo ritorno: WARRIOR, PALADIN, HUNTER, ROGUE, PRIEST, SHAMAN, MAGE, WARLOCK, DRUID, ...; `nil` = qualsiasi classe) e `mode` (`"pve"` | `"pvp"`). `Presets:List` accetta i filtri `class` e `mode`.
-- Elenco classi in UNA sola tabella dati (`CLASSES` in `Data/Presets.lua`) con ruoli possibili per classe, cosi' aggiungere una classe = una riga. Partire dalle 9 classi base (WARRIOR, PALADIN, HUNTER, ROGUE, PRIEST, SHAMAN, MAGE, WARLOCK, DRUID); includere solo classi verificate come presenti su Forever (sondare `GetNumClasses`/`C_CreatureInfo.GetClassInfo` a runtime: una classe non presente nel client non genera template visibili).
-- Per ogni classe esattamente 6 template bundled: **PvE**: `Dungeon`, `Raid`, `Solo / Leveling`; **PvP**: `Campo di battaglia`, `Arena / Skirmish`, `World PvP`. Chiavi stabili `"<classe>-pve-dungeon"`, ... `"<classe>-pvp-arena"`, ecc. Il ruolo del template e' quello primario della classe (es. Priest = healer, Warrior = dps/tank) con differenze REALI e motivate (visibilita' barre, cooldown, nameplate nemici/alleati e distanza, group frames raid/party, elementi nascosti, scala) usando solo chiavi esistenti dei moduli. Generazione data-driven da profili base (mode x scenario) + override per classe/ruolo, non 54 tabelle copiate a mano; ma ogni template deve restare ispezionabile con `Diff`.
-- Test: per ogni classe in CLASSES esistono esattamente 3 pve e 3 pvp, chiavi uniche, tutti validi e applicabili, i template PvP differiscono dai PvE per almeno un campo, filtro per class+mode corretto.
-- `Presets:Recommend()` (esistente) deve tenere conto di classe e modalita' (istanza PvP/arena/BG => pvp; altrimenti pve) e restituire il template della classe del giocatore.
-- Contexts: documentare e, se `Badb.Contexts` esiste, offrire "collega a regola automatica" (instance=pvp/arena -> template PvP della classe; raid/party -> PvE).
+## REQUISITO CONTENUTO (RIVISTO dopo la ricerca: leggere docs/FOREVER_FACTS.md) — template per classe, su misura
+**Fatti che cambiano il design**: Forever ha 9 classi con 3 alberi di talenti ciascuna (27), dual spec al lv 40; **NON ha arene ne' PvP classificato**;
+PvP = 4 campi di battaglia (WSG 10v10, AB 15v15, Alterac 40v40, Darkspear Islands 15v15) + world PvP; PvE = dungeon a 5 e raid a 10 / 20 / 40 giocatori.
+
+- `Badb.Player` (nuovo, **Core/PlayerInfo.lua, gia' su main, NON modificare**) e' l'unica fonte per classe/ruolo/talenti:
+  `Player.CLASSES` (9 classi: token, `roles`, `primary`, `trees`), `Player:ListClasses(onlyPresent)`, `Player:GetSnapshot()` ->
+  `{class, level, talentGroup, numTalentGroups, tree, role, roleSource, roleConfidence, altRole, roleAmbiguous}`, `Player:GetRole()`, `Player:SetRoleOverride(role, group?)`,
+  evento `BADB_PLAYER_CHANGED(snapshot)`. **Vietato** usare direttamente `GetSpecialization*`, `GetTalentTabInfo`, `UnitGroupRolesAssigned` per decidere il ruolo (spec Mainline != Forever): passare da `Badb.Player`.
+  Se `roleConfidence ~= "high"` le UI devono mostrare/chiedere conferma del ruolo.
+- Il `def` di un preset ha i campi nuovi `class` (token: WARRIOR, PALADIN, HUNTER, ROGUE, PRIEST, SHAMAN, MAGE, WARLOCK, DRUID; `nil` = qualsiasi), `mode` (`"pve"|"pvp"`),
+  `scenario` (vedi sotto), `role` (ruolo di default del template), `byRole = { [ruolo] = { modules=..., frames=... } }` (override applicati sopra il template in base al ruolo rilevato o scelto: solo i ruoli che la classe puo' avere secondo `Player.CLASSES[c].roles`),
+  `variants = { ["10"]=..., ["20"]=..., ["40"]=... }` (solo scenario raid: override per dimensione), `facts` (lista di riferimenti a righe di FOREVER_FACTS usate). `Presets:Apply(key, {role=, variant=})`; default da `Player:GetRole()`. `Presets:List` filtra per `class`, `mode`, `scenario`, `role`.
+- **6 template bundled per ogni classe** (54 totali), chiavi `"<classe-minuscola>-<mode>-<scenario>"`:
+  PvE: `dungeon` (gruppo da 5), `raid` (varianti 10/20/40), `solo` (leveling/mondo aperto).
+  PvP: `bg` (WSG/AB/Darkspear, 10-15 giocatori), `av` (Alterac Valley 40v40), `world` (world PvP e duelli).
+  **Niente "arena".**
+- Differenze **motivate e specifiche** (nel campo `rationale` di ogni template, in italiano, 1-2 frasi, con riferimento ai fatti): ruolo e distanza di combattimento della classe (mischia/ranged da `Player.CLASSES`), healer = group frames piu' grandi/leggibili
+  e meno elementi inutili, tank = nameplate nemici e barre/cooldown difensivi in evidenza, ranged = barre piu' compatte, raid 40 = group frames compatti vs raid 10 piu' ampi, PvP = nameplate nemici ben visibili e distanza maggiore / alleati ridotti,
+  solo/leveling = HUD pulito, tracker missioni visibile. Solo chiavi esistenti dei moduli (ActionBars, Cooldowns, Hider, Scaling, Nameplates, GroupFrames, EditModeBridge): generazione data-driven da profili base (mode x scenario) + override per classe/ruolo/variante, non 54 tabelle copiate.
+  Ogni template deve restare ispezionabile con `Diff` e passare la validazione di Register.
+- Test: per ogni classe di `Player.CLASSES` esattamente 3 pve + 3 pvp con scenari corretti, nessuna arena, chiavi uniche, tutti validi e applicabili, i PvP differiscono dai PvE, `byRole` solo per ruoli ammessi dalla classe,
+  le varianti raid 10/20/40 producono group frames diversi, filtri, `Recommend()` per classe+contesto (BG/AV/world => pvp, istanza raid => raid, altrimenti dungeon/solo) usando `Badb.Player`.
+- Contexts: contesti `instance = none|party|raid|pvp|scenario` (+ `arena` solo per compatibilita' futura, mai generato), `role` da `Badb.Player`, `pvpFlag` (UnitIsPVP, sondato). "Collega a regola automatica": BG/AV (`instance=pvp`) -> template PvP della classe; raid -> PvE raid; party -> dungeon.
+- Wizard: usa `Badb.Player` per classe/ruolo, chiede conferma del ruolo se la confidenza non e' alta, propone PvE/PvP/entrambi e i 3 template della classe.
+- Diagnostics: lista conflitti estesa con **ClassicUI, ClassicUI Forever, Classic UI Forever Reframed, Forevermore Classic UI, Forever Unit Frames, EllesmereUI, ElvUI, Bartender4, Dominos, Clique** (dati-driven) e avvisi su restrizioni note (secret values / combat log). Check "PlayerInfo": ruolo con confidenza bassa, talenti non leggibili.
+- Integrations: WeakAuras `supported=false` con motivazione; Details marcato "meter limitato nelle istanze"; DBM/BigWigs "timer nativi"; Plater "non verificato"; tutti "best-effort, non verificato in gioco".
+- Guides: le guide devono rispecchiare i fatti reali (preset Classic/Enhanced di Blizzard al primo login, Edit Mode Classic (Preset), click casting integrato, damage meter e cooldown manager integrati, 4 BG, raid 10/20/40) senza inventare numeri; marcare cio' che e' B/C.
 
 ## Regole di ownership (anti-conflitto)
 Ogni agente lavora in un proprio worktree e modifica **solo i file che possiede** (vedi tabella).
