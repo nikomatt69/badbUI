@@ -131,15 +131,19 @@ function DB:SetSpecProfile(specIndex, profileName)
 end
 
 local function currentSpec()
-    if GetSpecialization then return GetSpecialization() end
+    -- PlayerInfo (caricato dopo) risolve dual spec Forever / spec Mainline in modo difensivo.
+    if Badb.Player then return Badb.Player:GetTalentGroup() end
     if GetActiveTalentGroup then return GetActiveTalentGroup() end
+    if GetSpecialization then return GetSpecialization() end
 end
 
-local specEvent = GetSpecialization and "PLAYER_SPECIALIZATION_CHANGED" or "ACTIVE_TALENT_GROUP_CHANGED"
-Events:On(DB, specEvent, function()
+local function onSpecChanged()
     local map = DB.sv and DB.sv.specProfiles[DB.char]
     local target = map and map[currentSpec()]
     if target and target ~= DB.profileName then
         Events:RunOutOfCombat("specProfile", function() DB:SetProfile(target) end)
     end
-end)
+end
+-- Si registrano entrambi: l'evento non presente sul client viene scartato da Events:On (pcall su RegisterEvent).
+Events:On(DB, "ACTIVE_TALENT_GROUP_CHANGED", onSpecChanged)
+Events:On(DB, "PLAYER_SPECIALIZATION_CHANGED", onSpecChanged)

@@ -103,6 +103,9 @@ function M:RegisterAdapter(def)
         detect = def.detect, capture = def.capture, apply = def.apply, reset = def.reset,
         supported = supported,
         unsupportedReason = type(def.unsupportedReason) == "string" and def.unsupportedReason or nil,
+        note = type(def.note) == "string" and def.note or "",
+        noteFn = type(def.noteFn) == "function" and def.noteFn or nil,
+        confidence = (def.confidence == "A" or def.confidence == "B") and def.confidence or "C",
     }
     if not supported and not a.unsupportedReason then a.unsupportedReason = "non supportato" end
     if not self.adapters[id] then self.order[#self.order + 1] = id end
@@ -130,6 +133,15 @@ local function callAdapter(self, a, method, ...)
         return false, msg
     end
     return true, r1, r2
+end
+
+-- Nota informativa (statica o calcolata da noteFn, in pcall).
+local function noteOf(a)
+    if a.noteFn then
+        local ok, n = pcall(a.noteFn)
+        if ok and type(n) == "string" and n ~= "" then return n end
+    end
+    return a.note or ""
 end
 
 local function isLoaded(self, a)
@@ -193,6 +205,7 @@ function M:Status(id)
     local info = {
         id = id, title = a.title, addon = a.addon,
         loaded = loaded, supported = a.supported, unsupportedReason = a.unsupportedReason,
+        note = noteOf(a), confidence = a.confidence,
         hasProfile = rec ~= nil, capturedAt = rec and rec.capturedAt or nil,
         corrupt = (why == "corrupt"), canReset = a.reset ~= nil,
         lastError = st.lastError, lastWarning = st.lastWarning, lastApplied = st.lastApplied,
@@ -213,7 +226,7 @@ function M:List()
             out[#out + 1] = {
                 id = s.id, title = s.title, loaded = s.loaded, supported = s.supported,
                 hasProfile = s.hasProfile, reason = s.unsupportedReason, state = s.state,
-                capturedAt = s.capturedAt, canReset = s.canReset,
+                capturedAt = s.capturedAt, canReset = s.canReset, note = s.note, confidence = s.confidence,
             }
         end
     end
@@ -536,7 +549,7 @@ local function buildPage(parent, ctx)
                     if okD and type(d) == "string" then line = line .. " (" .. d .. ")" end
                 end
                 row.status:SetText(line)
-                local detail = s.unsupportedReason or s.lastError or s.lastWarning or ""
+                local detail = s.unsupportedReason or s.lastError or s.lastWarning or s.note or ""
                 row.reason:SetText(detail)
                 local canCapture = s.loaded and s.supported
                 row.capture:SetEnabled(canCapture and true or false)

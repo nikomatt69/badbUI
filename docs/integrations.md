@@ -1,6 +1,6 @@
 # Integrazioni addon (modulo `Integrations`)
 
-Hub per gestire gli addon terzi (ElvUI, Details!, Plater, Bartender4, BigWigs, DBM, WeakAuras) da BadbUI:
+Hub per gestire gli addon terzi (ElvUI, Details!, Plater, Bartender4, BigWigs, DBM, Clique, WeakAuras, EllesmereUI) da BadbUI:
 rileva l'addon, **cattura** il suo profilo/stato dentro il profilo BadbUI e lo **riapplica**. Poiche' i dati
 stanno nel profilo, finiscono nell'export BadbUI (`DB:ExportProfile`) e viaggiano con esso.
 
@@ -17,7 +17,7 @@ Nessun metodo lancia errori verso il chiamante: in errore ritornano `false, mess
 
 | Metodo | Ritorno |
 |---|---|
-| `List()` | `{ {id, title, loaded, supported, hasProfile, reason, state, capturedAt, canReset}, ... }` (ordine di registrazione) |
+| `List()` | `{ {id, title, loaded, supported, hasProfile, reason, state, capturedAt, canReset, note, confidence}, ... }` (ordine di registrazione). `note` = avvertenza per l'utente (stringa, puo' essere vuota); `confidence` = `"A"`/`"B"`/`"C"` (affidabilita' dell'informazione su Forever: A confermato, B una fonte, C non verificato; i built-in sono solo B/C) |
 | `Status(id)` | tabella estesa: `+ addon, unsupportedReason, corrupt, lastError, lastWarning, lastApplied`; `state` = `missing` / `installed` / `captured` / `unsupported` |
 | `Capture(id)` | `ok, err` — salva `data[id]`; rifiuta payload > 64 KB (export serializzato), ciclici, troppo profondi |
 | `Apply(id, opts?)` | `ok, err[, nota]` — backup `Backups:Create(..., "pre-import")` se `Badb.Backups` esiste (un backup fallito avvisa ma non blocca), fuori combattimento, poi `Events:Fire("BADB_INTEGRATION_APPLIED", id)`. In combattimento: `true, nil, "differito a fine combattimento"` (esegue a `PLAYER_REGEN_ENABLED`). Profilo mancante: `true, nil, "profilo mancante: ..."` e **nessun** evento |
@@ -37,6 +37,7 @@ Badb.Integrations:RegisterAdapter({
     capture = function() return { profile = MioAddonDB.profile } end,   -- tabella (o nil, "errore")
     apply   = function(payload) ... return true end,   -- true | false, "errore" | "skipped", "motivo"
     reset   = function() ... return true end,           -- opzionale
+    note = "avvertenza", confidence = "C",  -- opzionali (default "" e "C"); noteFn = fn -> stringa per note dinamiche
     -- oppure, per sola visibilita': supported = false, unsupportedReason = "..."
 })
 ```
@@ -72,6 +73,8 @@ Ogni accesso e' sondato e in `pcall`; se un metodo manca l'adapter degrada con u
 | Bartender4 | `Bartender4` | `Bartender4.db` (AceDB) |
 | BigWigs | `BigWigs` | `BigWigs.db` (AceDB) |
 | DBM | `DBM-Core`, globale `DBM` | `DBM_UsedProfile`, `DBM_AllSavedOptions[nome]`, `DBM:ApplyProfile(nome)`; nessuna scrittura diretta sulle SavedVariables; senza `reset` |
+| Clique | `Clique` | `Clique.db` (AceDB, solo nome profilo). Il click casting **integrato di Blizzard** (`C_ClickBindings`) non e' catturabile: viene solo sondato per mostrarlo nella nota, mai letto/scritto |
+| EllesmereUI | `EllesmereUI` | nessuna: solo rilevamento, `supported = false` (API di profilo non nota) |
 | WeakAuras | `WeakAuras` | nessuna: `supported = false` (nessuna API pubblica per catturare/applicare le aura; usare l'export nativo) |
 
 Su Forever la disponibilita' degli addon terzi e' incerta (docs/FOREVER_FACTS.md: Plater nessun dato, WeakAuras
@@ -80,6 +83,20 @@ build non ufficiali, ElvUI secondo una sola fonte): l'assenza di un addon e' uno
 `detect` usa `C_AddOns.IsAddOnLoaded` (o `IsAddOnLoaded`) e il globale; se l'API non esiste basta il globale.
 Un `SetProfile` AceDB su un profilo inesistente lo creerebbe vuoto: per questo l'esistenza e' verificata prima
 (`db.sv.profiles` o `GetProfiles()`); se non verificabile si procede con `SetProfile`.
+
+## Note e confidenza (docs/FOREVER_FACTS.md)
+| id | confidence | note |
+|---|---|---|
+| elvui | B | build Forever segnalata da una fonte |
+| details | B | meter real-time limitato nelle istanze (combat log non leggibile) |
+| plater | C | non verificato |
+| bartender4 | C | non verificato su Forever (API AceDB standard) |
+| bigwigs, dbm | B | timer dalla timeline nativa, si cattura solo il profilo |
+| clique | C | non verificato; solo il profilo Clique (+ avviso `C_ClickBindings` se presente) |
+| weakauras | C | stato incerto su Forever (restrizioni stile Midnight, build non ufficiali) |
+| ellesmereui | C | solo rilevamento: API di profilo non nota |
+
+Gli addon UI in conflitto (ClassicUI Forever, Forever Unit Frames, ...) **non** sono integrazioni: li gestisce Diagnostics.
 
 ## Limiti noti
 - Payload max 64 KB per integrazione (export serializzato), 20000 nodi, profondita' 12; valori secret, funzioni e

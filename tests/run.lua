@@ -4,10 +4,19 @@
 -- e viene eseguito in un ambiente pulito: addon ricaricato da zero per ogni file.
 local root = arg and arg[1] or "."
 
-local SUITES = {
-    "tests/actionbars_test.lua",
-    "tests/cooldowns_test.lua",
-}
+-- Auto-discovery: ogni tests/*_test.lua viene eseguito (ordine alfabetico).
+local SUITES = {}
+do
+    local p = io.popen('ls "' .. root .. '/tests" 2>/dev/null')
+    if p then
+        for name in p:lines() do
+            if name:match("_test%.lua$") then SUITES[#SUITES + 1] = "tests/" .. name end
+        end
+        p:close()
+    end
+    table.sort(SUITES)
+    assert(#SUITES > 0, "nessuna suite trovata in " .. root .. "/tests")
+end
 
 local passed, failed = 0, 0
 

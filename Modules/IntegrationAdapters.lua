@@ -303,3 +303,52 @@ Defs[#Defs + 1] = {
     unsupportedReason = "WeakAuras non espone un'API pubblica per catturare o riapplicare le aura: usa l'export/import nativo di WeakAuras",
     detect = function() return detectAddon("WeakAuras", "WeakAuras") end,
 }
+
+-- ---------------------------------------------------------------------------------------
+-- Clique (click casting di terze parti): salva `CliqueDB3` come AceDB in `Clique.db` (best-effort,
+-- non verificato): si cattura solo il nome del profilo. Il click casting integrato di Blizzard
+-- (C_ClickBindings) NON e' catturabile da qui: viene solo sondato per segnalarlo nella nota.
+-- ---------------------------------------------------------------------------------------
+local clique = aceDBAdapter("clique", "Clique", "Clique", function()
+    return safeGet(rawget(_G, "Clique"), "db")
+end)
+clique.noteFn = function()
+    if type(rawget(_G, "C_ClickBindings")) == "table" then
+        return "solo il profilo Clique; il click casting integrato di Blizzard (C_ClickBindings) non e' catturabile"
+    end
+end
+table.insert(Defs, #Defs, clique) -- prima di WeakAuras
+
+-- ---------------------------------------------------------------------------------------
+-- EllesmereUI: solo rilevamento. Non si conosce un'API di profilo: nessuna API inventata.
+-- ---------------------------------------------------------------------------------------
+Defs[#Defs + 1] = {
+    id = "ellesmereui", title = "EllesmereUI", addon = "EllesmereUI",
+    supported = false,
+    unsupportedReason = "API di profilo di EllesmereUI sconosciuta: solo rilevamento (usa il suo export nativo)",
+    detect = function()
+        local known = addOnLoadedKnown("EllesmereUI")
+        if known ~= nil then return known end
+        return type(rawget(_G, "EllesmereUI")) == "table"
+    end,
+}
+
+-- ---------------------------------------------------------------------------------------
+-- Metadati informativi (docs/FOREVER_FACTS.md): nota per l'utente e confidenza della fonte
+-- (A = confermato, B = una fonte/secondaria, C = non verificato). Tutti gli adapter sono best-effort.
+-- ---------------------------------------------------------------------------------------
+local META = {
+    elvui = { "build Forever segnalata da una fonte", "B" },
+    details = { "meter real-time limitato nelle istanze (combat log non leggibile)", "B" },
+    plater = { "non verificato", "C" },
+    bartender4 = { "non verificato su Forever (API AceDB standard)", "C" },
+    bigwigs = { "timer dalla timeline nativa, si cattura solo il profilo", "B" },
+    dbm = { "timer dalla timeline nativa, si cattura solo il profilo", "B" },
+    clique = { "non verificato; solo il profilo Clique", "C" },
+    weakauras = { "stato incerto su Forever (restrizioni stile Midnight, build non ufficiali)", "C" },
+    ellesmereui = { "solo rilevamento: API di profilo non nota", "C" },
+}
+for _, def in ipairs(Defs) do
+    local m = META[def.id]
+    if m then def.note, def.confidence = m[1], m[2] end
+end

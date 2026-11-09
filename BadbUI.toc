@@ -20,6 +20,8 @@ Core\Serializer.lua
 Core\Database.lua
 Core\Modules.lua
 Core\FrameManager.lua
+Core\CVars.lua
+Core\PlayerInfo.lua
 
 Locales\itIT.lua
 
@@ -30,8 +32,21 @@ Modules\Scaling.lua
 Modules\ActionBarsShared.lua
 Modules\ActionBars.lua
 Modules\Cooldowns.lua
+Modules\Nameplates.lua
+Modules\GroupFrames.lua
+Modules\Backups.lua
+Modules\Presets.lua
+Data\Presets.lua
+Modules\Contexts.lua
+Modules\LayoutStudio.lua
+Modules\IntegrationAdapters.lua
+Modules\Integrations.lua
+Modules\Guides.lua
+Data\Guides.lua
+Modules\Diagnostics.lua
 
 # Configurazione
 Config\Widgets.lua
 Config\ConfigUI.lua
+Config\Wizard.lua
 Config\Slash.lua

@@ -27,7 +27,7 @@ local function ensureLoaded()
 end
 
 local GLOBALS = { "ElvUI", "Details", "Plater", "Bartender4", "BigWigs", "DBM", "DBM_AllSavedOptions",
-    "DBM_UsedProfile", "WeakAuras" }
+    "DBM_UsedProfile", "WeakAuras", "Clique", "EllesmereUI", "C_ClickBindings", "MioAddon" }
 
 -- Ambiente pulito: nessun addon terzo, IsAddOnLoaded controllato da `loaded`.
 local function setup(Mock)
@@ -82,7 +82,7 @@ end
 T["addon assenti: loaded=false, nessun errore"] = function(Mock)
     local env = setup(Mock)
     local list = env.I:List()
-    eq(#list, 7, "sette adapter integrati")
+    eq(#list, 9, "nove adapter integrati")
     for _, r in ipairs(list) do eq(r.loaded, false, r.id .. " non caricato") end
     local ok, err = env.I:Capture("elvui")
     eq(ok, false); has(err, "non e' caricato")
@@ -97,7 +97,7 @@ T["List: ordine, campi e WeakAuras non supportato con motivo"] = function(Mock)
     local env = setup(Mock)
     local ids = {}
     for _, r in ipairs(env.I:List()) do ids[#ids + 1] = r.id end
-    eq(table.concat(ids, ","), "elvui,details,plater,bartender4,bigwigs,dbm,weakauras", "ordine")
+    eq(table.concat(ids, ","), "elvui,details,plater,bartender4,bigwigs,dbm,clique,weakauras,ellesmereui", "ordine")
     local wa = find(env.I:List(), "weakauras")
     eq(wa.supported, false, "supported=false")
     truthy(wa.reason and #wa.reason > 10, "motivazione presente")
@@ -471,7 +471,7 @@ T["modulo disattivato: nessun auto-apply, API ancora sicure"] = function(Mock)
     db.current = "Healer"
     BadbUI.DB:SetProfile("Alt")
     eq(#db.calls, 0)
-    eq(#env.I:List(), 7)
+    eq(#env.I:List(), 9)
 end
 
 T["adapter di terze parti e registrazione non valida"] = function(Mock)
@@ -524,7 +524,7 @@ T["un adapter che lancia errore non blocca gli altri"] = function(Mock)
     -- detect che lancia: loaded=false, lastError, nessuna eccezione
     local s = env.I:Status("dbad")
     eq(s.loaded, false); has(s.lastError, "detect rotto")
-    eq(#env.I:List(), 9)
+    eq(#env.I:List(), 11)
     -- il Logger ha registrato l'errore
     local found = false
     for _, line in ipairs(BadbUI.Logger.buffer) do if line:find("esplosione", 1, true) then found = true end end
@@ -590,7 +590,7 @@ T["dati corrotti nel profilo: nessun errore, Cattura ripara"] = function(Mock)
     eq(mod.data.elvui, nil)
     -- profilo senza tabella modulo
     BadbUI.DB.profile.modules.Integrations = nil
-    eq(#env.I:List(), 7)
+    eq(#env.I:List(), 9)
     ok = env.I:Capture("elvui")
     eq(ok, false, "nessun errore Lua anche senza tabella modulo")
 end
@@ -635,8 +635,8 @@ T["ConfigUI: pagina con una riga per integrazione"] = function(Mock)
     eq(page.category, "Strumenti"); eq(type(page.title), "string"); eq(type(page.order), "number")
     local h = page.build(Mock.NewObject("Frame"), { UI = BadbUI.ConfigUI, W = BadbUI.Widgets })
     CreateFrame = origCF
-    eq(h, 34 + 7 * 46, "altezza = toggle + 7 righe")
-    eq(#btns, 21, "3 pulsanti per riga")
+    eq(h, 34 + 9 * 46, "altezza = toggle + 9 righe")
+    eq(#btns, 27, "3 pulsanti per riga")
     has(texs[1].__texture, "Waiting", "ElvUI installato ma non catturato")
 end
 
@@ -666,8 +666,8 @@ T["ConfigUI: stati icona e pulsanti Cattura/Applica/Reset"] = function(Mock)
     -- riga 2 = Details: non installato
     has(texs[2].__texture, "NotReady")
     eq(button(2, "Cattura").__enabled, false); eq(button(2, "Applica").__enabled, false)
-    -- riga 7 = WeakAuras: non supportato, reset nascosto
-    eq(button(7, "Cattura").__enabled, false); eq(button(7, "Reset").__shown, false)
+    -- riga 8 = WeakAuras: non supportato, reset nascosto
+    eq(button(8, "Cattura").__enabled, false); eq(button(8, "Reset").__shown, false)
     -- click su Cattura
     button(1, "Cattura").__scripts.OnClick()
     has(texs[1].__texture, "Ready"); truthy(not texs[1].__texture:find("NotReady", 1, true))
@@ -716,7 +716,7 @@ end
 T["gli adapter built-in sono esposti come lista in IntegrationAdapterDefs"] = function(Mock)
     local env = setup(Mock)
     local defs = BadbUI.IntegrationAdapterDefs
-    eq(type(defs), "table"); eq(#defs, 7)
+    eq(type(defs), "table"); eq(#defs, 9)
     for _, d in ipairs(defs) do truthy(d.id and d.title and d.detect, "def " .. tostring(d.id)) end
     eq(type(BadbUI.IntegrationAdapterHelpers.aceDBAdapter), "function")
     -- un adapter di terze parti registrato prima di OnInitialize ha la precedenza
@@ -739,6 +739,85 @@ T["aceDBAdapter riutilizzabile per addon AceDB di terze parti"] = function(Mock)
     db.current = "P2"
     eq(env.I:Apply("mio"), true); eq(db.current, "P1")
     _G.MioAddon = nil
+end
+
+T["note e confidence esposte da List per ogni voce"] = function(Mock)
+    local env = setup(Mock)
+    local expect = {
+        elvui = { "build Forever segnalata da una fonte", "B" },
+        details = { "meter real-time limitato nelle istanze (combat log non leggibile)", "B" },
+        plater = { "non verificato", "C" },
+        bigwigs = { "timer dalla timeline nativa, si cattura solo il profilo", "B" },
+        dbm = { "timer dalla timeline nativa, si cattura solo il profilo", "B" },
+        weakauras = { "stato incerto su Forever (restrizioni stile Midnight, build non ufficiali)", "C" },
+    }
+    for _, r in ipairs(env.I:List()) do
+        eq(type(r.note), "string", r.id .. " note"); truthy(r.note ~= "", r.id .. " nota non vuota")
+        truthy(r.confidence == "A" or r.confidence == "B" or r.confidence == "C", r.id .. " confidence")
+        truthy(r.confidence ~= "A", r.id .. ": tutte best-effort, mai A")
+        local e = expect[r.id]
+        if e then eq(r.note, e[1], r.id); eq(r.confidence, e[2], r.id) end
+    end
+    eq(env.I:Status("weakauras").note, expect.weakauras[1])
+    -- adapter di terze parti: default "" / "C"; confidence non valida => "C"
+    env.I:RegisterAdapter({ id = "tp1", detect = function() return true end, capture = function() return {} end,
+        apply = function() return true end })
+    local r = find(env.I:List(), "tp1")
+    eq(r.note, ""); eq(r.confidence, "C")
+    env.I:RegisterAdapter({ id = "tp2", note = "ciao", confidence = "B", detect = function() return true end,
+        capture = function() return {} end, apply = function() return true end })
+    r = find(env.I:List(), "tp2"); eq(r.note, "ciao"); eq(r.confidence, "B")
+    env.I:RegisterAdapter({ id = "tp3", note = 5, confidence = "Z", detect = function() return true end,
+        capture = function() return {} end, apply = function() return true end,
+    })
+    r = find(env.I:List(), "tp3"); eq(r.note, ""); eq(r.confidence, "C")
+    -- noteFn che lancia: nessun errore
+    env.I:RegisterAdapter({ id = "tp4", note = "base", noteFn = function() error("x") end,
+        detect = function() return true end, capture = function() return {} end, apply = function() return true end })
+    eq(find(env.I:List(), "tp4").note, "base")
+end
+
+T["Clique: AceDB round-trip e nota su C_ClickBindings"] = function(Mock)
+    local env = setup(Mock)
+    local db = fakeAce("Healer", { "Healer", "Altro" })
+    _G.Clique = { db = db }
+    env.loaded.Clique = true
+    eq(env.I:Status("clique").loaded, true)
+    eq(env.I:Capture("clique"), true)
+    db.current = "Altro"
+    eq(env.I:Apply("clique"), true); eq(db.current, "Healer")
+    eq(find(env.I:List(), "clique").note, "non verificato; solo il profilo Clique")
+    -- con C_ClickBindings la nota dichiara che il click casting Blizzard non e' catturabile
+    _G.C_ClickBindings = {}
+    has(find(env.I:List(), "clique").note, "non e' catturabile")
+    -- il click casting Blizzard non viene mai letto ne' scritto da BadbUI
+    _G.C_ClickBindings = setmetatable({}, { __index = function() error("non toccare") end })
+    eq(env.I:Capture("clique"), true)
+    _G.C_ClickBindings = nil
+    _G.Clique = nil
+    -- assente
+    eq(env.I:Status("clique").loaded, false)
+end
+
+T["EllesmereUI: solo rilevamento"] = function(Mock)
+    local env = setup(Mock)
+    local s = env.I:Status("ellesmereui")
+    eq(s.loaded, false); eq(s.supported, false); eq(s.state, "unsupported")
+    env.loaded.EllesmereUI = true
+    _G.EllesmereUI = {}
+    s = env.I:Status("ellesmereui")
+    eq(s.loaded, true); eq(s.supported, false)
+    local ok, err = env.I:Capture("ellesmereui")
+    eq(ok, false); has(err, "EllesmereUI")
+    eq(env.I:Apply("ellesmereui"), false); eq(env.I:Reset("ellesmereui"), false)
+    _G.EllesmereUI = nil
+    -- senza IsAddOnLoaded si usa il globale
+    C_AddOns.IsAddOnLoaded = nil
+    _G.IsAddOnLoaded = nil
+    eq(env.I:Status("ellesmereui").loaded, false)
+    _G.EllesmereUI = {}
+    eq(env.I:Status("ellesmereui").loaded, true)
+    _G.EllesmereUI = nil
 end
 
 return T
