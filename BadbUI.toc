@@ -23,6 +23,13 @@ Core\FrameManager.lua
 Core\CVars.lua
 Core\PlayerInfo.lua
 
+# Design system (Theme + widget). Prima dei moduli: tutti possono usarlo.
+UI\Theme.lua
+UI\Base.lua
+UI\Controls.lua
+UI\Dropdown.lua
+UI\Layout.lua
+
 Locales\itIT.lua
 
 # Moduli
@@ -50,3 +57,6 @@ Config\Widgets.lua
 Config\ConfigUI.lua
 Config\Wizard.lua
 Config\Slash.lua
+
+# Galleria del design system (dopo Slash: registra /badb gallery e /badb theme)
+UI\Gallery.lua
