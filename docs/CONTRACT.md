@@ -18,6 +18,14 @@ Estendere solo tramite le API pubbliche sotto. Lingua: commenti e testo UI in it
 - Due runner di test: `lua5.1 tests/run.lua .` (wow_mock, auto-discovery `tests/*_test.lua`) e `lua5.1 tests/run_stub.lua` (suite `tests/lua/`). **Entrambi devono restare verdi.**
 - Prima di consegnare: `git fetch origin && git merge origin/main` nel tuo worktree e risolvi i conflitti sui TUOI file.
 
+## REQUISITO CONTENUTO: 3 template PvE + 3 PvP per OGNI classe
+- Il `def` di un preset ha due campi nuovi: `class` (token inglese maiuscolo come `UnitClass` secondo ritorno: WARRIOR, PALADIN, HUNTER, ROGUE, PRIEST, SHAMAN, MAGE, WARLOCK, DRUID, ...; `nil` = qualsiasi classe) e `mode` (`"pve"` | `"pvp"`). `Presets:List` accetta i filtri `class` e `mode`.
+- Elenco classi in UNA sola tabella dati (`CLASSES` in `Data/Presets.lua`) con ruoli possibili per classe, cosi' aggiungere una classe = una riga. Partire dalle 9 classi base (WARRIOR, PALADIN, HUNTER, ROGUE, PRIEST, SHAMAN, MAGE, WARLOCK, DRUID); includere solo classi verificate come presenti su Forever (sondare `GetNumClasses`/`C_CreatureInfo.GetClassInfo` a runtime: una classe non presente nel client non genera template visibili).
+- Per ogni classe esattamente 6 template bundled: **PvE**: `Dungeon`, `Raid`, `Solo / Leveling`; **PvP**: `Campo di battaglia`, `Arena / Skirmish`, `World PvP`. Chiavi stabili `"<classe>-pve-dungeon"`, ... `"<classe>-pvp-arena"`, ecc. Il ruolo del template e' quello primario della classe (es. Priest = healer, Warrior = dps/tank) con differenze REALI e motivate (visibilita' barre, cooldown, nameplate nemici/alleati e distanza, group frames raid/party, elementi nascosti, scala) usando solo chiavi esistenti dei moduli. Generazione data-driven da profili base (mode x scenario) + override per classe/ruolo, non 54 tabelle copiate a mano; ma ogni template deve restare ispezionabile con `Diff`.
+- Test: per ogni classe in CLASSES esistono esattamente 3 pve e 3 pvp, chiavi uniche, tutti validi e applicabili, i template PvP differiscono dai PvE per almeno un campo, filtro per class+mode corretto.
+- `Presets:Recommend()` (esistente) deve tenere conto di classe e modalita' (istanza PvP/arena/BG => pvp; altrimenti pve) e restituire il template della classe del giocatore.
+- Contexts: documentare e, se `Badb.Contexts` esiste, offrire "collega a regola automatica" (instance=pvp/arena -> template PvP della classe; raid/party -> PvE).
+
 ## Regole di ownership (anti-conflitto)
 Ogni agente lavora in un proprio worktree e modifica **solo i file che possiede** (vedi tabella).
 **Vietato** modificare: `BadbUI.toc`, `tests/run.lua`, `tests/wow_mock.lua`, `Core/*`, `README.md`, file di altri agenti.
