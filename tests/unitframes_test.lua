@@ -747,4 +747,38 @@ case("icona di classe solo per i giocatori con classe leggibile", function(Mock)
     noErrors()
 end)
 
+case("aura grande: CC curato al centro, priorita' e opzione", function(Mock)
+    local UF = start(Mock)
+    local f = UF.frames.target
+    Env.auras["target:HARMFUL"] = { { spellId = 116, icon = 7, applications = 0, duration = 5, expirationTime = 105, auraInstanceID = 1 },
+                                    { spellId = 118, icon = 8, applications = 0, duration = 8, expirationTime = 108, auraInstanceID = 2 } }
+    Env.auras["target:HELPFUL"] = { { spellId = 871, icon = 9, applications = 0, duration = 10, expirationTime = 110, auraInstanceID = 3 } }
+    fire("UNIT_AURA", "target")
+    ok(f.BigAura and f.BigAura:IsShown(), "aura grande visibile")
+    eq(f.BigAura.icon:GetTexture(), 8, "Polymorph batte difensivi e rallentamenti")
+    Env.auras["target:HARMFUL"] = {}
+    fire("UNIT_AURA", "target")
+    eq(f.BigAura.icon:GetTexture(), 9, "poi il difensivo")
+    Env.auras["target:HELPFUL"] = {}
+    fire("UNIT_AURA", "target")
+    ok(not f.BigAura:IsShown(), "niente di curato: nascosta")
+    Env.auras["target:HARMFUL"] = { { spellId = 118, icon = 8, applications = 0, duration = Mock.Secret(),
+                                      expirationTime = Mock.Secret(), auraInstanceID = 2 } }
+    fire("UNIT_AURA", "target")
+    ok(f.BigAura:IsShown(), "durate secret tollerate")
+    UF:Set("units.target.showBigAura", false)
+    fire("UNIT_AURA", "target")
+    ok(not f.BigAura:IsShown(), "opzione spenta")
+    noErrors()
+end)
+
+case("aura grande: database Auras spento, nessun errore", function(Mock)
+    local UF = start(Mock)
+    Env.auras["target:HARMFUL"] = { { spellId = 118, icon = 8, applications = 0, duration = 8, expirationTime = 108, auraInstanceID = 2 } }
+    BadbUI.Modules:SetEnabled("Auras", false)
+    fire("UNIT_AURA", "target")
+    ok(not (UF.frames.target.BigAura and UF.frames.target.BigAura:IsShown()), "nascosta")
+    noErrors()
+end)
+
 return T

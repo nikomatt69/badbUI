@@ -229,7 +229,7 @@ end
 T["Register: validazione, sovrascrittura, riservati, Unregister"] = function()
     local S = BadbUI.Slash
     local got
-    local before = #S.registeredOrder -- altri file (es. UI/Gallery.lua) registrano comandi propri
+    local before = #S.registeredOrder -- altri file (Import/Export, UI/Gallery.lua) registrano comandi propri
     eq(S:Register("ciao", function(a) got = a end, "saluta"), true)
     S:Dispatch("ciao mondo")
     eq(got, "mondo")

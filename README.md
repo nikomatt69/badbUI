@@ -57,6 +57,16 @@ Badb.Presets:RegisterContent("arena", { title = "Arena", description = "...", ic
 ```
 I test verificano che ogni chiave di un preset esista nei default del modulo.
 
+## Aure curate e avvisi
+
+| Modulo | File | Cosa fa |
+|---|---|---|
+| Aure curate | `Modules/Auras.lua`, `Data/Auras.lua` | Database di CC, immunita', difensivi, offensivi, root, rallentamenti e debuff per classe; riconosce anche i rank nuovi per nome localizzato; elenco personale (`/badb aura`). |
+| Aure sulle nameplate | `Modules/NameplateAuras.lua` | CC grande a destra, difensivi/offensivi nemici a sinistra, i tuoi debuff sopra; nasconde le aure Blizzard. |
+| Avvisi | `Modules/Alerts.lua` | "Healer in CC" (e focus) con suono, di default solo nei BG (`/badb alert`). |
+
+Tutto passa dalle API aure (niente combat log) e tollera i secret values: dettagli in [docs/auras.md](docs/auras.md). Gli unit frame mostrano la stessa "aura grande" al centro di bersaglio, focus e gruppo.
+
 ## Test
 `lua5.1 tests/run.lua` dalla root del repo (eseguito anche dalla CI su ogni PR). Il design system ha una suite propria con un mock che registra punti, dimensioni e colori dei widget: `lua5.1 tests/ui/run.lua`. `tests/lua/wowstub.lua` simula l'API WoW necessaria: CVar, combattimento, nameplate, layout Edit Mode, secret values.
 

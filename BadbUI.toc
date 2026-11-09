@@ -41,6 +41,10 @@ Modules\ActionBars.lua
 Modules\Cooldowns.lua
 Modules\Nameplates.lua
 Modules\GroupFrames.lua
+Data\Auras.lua
+Modules\Auras.lua
+Modules\NameplateAuras.lua
+Modules\Alerts.lua
 Modules\UnitFrames\Style.lua
 Modules\UnitFrames\Elements.lua
 Modules\UnitFrames\UnitFrames.lua
@@ -60,6 +64,7 @@ Config\Widgets.lua
 Config\ConfigUI.lua
 Config\Wizard.lua
 Config\Slash.lua
+Config\ImportExport.lua
 
 # Galleria del design system (dopo Slash: registra /badb gallery e /badb theme)
 UI\Gallery.lua

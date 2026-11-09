@@ -200,6 +200,11 @@ function E.Layout(f, c)
     a.anchorBelow = c.showCastbar -- con castbar sotto, le aure vanno sopra
     for _, b in ipairs(a.buttons) do b:Hide() end
 
+    -- Aura grande (CC, immunita', difensivi) al centro del frame, dal database curato Badb.Auras
+    f.bigAuraEnabled = c.showBigAura and true or false
+    f.bigAuraSize = math.max(12, math.min(48, (c.height or 40) - 4))
+    if f.BigAura and not f.bigAuraEnabled then Badb.Auras:ClearIcon(f.BigAura) end
+
     Style.Skin(f)
 end
 
@@ -520,6 +525,36 @@ function E.UpdateAuras(f)
 end
 
 ---------------------------------------------------------------------------
+-- Aura grande: la piu' importante tra immunita' > CC > silence > difensivi > offensivi
+-- (priorita' e categorie da Badb.Auras, la stessa lista delle nameplate e degli avvisi).
+---------------------------------------------------------------------------
+local BIG_AURA_CATEGORIES = { "immunity", "cc", "silence", "defensive", "offensive" }
+
+function E.UpdateBigAura(f)
+    local A = Badb.Auras
+    if not A then return end
+    local entry = f.bigAuraEnabled and A.enabled and A:GetHighest(f.unit, BIG_AURA_CATEGORIES) or nil
+    if not entry then
+        if f.BigAura then A:ClearIcon(f.BigAura) end
+        return
+    end
+    if not f.BigAura then
+        f.BigAura = A:CreateIcon(f, f.bigAuraSize)
+        if f.BigAura.SetFrameLevel and f.Health and f.Health.GetFrameLevel then
+            f.BigAura:SetFrameLevel((f.Health:GetFrameLevel() or 1) + 6)
+        end
+    end
+    f.BigAura:ClearAllPoints()
+    f.BigAura:SetPoint("CENTER", f, "CENTER", 0, 0)
+    A:SetIcon(f.BigAura, entry, f.unit, { size = f.bigAuraSize })
+end
+
+function E.UpdateAllAuras(f)
+    E.UpdateAuras(f)
+    E.UpdateBigAura(f)
+end
+
+---------------------------------------------------------------------------
 -- Aggiornamento completo
 ---------------------------------------------------------------------------
 function E.UpdateAll(f)
@@ -531,6 +566,7 @@ function E.UpdateAll(f)
     E.UpdateIndicators(f)
     E.UpdateCast(f)
     E.UpdateAuras(f)
+    E.UpdateBigAura(f)
 end
 
 -- Dati finti per configurare i frame senza gruppo/bersaglio.
