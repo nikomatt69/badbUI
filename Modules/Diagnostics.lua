@@ -42,6 +42,9 @@ local KNOWN_ADDONS = {
     { title = "TidyPlates", addons = { "TidyPlates", "TidyPlates_ThreatPlates" }, modules = { "Nameplates" }, note = "nameplate" },
     { title = "Shadowed Unit Frames", addons = { "ShadowedUnitFrames", "SUF" }, modules = { "GroupFrames", "Scaling" },
       note = "sostituisce i frame unita'" },
+    { title = "X-Perl", addons = { "XPerl", "ZPerl", "MetaPerl", "CPerl", "FPerl", "XPerl_Player", "ZPerl_Player" },
+      modules = { "UnitFrames", "GroupFrames", "Scaling" },
+      note = "sostituisce i frame unita' e di gruppo: spegni UnitFrames di BadbUI (/badb disable UnitFrames)" },
     { title = "Details!", addons = { "Details" }, modules = {}, note = "meter" },
     { title = "WeakAuras", addons = { "WeakAuras" }, modules = {}, note = "aura e icone" },
 }

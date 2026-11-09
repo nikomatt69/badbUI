@@ -130,6 +130,27 @@ function FM:SetOption(key, field, value)
 end
 
 -- Modalita' sblocco: overlay trascinabili sopra ogni frame registrato, con snap a griglia.
+local ARROWS = { LEFT = { -1, 0 }, RIGHT = { 1, 0 }, UP = { 0, 1 }, DOWN = { 0, -1 } }
+local SCALE_STEP, SCALE_MIN, SCALE_MAX = 0.05, 0.5, 2
+
+-- Salva la posizione (relativa al centro dello schermo) e la riapplica; il mover segue il frame.
+local function place(m, desc, f, x, y)
+    local c = conf(desc.key)
+    c.point, c.relPoint, c.x, c.y = "CENTER", "CENTER", x, y
+    FM:Apply(desc.key)
+    m:ClearAllPoints(); m:SetAllPoints(f)
+    Events:Fire("BADB_FRAME_CHANGED", desc.key, "position", c)
+end
+
+-- Sposta di (dx, dy) pixel dalla posizione attuale del frame. Falso se la posizione non e' leggibile.
+local function nudge(m, desc, f, dx, dy)
+    local x, y = f:GetCenter()
+    local ux, uy = UIParent:GetCenter()
+    if type(x) ~= "number" or type(ux) ~= "number" then return false end
+    place(m, desc, f, math.floor(x - ux + 0.5) + dx, math.floor(y - uy + 0.5) + dy)
+    return true
+end
+
 local function createMover(desc, f)
     local m = Compat.CreateFrame("Frame", nil, UIParent)
     m:SetFrameStrata("DIALOG")
@@ -137,7 +158,7 @@ local function createMover(desc, f)
     m:EnableMouse(true); m:SetMovable(true); m:RegisterForDrag("LeftButton")
     if m.SetBackdrop then
         m:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8", edgeFile = "Interface\\Buttons\\WHITE8X8", edgeSize = 1 })
-        m:SetBackdropColor(0.25, 0.65, 1, 0.25); m:SetBackdropBorderColor(0.25, 0.65, 1, 0.9)
+        m:SetBackdropColor(0.09, 0.52, 0.82, 0.3); m:SetBackdropBorderColor(0.09, 0.52, 0.82, 0.95)
     end
     local label = m:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     label:SetPoint("CENTER"); label:SetText(desc.title)
@@ -149,17 +170,52 @@ local function createMover(desc, f)
         local ux, uy = UIParent:GetCenter()
         x = math.floor((x - ux) / grid + 0.5) * grid
         y = math.floor((y - uy) / grid + 0.5) * grid
-        local c = conf(desc.key)
-        c.point, c.relPoint, c.x, c.y = "CENTER", "CENTER", x, y
-        FM:Apply(desc.key)
-        self:ClearAllPoints(); self:SetAllPoints(f)
-        Events:Fire("BADB_FRAME_CHANGED", desc.key, "position", c)
+        place(self, desc, f, x, y)
     end)
     m:SetScript("OnMouseUp", function(_, button)
         if button == "RightButton" then FM:Restore(desc.key) end
     end)
+    -- Come i mover di ElvUI: con il mouse sopra, le frecce spostano di 1 px (Maiusc: 10 px) e
+    -- Maiusc + rotella cambia la scala. Gli altri tasti restano al gioco.
+    m:EnableKeyboard(false)
+    if m.SetPropagateKeyboardInput then m:SetPropagateKeyboardInput(true) end
+    m:SetScript("OnEnter", function(self)
+        if self.EnableKeyboard then self:EnableKeyboard(true) end
+        if GameTooltip and GameTooltip.SetOwner then
+            GameTooltip:SetOwner(self, "ANCHOR_TOP")
+            GameTooltip:SetText(desc.title)
+            GameTooltip:AddLine("Trascina: sposta (griglia)", 1, 1, 1)
+            GameTooltip:AddLine("Frecce: 1 px (Maiusc 10 px)", 1, 1, 1)
+            if desc.scalable ~= false then GameTooltip:AddLine("Maiusc + rotella: scala", 1, 1, 1) end
+            GameTooltip:AddLine("Tasto destro: ripristina", 1, 1, 1)
+            GameTooltip:Show()
+        end
+    end)
+    m:SetScript("OnLeave", function(self)
+        if self.EnableKeyboard then self:EnableKeyboard(false) end
+        if GameTooltip and GameTooltip.Hide then GameTooltip:Hide() end
+    end)
+    m:SetScript("OnKeyDown", function(self, key)
+        local dir = ARROWS[key]
+        local handled = false
+        if dir and not InCombatLockdown() then
+            local step = (IsShiftKeyDown and IsShiftKeyDown()) and 10 or 1
+            handled = nudge(self, desc, f, dir[1] * step, dir[2] * step)
+        end
+        if self.SetPropagateKeyboardInput then self:SetPropagateKeyboardInput(not handled) end
+    end)
+    m:EnableMouseWheel(true)
+    m:SetScript("OnMouseWheel", function(_, delta)
+        if not (IsShiftKeyDown and IsShiftKeyDown()) or desc.scalable == false then return end
+        if Compat.IsEditModeFrame(f) or InCombatLockdown() then return end
+        local cur = conf(desc.key).scale or f:GetScale() or 1
+        local nxt = math.max(SCALE_MIN, math.min(SCALE_MAX, math.floor((cur + (delta > 0 and SCALE_STEP or -SCALE_STEP)) * 100 + 0.5) / 100))
+        FM:SetOption(desc.key, "scale", nxt)
+    end)
     return m
 end
+
+FM._nudge = nudge -- usato dai test
 
 function FM:SetUnlocked(state)
     if state and InCombatLockdown() then

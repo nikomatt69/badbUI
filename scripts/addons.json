@@ -1,0 +1,82 @@
+{
+  "schema": 1,
+  "_nota": "Fonti verificate il 2026-11-09. 'forever' indica cosa si sa del client WoW Forever: nessun addon e' garantito, vedi docs/addons.md.",
+  "bundles": {
+    "essentials": ["xperl", "bigwigs", "details"],
+    "pvp": ["xperl", "bigwigs", "details", "plater", "weakauras"],
+    "full": ["xperl", "elvui", "bigwigs", "dbm", "details", "plater", "bartender4", "weakauras"]
+  },
+  "addons": [
+    {
+      "id": "xperl",
+      "title": "X-Perl Forever",
+      "role": "Unit frame classici (giocatore, bersaglio, gruppo, raid)",
+      "source": { "type": "curseforge", "slug": "x-perl-unitframes-forever",
+                  "page": "https://www.curseforge.com/wow/addons/x-perl-unitframes-forever" },
+      "forever": "Adattamento non ufficiale di X-Perl per Forever (le release X-Perl/Z-Perl normali non funzionano sul client Forever). Alternative: MetaPerl, C-Perl, F-Perl su CurseForge.",
+      "conflicts": ["badbui:UnitFrames", "badbui:GroupFrames"],
+      "conflictNote": "Sostituisce i frame unita': con X-Perl spegni UnitFrames di BadbUI (/badb disable UnitFrames)."
+    },
+    {
+      "id": "elvui",
+      "title": "ElvUI",
+      "role": "Suite UI completa (alternativa al look di BadbUI)",
+      "source": { "type": "github-archive", "repo": "tukui-org/ElvUI", "ref": "main" },
+      "forever": "Una fonte indica una build Forever; il ramo main del repository puo' essere piu' avanti del client.",
+      "conflicts": ["badbui:UnitFrames", "badbui:ActionBars", "badbui:Nameplates", "badbui:GroupFrames", "badbui:Cooldowns"],
+      "conflictNote": "Sostituisce barre, unit frame e nameplate: usa ElvUI oppure i moduli di BadbUI, non entrambi."
+    },
+    {
+      "id": "bigwigs",
+      "title": "BigWigs",
+      "role": "Timer e avvisi dei boss",
+      "source": { "type": "github-release", "repo": "BigWigsMods/BigWigs", "asset": "BigWigs-v*.zip" },
+      "forever": "Timer dalla timeline nativa degli incontri.",
+      "conflicts": []
+    },
+    {
+      "id": "dbm",
+      "title": "Deadly Boss Mods",
+      "role": "Alternativa a BigWigs (non installarli insieme)",
+      "source": { "type": "github-release", "repo": "DeadlyBossMods/DeadlyBossMods", "asset": "DBM-Core-*.zip" },
+      "forever": "Timer dalla timeline nativa degli incontri.",
+      "conflicts": ["addon:bigwigs"],
+      "conflictNote": "Fa lo stesso lavoro di BigWigs: ne basta uno."
+    },
+    {
+      "id": "details",
+      "title": "Details! Damage Meter",
+      "role": "Meter di danni e cure",
+      "source": { "type": "curseforge", "slug": "details",
+                  "page": "https://www.curseforge.com/wow/addons/details" },
+      "forever": "Build Forever esistente; meter in tempo reale limitato nelle istanze. Il meter nativo di Forever puo' bastare.",
+      "conflicts": []
+    },
+    {
+      "id": "plater",
+      "title": "Plater Nameplates",
+      "role": "Nameplate avanzate",
+      "source": { "type": "github-release", "repo": "Tercioo/Plater-Nameplates", "asset": "Plater-v*.zip" },
+      "forever": "Nessun dato verificato.",
+      "conflicts": ["badbui:Nameplates", "badbui:NameplateAuras"],
+      "conflictNote": "Sostituisce le nameplate: spegni Nameplates di BadbUI."
+    },
+    {
+      "id": "bartender4",
+      "title": "Bartender4",
+      "role": "Barre azioni",
+      "source": { "type": "github-release", "repo": "Nevcairiel/Bartender4", "asset": "Bartender4-*.zip" },
+      "forever": "Nessun dato verificato.",
+      "conflicts": ["badbui:ActionBars"],
+      "conflictNote": "Gestisce le barre azioni: spegni ActionBars di BadbUI."
+    },
+    {
+      "id": "weakauras",
+      "title": "WeakAuras",
+      "role": "Aure e icone personalizzate",
+      "source": { "type": "github-release", "repo": "WeakAuras/WeakAuras2", "asset": "WeakAuras-*.zip" },
+      "forever": "Stato incerto su Forever (circolano build non ufficiali).",
+      "conflicts": []
+    }
+  ]
+}

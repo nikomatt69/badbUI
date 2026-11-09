@@ -67,6 +67,12 @@ I test verificano che ogni chiave di un preset esista nei default del modulo.
 
 Tutto passa dalle API aure (niente combat log) e tollera i secret values: dettagli in [docs/auras.md](docs/auras.md). Gli unit frame mostrano la stessa "aura grande" al centro di bersaglio, focus e gruppo.
 
+## Stile ElvUI e gestione addon
+* **Stile ElvUI** (`Modules/ElvLook.lua`): tema `elvui` predefinito (grigio carbone, bordo nero da 1px, accento azzurro), due pannelli datatext 412x22 in basso, minimappa quadrata, sfondo scuro per chat e barre azioni, unit frame con le misure e le posizioni di ElvUI. Confronto dettagliato e comandi per spostare/scalare tutto (frecce, Maiusc+rotella): [docs/elvlook.md](docs/elvlook.md). `/badb elv` applica tutto in un click (con backup `pre-elvui`); al primo avvio viene applicato una sola volta.
+* **Script** (`Modules/Scripts.lua`): Lua dentro l'addon, con trigger (avvio, evento, combattimento, timer), `script.on/after/every/data`, editor in gioco (`/badb script edit`) e import/export. Guida: [docs/scripts.md](docs/scripts.md).
+* **Pagina principale** (`/badb`): azioni rapide, tutti i moduli, script, aspetto e addon installati in un'unica finestra ([docs/configui.md](docs/configui.md)).
+* **Addon terzi** (`scripts/addons.py`): X-Perl, BigWigs, Details!, Plater, ElvUI... da riga di comando, con backup e senza includere il loro codice. Guida: [docs/addons.md](docs/addons.md).
+
 ## Test
 `lua5.1 tests/run.lua` dalla root del repo (eseguito anche dalla CI su ogni PR). Il design system ha una suite propria con un mock che registra punti, dimensioni e colori dei widget: `lua5.1 tests/ui/run.lua`. `tests/lua/wowstub.lua` simula l'API WoW necessaria: CVar, combattimento, nameplate, layout Edit Mode, secret values.
 

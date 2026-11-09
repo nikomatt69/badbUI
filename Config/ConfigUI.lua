@@ -1337,7 +1337,7 @@ function UI:Open(pageKey)
             -- nome modulo senza pagina: apre Moduli con la sezione espansa
             if Modules.list and Modules.list[pageKey] then UI.pendingFocus = pageKey; key = "modules" end
         end
-        key = key or self:ResolveKey(UI.State().page) or "overview"
+        key = key or self:ResolveKey(UI.State().page) or (self:FindPage("home") and "home") or "overview"
         self:SelectPage(key)
     end)
     if not ok then Logger:Error("ConfigUI: %s", tostring(err)); return false end

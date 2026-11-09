@@ -40,26 +40,26 @@ end
 
 local UNITS = {
     { key = "player", unit = "player", title = "Giocatore",
-      defaults = with({ width = 220, height = 44, powerHeight = 8, showPowerText = true, showCastbar = true,
+      defaults = with({ width = 270, height = 54, powerHeight = 10, showPowerText = true, showCastbar = true,
                         castbarHeight = 18, showLeader = true, showCombat = true, reactionColor = false }),
-      point = { "CENTER", -290, -170 } },
+      point = { "BOTTOM", -395, 139 } },   -- ElvUI usa -342, ma con barre Blizzard da ~500 px si sovrapporrebbe
     { key = "target", unit = "target", title = "Bersaglio",
-      defaults = with({ width = 220, height = 44, powerHeight = 8, showLevel = true, showCastbar = true,
+      defaults = with({ width = 270, height = 54, powerHeight = 10, showLevel = true, showCastbar = true,
                         castbarHeight = 18, showAuras = true, auraMax = 12, showCombat = true, showBigAura = true }),
-      point = { "CENTER", 290, -170 } },
+      point = { "BOTTOM", 395, 139 } },
     { key = "targettarget", unit = "targettarget", title = "Bersaglio del bersaglio",
-      defaults = with({ width = 120, height = 22, powerHeight = 0, showPower = false, showHealthValue = false,
+      defaults = with({ width = 130, height = 36, powerHeight = 0, showPower = false, showHealthValue = false,
                         fontSize = 10 }),
-      point = { "CENTER", 460, -205 } },
+      point = { "BOTTOM", 395, 101 } },
     { key = "focus", unit = "focus", title = "Focus",
-      defaults = with({ width = 180, height = 34, powerHeight = 5, showCastbar = true, showAuras = true,
+      defaults = with({ width = 190, height = 36, powerHeight = 5, showCastbar = true, showAuras = true,
                         auraMax = 6, auraOnlyMine = true, auraSize = 18, showCombat = true, showBigAura = true }),
-      point = { "CENTER", -290, -60 } },
+      point = { "BOTTOM", 395, 60 } },
     { key = "party", unit = "party", title = "Gruppo",
-      defaults = with({ width = 160, height = 36, powerHeight = 5, showHealthValue = false, showLeader = true,
+      defaults = with({ width = 184, height = 54, powerHeight = 5, showHealthValue = false, showLeader = true,
                         highlightTarget = true, spacing = 10, vertical = true, showInRaid = false,
                         rangeFade = true, rangeAlpha = 0.45, showBigAura = true }),
-      point = { "LEFT", 40, 120 } },
+      point = { "BOTTOMLEFT", 4, 269 } },
 }
 local UNIT_BY_KEY = {}
 for _, u in ipairs(UNITS) do UNIT_BY_KEY[u.key] = u end

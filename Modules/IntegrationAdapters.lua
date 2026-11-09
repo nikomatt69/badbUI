@@ -334,6 +334,27 @@ Defs[#Defs + 1] = {
 }
 
 -- ---------------------------------------------------------------------------------------
+-- X-Perl (e fork Z/M/C/F-Perl per Forever): solo rilevamento. Il nome della cartella cambia da
+-- fork a fork e la struttura dei suoi dati non e' verificata: nessuna API inventata.
+-- ---------------------------------------------------------------------------------------
+local XPERL_NAMES = { "XPerl", "ZPerl", "MetaPerl", "CPerl", "FPerl", "XPerl_Player", "ZPerl_Player" }
+Defs[#Defs + 1] = {
+    id = "xperl", title = "X-Perl", addon = "XPerl",
+    supported = false,
+    unsupportedReason = "struttura dati di X-Perl non verificata: solo rilevamento (usa il suo export nativo)",
+    detect = function()
+        local sawFalse = false
+        for _, name in ipairs(XPERL_NAMES) do
+            local known = addOnLoadedKnown(name)
+            if known == true then return true end
+            if known == false then sawFalse = true end
+        end
+        if sawFalse then return false end
+        return false
+    end,
+}
+
+-- ---------------------------------------------------------------------------------------
 -- Metadati informativi (docs/FOREVER_FACTS.md): nota per l'utente e confidenza della fonte
 -- (A = confermato, B = una fonte/secondaria, C = non verificato). Tutti gli adapter sono best-effort.
 -- ---------------------------------------------------------------------------------------
@@ -347,6 +368,7 @@ local META = {
     clique = { "non verificato; solo il profilo Clique", "C" },
     weakauras = { "stato incerto su Forever (restrizioni stile Midnight, build non ufficiali)", "C" },
     ellesmereui = { "solo rilevamento: API di profilo non nota", "C" },
+    xperl = { "solo rilevamento: sostituisce i frame unita' (spegni UnitFrames di BadbUI)", "C" },
 }
 for _, def in ipairs(Defs) do
     local m = META[def.id]

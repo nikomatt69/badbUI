@@ -29,6 +29,7 @@ Mock.NewObject = newObject
 
 function Methods:GetAlpha() return self.__alpha end
 function Methods:SetAlpha(a) self.__alpha = a end
+function Methods:HasFocus() return false end
 function Methods:IsShown() return self.__shown end
 function Methods:Show() self.__shown = true end
 function Methods:Hide() self.__shown = false end

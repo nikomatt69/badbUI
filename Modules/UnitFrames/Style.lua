@@ -100,7 +100,10 @@ function Style.Skin(f)
     local r, g, b, a = Style.Color("border")
     for _, t in ipairs(f.badbBorder) do t:SetVertexColor(r, g, b, a) end
     local sr, sg, sb, sa = Style.Color("shadow")
-    f.badbShadow:SetVertexColor(sr, sg, sb, (sa or 0.6) * 0.5)
+    -- Schema piatto (ElvUI): niente ombra morbida, solo fondo e bordo netto.
+    local T = theme()
+    local scheme = T and T.SCHEMES and T.state and T.SCHEMES[T.state.scheme]
+    f.badbShadow:SetVertexColor(sr, sg, sb, (scheme and scheme.flat) and 0 or (sa or 0.6) * 0.5)
 end
 
 -- Bordo evidenziato (es. bersaglio corrente nel party, aggro).

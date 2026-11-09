@@ -82,7 +82,7 @@ end
 T["addon assenti: loaded=false, nessun errore"] = function(Mock)
     local env = setup(Mock)
     local list = env.I:List()
-    eq(#list, 9, "nove adapter integrati")
+    eq(#list, 10, "dieci adapter integrati")
     for _, r in ipairs(list) do eq(r.loaded, false, r.id .. " non caricato") end
     local ok, err = env.I:Capture("elvui")
     eq(ok, false); has(err, "non e' caricato")
@@ -97,7 +97,7 @@ T["List: ordine, campi e WeakAuras non supportato con motivo"] = function(Mock)
     local env = setup(Mock)
     local ids = {}
     for _, r in ipairs(env.I:List()) do ids[#ids + 1] = r.id end
-    eq(table.concat(ids, ","), "elvui,details,plater,bartender4,bigwigs,dbm,clique,weakauras,ellesmereui", "ordine")
+    eq(table.concat(ids, ","), "elvui,details,plater,bartender4,bigwigs,dbm,clique,weakauras,ellesmereui,xperl", "ordine")
     local wa = find(env.I:List(), "weakauras")
     eq(wa.supported, false, "supported=false")
     truthy(wa.reason and #wa.reason > 10, "motivazione presente")
@@ -471,7 +471,7 @@ T["modulo disattivato: nessun auto-apply, API ancora sicure"] = function(Mock)
     db.current = "Healer"
     BadbUI.DB:SetProfile("Alt")
     eq(#db.calls, 0)
-    eq(#env.I:List(), 9)
+    eq(#env.I:List(), 10)
 end
 
 T["adapter di terze parti e registrazione non valida"] = function(Mock)
@@ -524,7 +524,7 @@ T["un adapter che lancia errore non blocca gli altri"] = function(Mock)
     -- detect che lancia: loaded=false, lastError, nessuna eccezione
     local s = env.I:Status("dbad")
     eq(s.loaded, false); has(s.lastError, "detect rotto")
-    eq(#env.I:List(), 11)
+    eq(#env.I:List(), 12)
     -- il Logger ha registrato l'errore
     local found = false
     for _, line in ipairs(BadbUI.Logger.buffer) do if line:find("esplosione", 1, true) then found = true end end
@@ -590,7 +590,7 @@ T["dati corrotti nel profilo: nessun errore, Cattura ripara"] = function(Mock)
     eq(mod.data.elvui, nil)
     -- profilo senza tabella modulo
     BadbUI.DB.profile.modules.Integrations = nil
-    eq(#env.I:List(), 9)
+    eq(#env.I:List(), 10)
     ok = env.I:Capture("elvui")
     eq(ok, false, "nessun errore Lua anche senza tabella modulo")
 end
@@ -635,8 +635,8 @@ T["ConfigUI: pagina con una riga per integrazione"] = function(Mock)
     eq(page.category, "Strumenti"); eq(type(page.title), "string"); eq(type(page.order), "number")
     local h = page.build(Mock.NewObject("Frame"), { UI = BadbUI.ConfigUI, W = BadbUI.Widgets })
     CreateFrame = origCF
-    eq(h, 34 + 9 * 46, "altezza = toggle + 9 righe")
-    eq(#btns, 27, "3 pulsanti per riga")
+    eq(h, 34 + 10 * 46, "altezza = toggle + 10 righe")
+    eq(#btns, 30, "3 pulsanti per riga")
     has(texs[1].__texture, "Waiting", "ElvUI installato ma non catturato")
 end
 
@@ -716,7 +716,7 @@ end
 T["gli adapter built-in sono esposti come lista in IntegrationAdapterDefs"] = function(Mock)
     local env = setup(Mock)
     local defs = BadbUI.IntegrationAdapterDefs
-    eq(type(defs), "table"); eq(#defs, 9)
+    eq(type(defs), "table"); eq(#defs, 10)
     for _, d in ipairs(defs) do truthy(d.id and d.title and d.detect, "def " .. tostring(d.id)) end
     eq(type(BadbUI.IntegrationAdapterHelpers.aceDBAdapter), "function")
     -- un adapter di terze parti registrato prima di OnInitialize ha la precedenza

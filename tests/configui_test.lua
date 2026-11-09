@@ -284,7 +284,7 @@ end
 T["Open con chiave sconosciuta o argomenti strani"] = function()
     local UI = BadbUI.ConfigUI
     noThrow(function() UI:Open("non-esiste") end)
-    eq(UI.current, "overview")
+    eq(UI.current, "home")
     noThrow(function() UI:Open(42) end)
     noThrow(function() UI:Open({}) end)
     noThrow(function() UI:Refresh() end)

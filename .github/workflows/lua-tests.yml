@@ -31,3 +31,5 @@ jobs:
         run: lua5.1 tests/run_stub.lua
       - name: Tests (design system UI)
         run: lua5.1 tests/ui/run.lua .
+      - name: Tests (gestore addon, Python)
+        run: python3 tests/scripts/test_addons.py

@@ -49,6 +49,9 @@ Modules\UnitFrames\Style.lua
 Modules\UnitFrames\Elements.lua
 Modules\UnitFrames\UnitFrames.lua
 Modules\Backups.lua
+Modules\ElvLook.lua
+Modules\DataBars.lua
+Modules\Tooltip.lua
 Modules\Presets.lua
 Data\Presets.lua
 Modules\Contexts.lua
@@ -56,6 +59,7 @@ Modules\LayoutStudio.lua
 Modules\IntegrationAdapters.lua
 Modules\Integrations.lua
 Modules\Guides.lua
+Modules\Scripts.lua
 Data\Guides.lua
 Modules\Diagnostics.lua
 
@@ -63,6 +67,8 @@ Modules\Diagnostics.lua
 Config\Widgets.lua
 Config\ConfigUI.lua
 Config\Wizard.lua
+Config\ScriptEditor.lua
+Config\MainPages.lua
 Config\Slash.lua
 Config\ImportExport.lua
 

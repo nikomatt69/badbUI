@@ -27,6 +27,7 @@ local pairs, type, unpack, format, floor = pairs, type, unpack, string.format, m
 
 -- Accento predefinito: oro caldo. Le alternative sono offerte dal selettore in config.
 Theme.ACCENTS = {
+    elvui  = { 0.09, 0.52, 0.82 }, -- valuecolor di ElvUI (Defaults/Profile.lua)
     gold   = { 0.93, 0.75, 0.42 },
     badb   = { 0.25, 0.65, 1.00 },
     jade   = { 0.36, 0.84, 0.62 },
@@ -34,7 +35,7 @@ Theme.ACCENTS = {
     ember  = { 1.00, 0.52, 0.34 },
     frost  = { 0.55, 0.86, 0.96 },
 }
-Theme.ACCENT_ORDER = { "gold", "badb", "jade", "violet", "ember", "frost" }
+Theme.ACCENT_ORDER = { "elvui", "gold", "badb", "jade", "violet", "ember", "frost" }
 
 -- Colori di stato: uguali in ogni schema, cosi' "pericolo" e' sempre lo stesso rosso.
 local STATUS = {
@@ -50,6 +51,24 @@ local STATUS = {
 
 -- Schemi: fondi + scala di testo. "ink" e' il colore di hairline e velature.
 Theme.SCHEMES = {
+    -- Stile ElvUI: grigio carbone piatto, bordo nero da 1px (non una velatura chiara), niente ombra morbida.
+    elvui = {
+        label = "ElvUI",
+        flat     = true,
+        bg       = { 0.060, 0.060, 0.060, 0.96 },  -- backdropfadecolor di ElvUI (0.06)
+        panel    = { 0.100, 0.100, 0.100, 0.98 },  -- backdropcolor di ElvUI (0.1)
+        panelAlt = { 0.135, 0.135, 0.135, 1 },
+        sidebar  = { 0.072, 0.072, 0.072, 1 },
+        header   = { 0.120, 0.120, 0.120, 1 },
+        footer   = { 0.072, 0.072, 0.072, 1 },
+        text      = { 1.00, 1.00, 1.00, 1 },
+        textDim   = { 0.82, 0.82, 0.82, 1 },
+        textMuted = { 0.64, 0.64, 0.64, 1 },
+        ink    = { 1, 1, 1 },
+        border  = { 0, 0, 0, 1 },    -- override dei velature: bordo e divisori neri pieni
+        divider = { 0, 0, 0, 0.85 },
+        shadow = { 0, 0, 0, 0.35 },
+    },
     night = {
         label = "Notte",
         bg       = { 0.035, 0.047, 0.082, 0.96 },
@@ -93,7 +112,7 @@ Theme.SCHEMES = {
         shadow = { 0, 0, 0, 0.6 },
     },
 }
-Theme.SCHEME_ORDER = { "night", "dusk", "graphite" }
+Theme.SCHEME_ORDER = { "elvui", "night", "dusk", "graphite" }
 
 -- Velature di "ink" (hairline, hover, selezione) come frazioni di alpha.
 local WASH = { border = 0.12, divider = 0.08, hover = 0.06, selected = 0.10, track = 0.14, control = 0.05 }
@@ -150,7 +169,7 @@ for k, def in pairs(FONT_DEFS) do Theme.fontObjects[k] = def[1] end
 ---------------------------------------------------------------------------
 
 Theme.colors = {}
-Theme.state = { scheme = "night", accent = "gold", customAccent = nil, opacity = 1 }
+Theme.state = { scheme = "elvui", accent = "elvui", customAccent = nil, opacity = 1 }
 
 local function set4(dst, r, g, b, a)
     dst[1], dst[2], dst[3], dst[4] = r, g, b, a or 1
@@ -166,7 +185,7 @@ end
 
 -- Ricalcola Theme.colors senza sostituire le tabelle (chi le ha in mano le vede aggiornate).
 function Theme:Resolve()
-    local s = self.SCHEMES[self.state.scheme] or self.SCHEMES.night
+    local s = self.SCHEMES[self.state.scheme] or self.SCHEMES.elvui
     local op = self.state.opacity or 1
     for _, k in pairs({ "bg", "panel", "panelAlt", "sidebar", "header", "footer", "text", "textDim", "textMuted", "shadow" }) do
         local c = s[k]
@@ -177,9 +196,13 @@ function Theme:Resolve()
     set4(slot("surface"), unpack(self.colors.panel, 1, 4))
     local ink = s.ink
     for k, a in pairs(WASH) do set4(slot(k), ink[1], ink[2], ink[3], a) end
+    for _, k in ipairs({ "border", "divider" }) do -- override per schema (es. bordo nero ElvUI)
+        local o = s[k]
+        if o then set4(slot(k), o[1], o[2], o[3], o[4] or 1) end
+    end
     for k, c in pairs(STATUS) do set4(slot(k), unpack(c)) end
 
-    local acc = self.state.customAccent or self.ACCENTS[self.state.accent] or self.ACCENTS.gold
+    local acc = self.state.customAccent or self.ACCENTS[self.state.accent] or self.ACCENTS.elvui
     set4(slot("accent"), acc[1], acc[2], acc[3], 1)
     set4(slot("accentDim"), acc[1], acc[2], acc[3], 0.35)
     set4(slot("accentSoft"), acc[1], acc[2], acc[3], 0.14)
@@ -348,9 +371,9 @@ function Theme:Load()
     self:Refresh()
 end
 
--- Torna ai valori di fabbrica (schema notte, accento oro, opacita' piena).
+-- Torna ai valori di fabbrica (schema ElvUI, accento azzurro, opacita' piena).
 function Theme:Reset()
-    self.state.scheme, self.state.accent, self.state.customAccent, self.state.opacity = "night", "gold", nil, 1
+    self.state.scheme, self.state.accent, self.state.customAccent, self.state.opacity = "elvui", "elvui", nil, 1
     save(); self:Refresh()
 end
 

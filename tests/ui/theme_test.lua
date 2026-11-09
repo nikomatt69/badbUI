@@ -94,9 +94,9 @@ end
 S["valori non validi rifiutati"] = function(boot)
     local T = boot()
     T.eq(T.Theme:SetScheme("inesistente"), false)
-    T.eq(T.Theme.state.scheme, "night")
+    T.eq(T.Theme.state.scheme, "elvui")
     T.eq(T.Theme:SetAccent("inesistente"), false)
-    T.eq(T.Theme.state.accent, "gold")
+    T.eq(T.Theme.state.accent, "elvui")
     T.Theme:SetOpacity(5); T.eq(T.Theme.state.opacity, 1)
     T.Theme:SetOpacity(-1); T.eq(T.Theme.state.opacity, 0.3)
 end
@@ -115,22 +115,22 @@ end
 S["SavedVariables corrotte: si torna ai default senza errori"] = function(boot)
     local bad = { global = { theme = { scheme = 42, accent = {}, customAccent = { "x", 2, -1 }, opacity = 0 / 0 } } }
     local T = boot({ db = bad })
-    T.eq(T.Theme.state.scheme, "night")
-    T.eq(T.Theme.state.accent, "gold")
+    T.eq(T.Theme.state.scheme, "elvui")
+    T.eq(T.Theme.state.accent, "elvui")
     T.eq(T.Theme.state.customAccent, nil)
     T.eq(T.Theme.state.opacity, 1)
     T.eq(bad.global.theme.customAccent, nil, "accento corrotto non ripulito")
     -- theme non tabella / global non tabella
     local T2 = boot({ db = { global = { theme = nil } } })
-    T2.eq(T2.Theme.state.scheme, "night")
+    T2.eq(T2.Theme.state.scheme, "elvui")
 end
 
 S["Reset riporta ai valori di fabbrica"] = function(boot)
     local T = boot()
     T.Theme:SetScheme("dusk"); T.Theme:SetAccent(1, 0, 0); T.Theme:SetOpacity(0.5)
     T.Theme:Reset()
-    T.eq(T.Theme.state.scheme, "night"); T.eq(T.Theme.state.customAccent, nil); T.eq(T.Theme.state.opacity, 1)
-    T.eq(BadbUIDB.global.theme.scheme, "night")
+    T.eq(T.Theme.state.scheme, "elvui"); T.eq(T.Theme.state.customAccent, nil); T.eq(T.Theme.state.opacity, 1)
+    T.eq(BadbUIDB.global.theme.scheme, "elvui")
 end
 
 S["tema usabile prima del login (valori di default gia' risolti)"] = function(boot)
@@ -153,6 +153,20 @@ S["contrasto del testo leggibile su ogni schema (7:1 primario, 4.5:1 secondario)
         T.ok(contrast({ 0.04, 0.05, 0.08 }, acc) >= 4.5, "onAccent su accento " .. name)
         T.ok(contrast(acc, T.Theme.SCHEMES.night.bg) >= 4.5, "accento " .. name .. " su night")
     end
+end
+
+S["schema ElvUI: predefinito, bordo nero pieno, accento azzurro"] = function(boot)
+    local T = boot()
+    T.eq(T.Theme.state.scheme, "elvui"); T.eq(T.Theme.state.accent, "elvui")
+    local b = T.Theme.colors.border
+    T.near(b[1], 0); T.near(b[2], 0); T.near(b[3], 0); T.near(b[4], 1, 1e-6, "bordo non pieno")
+    local a = T.Theme.colors.accent
+    T.ok(a[3] > a[1] and a[3] > 0.8, "accento non azzurro")
+    -- lo schema notte mantiene la hairline chiara
+    T.Theme:SetScheme("night")
+    T.near(T.Theme.colors.border[1], 1); T.near(T.Theme.colors.border[4], 0.12, 1e-6)
+    T.Theme:SetScheme("elvui")
+    T.near(T.Theme.colors.border[1], 0, 1e-6, "override non riapplicato")
 end
 
 S["hairline pixel perfect su ogni scala e risoluzione"] = function(boot)

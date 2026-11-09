@@ -63,3 +63,12 @@ Nuovo tipo: aggiungere `W.Builders.mio = function(parent, module, opt) ... retur
 - Nessuna verifica in gioco: i template Blizzard (`BasicFrameTemplateWithInset`, `ScrollFrameTemplate`, `WowStyle1DropdownTemplate`, `SearchBoxTemplate`, `InputScrollFrameTemplate`) sono sondati con pcall e hanno un fallback a frame base, ma l'aspetto del fallback e' minimale.
 - Le pagine dei moduli sono pensate per ~540 px di larghezza; ridimensionare la finestra non le allarga.
 - L'ordine di costruzione e' lazy: una pagina gia' costruita non viene ricostruita se un modulo cambia `page.build` a runtime (si ricostruisce solo al cambio di stato attivo/disattivo del modulo).
+
+## Pagine principali (`Config/MainPages.lua`)
+La finestra si apre su **Principale** (`/badb`), pensata per gestire tutto da un punto:
+* **Principale**: azioni rapide (stile ElvUI, sblocca frame, editor script, configurazione guidata, `/badb doctor`, backup, reload),
+  tutti i moduli con Spegni/Accendi e *Opzioni*, elenco degli script con Modifica/Esegui/Accendi.
+* **Aspetto**: schema colori, accento, trasparenza, scala della finestra, ripristino del tema ElvUI.
+* **Addon**: tutti gli addon installati con Accendi/Spegni (serve `/reload`; `BadbUI` non si spegne da qui).
+  Installare o aggiornare addon richiede il computer: `scripts/addons.py` (vedi `docs/addons.md`).
+Logica esposta in `Badb.MainPages` (`quickActions`, `moduleRows`, `scriptRows`, `appearanceOptions`, `addonRows`); test in `tests/mainpages_test.lua`.
