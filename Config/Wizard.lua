@@ -1066,7 +1066,7 @@ end
 
 local function button(parent, text, w, onClick, variant)
     local UI = Badb.UI
-    if UI and UI.Button then return UI.Button(parent, text, w, 26, onClick, variant) end
+    if UI and UI.Button then return UI:Button(parent, text, w, 26, onClick, variant) end
     local b = CreateFrame("Button", nil, parent, "BackdropTemplate")
     b:SetSize(w, 26)
     skin(b, variant == "primary" and "accent" or "panelAlt", variant == "primary" and "accent" or "border")
@@ -1088,7 +1088,7 @@ end
 
 local function toggle(parent, text, get, set)
     local UI = Badb.UI
-    if UI and UI.Toggle then return UI.Toggle(parent, text, get, set) end
+    if UI and UI.Toggle then return UI:Toggle(parent, text, get, set) end
     local cb = CreateFrame("CheckButton", nil, parent, "UICheckButtonTemplate")
     local t = cb.text or cb.Text
     if t then t:SetText(text); t:SetTextColor(color("text")) end

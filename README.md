@@ -17,6 +17,7 @@ Copia la cartella `BadbUI` in `World of Warcraft\_classic_\Interface\AddOns\` (o
 | Database | `Core/Database.lua` | Profili per personaggio, profilo per spec, migrazioni di schema versionate, import/export |
 | Moduli | `Core/Modules.lua` | Ciclo di vita `OnInitialize/OnEnable/OnDisable/OnProfileChanged`, dipendenze, attivazione a runtime |
 | Frame | `Core/FrameManager.lua` | Registro frame: posizione, scala, alpha, visibilità, snapshot e ripristino originale, modalità sblocco con griglia |
+| Design system | `UI/*` | `Badb.Theme` (token di colore, font, spaziature, schemi notte/crepuscolo/grafite, accento) e `Badb.UI` (finestre, bottoni, toggle, slider, dropdown, tab, liste virtualizzate). Doc: [docs/UI.md](docs/UI.md), anteprima dal vivo: `/badb gallery` |
 | Config | `Config/*` | Pannello in Opzioni > AddOns generato dai descrittori dei moduli, slash `/badb` `/bui` |
 
 ### Regole specifiche di Forever
@@ -56,11 +57,21 @@ Badb.Presets:RegisterContent("arena", { title = "Arena", description = "...", ic
 ```
 I test verificano che ogni chiave di un preset esista nei default del modulo.
 
+## Aure curate e avvisi
+
+| Modulo | File | Cosa fa |
+|---|---|---|
+| Aure curate | `Modules/Auras.lua`, `Data/Auras.lua` | Database di CC, immunita', difensivi, offensivi, root, rallentamenti e debuff per classe; riconosce anche i rank nuovi per nome localizzato; elenco personale (`/badb aura`). |
+| Aure sulle nameplate | `Modules/NameplateAuras.lua` | CC grande a destra, difensivi/offensivi nemici a sinistra, i tuoi debuff sopra; nasconde le aure Blizzard. |
+| Avvisi | `Modules/Alerts.lua` | "Healer in CC" (e focus) con suono, di default solo nei BG (`/badb alert`). |
+
+Tutto passa dalle API aure (niente combat log) e tollera i secret values: dettagli in [docs/auras.md](docs/auras.md). Gli unit frame mostrano la stessa "aura grande" al centro di bersaglio, focus e gruppo.
+
 ## Test
-`lua5.1 tests/run.lua` dalla root del repo (eseguito anche dalla CI su ogni PR). `tests/lua/wowstub.lua` simula l'API WoW necessaria: CVar, combattimento, nameplate, layout Edit Mode, secret values.
+`lua5.1 tests/run.lua` dalla root del repo (eseguito anche dalla CI su ogni PR). Il design system ha una suite propria con un mock che registra punti, dimensioni e colori dei widget: `lua5.1 tests/ui/run.lua`. `tests/lua/wowstub.lua` simula l'API WoW necessaria: CVar, combattimento, nameplate, layout Edit Mode, secret values.
 
 ## Comandi
-`/badb` config · `/badb setup` configurazione guidata · `/badb undo` annulla ultimo preset · `/badb unlock` · `/badb profile <nome>` · `/badb export` · `/badb enable|disable <modulo>` · `/badb debug` · `/badb log`
+`/badb` config · `/badb setup` configurazione guidata · `/badb undo` annulla ultimo preset · `/badb unlock` · `/badb profile <nome>` · `/badb export` · `/badb enable|disable <modulo>` · `/badb debug` · `/badb log` · `/badb gallery` galleria del design system · `/badb theme <schema> <accento>`
 
 ## Barre azioni e cooldown
 
@@ -77,6 +88,16 @@ I test verificano che ogni chiave di un preset esista nei default del modulo.
 - Pulse al centro dello schermo quando un'abilita' lunga torna pronta; spostabile con `/badb unlock`.
 - Opzione per estendere lo stile a tutti i cooldown (buff, oggetti); i frame "forbidden" (nameplate) non vengono mai toccati.
 - Secret values: quando la durata e' opaca il client disegna comunque il countdown; colore, soglia e pulse si disattivano per quel cooldown senza errori.
+
+## Unit frame
+
+**UnitFrames** (`Modules/UnitFrames/`, documentazione in `docs/unitframes.md`)
+- Frame propri per giocatore, bersaglio, bersaglio del bersaglio, focus e gruppo (party 1-4), stile piatto del tema: fondo notturno, hairline da 1px, ombra morbida, accento oro, palette di riserva se il design system manca.
+- Bottoni `SecureUnitButtonTemplate`: click = bersaglio, destro = menu, registrati in `ClickCastFrames`. Visibilita' affidata al client (`RegisterUnitWatch`, state driver per il gruppo), nessuno snippet secure.
+- Vita (valore e/o percentuale), risorsa, nome, livello, colore di classe o reazione, castbar con icona (grigia se non interrompibile), aure su bersaglio/focus/gruppo con debuff prima dei buff, icona di classe, icone combattimento (anche su bersaglio/focus), capogruppo e marker, gruppo sfumato fuori portata, bordo d'accento sul membro che e' il tuo bersaglio.
+- Secret values: i valori opachi vanno direttamente ai widget, testi e colori usano le API del client (`UnitHealthPercent`, `SetAlphaFromBoolean`, durate dei cast) quando ci sono, altrimenti un fallback neutro. Nessun confronto o calcolo su valori secret.
+- Combattimento: creazione, dimensioni e ancoraggi solo fuori combattimento (rimandati automaticamente), aggiornamenti di vita/aure/cast sempre attivi. Frame Blizzard nascosti riparentandoli e ripristinati alla disattivazione.
+- Spento di default. Anteprima con dati finti (`/badb uf preview`), posizioni con `/badb unlock`, `/badb uf reset <unita'>`. Un solo pannello di opzioni con selettore dell'unita'.
 
 ## Test
 `lua5.1 tests/run.lua .` carica la TOC con API WoW simulate (`tests/wow_mock.lua`) ed esegue `tests/*_test.lua`, con l'addon ricaricato da zero per ogni test. La CI (`.github/workflows/lua-tests.yml`) esegue controllo sintassi e test su ogni PR. I casi limite coperti includono secret values, combattimento, barre mancanti, pulsanti creati dopo il login, cambio profilo, temi malformati e ripristino completo alla disattivazione.

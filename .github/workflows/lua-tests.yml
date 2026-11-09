@@ -27,5 +27,7 @@ jobs:
         run: for f in $(git ls-files '*.lua'); do luac5.1 -p "$f" || exit 1; done
       - name: Tests
         run: lua5.1 tests/run.lua .
-      - name: Tests (suite stub: CVars, Nameplates, GroupFrames, Presets)
+      - name: "Tests (suite stub: CVars, Nameplates, GroupFrames, Presets)"
         run: lua5.1 tests/run_stub.lua
+      - name: Tests (design system UI)
+        run: lua5.1 tests/ui/run.lua .
