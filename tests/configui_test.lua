@@ -327,6 +327,8 @@ T["ricerca: titoli pagina, titoli modulo e label opzioni (case-insensitive)"] = 
         { type = "separator" },
         "garbage", 42,
     } })
+    -- Il vero modulo Presets ha una pagina "Preset": la togliamo per isolare il modulo finto.
+    BadbUI.Modules:Get("Presets").page = nil
     newModule("Pgm", { title = "Modulo con pagina", page = { title = "Preset ruolo", build = function() return 10 end } })
     local r = UI:Search("XILOFONO")
     eq(#r, 2, "due label con 'xilofono'")
