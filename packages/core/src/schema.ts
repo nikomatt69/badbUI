@@ -14,13 +14,18 @@ export const RankSchema = z.enum(ranks)
 export const DateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
 
 export const RangeSchema = z
-  .object({ day: z.number().int().min(0).max(6), start: z.number().int().min(0).max(1440), end: z.number().int().min(0).max(1440) })
+  .object({
+    day: z.number().int().min(0).max(6),
+    start: z.number().int().min(0).max(1440),
+    end: z.number().int().min(0).max(1440),
+  })
   .refine(validRange, "Intervallo non valido")
 
 export const WeightsSchema = z.partialRecord(z.enum(tagIds), z.number().int().min(0).max(3))
 
 // ── Account ─────────────────────────────────────────────────────────────────────────────────────
 export const Credentials = z.object({
+  setupKey: z.string().max(128).optional(),
   name: z
     .string()
     .trim()
@@ -32,7 +37,11 @@ export const Credentials = z.object({
 
 export const LinkKind = z.enum(["discord", "addon", "mobile"])
 export const LinkRedeem = z.object({ code: name(16), label: text(60).optional() })
-export const DiscordLink = z.object({ code: name(16), discordId: z.string().regex(/^\d{5,25}$/), discordName: text(60).optional() })
+export const DiscordLink = z.object({
+  code: name(16),
+  discordId: z.string().regex(/^\d{5,25}$/),
+  discordName: text(60).optional(),
+})
 
 export type User = {
   id: string
@@ -61,8 +70,8 @@ export const CharacterInput = z.object({
     .string()
     .trim()
     .min(2)
-    .max(24)
-    .regex(/^[\p{L}'-]+$/u, "Nome personaggio non valido"),
+    .max(48)
+    .regex(/^[\p{L}'-]+(?: [\p{L}'-]+)*$/u, "Nome personaggio non valido"),
   realm: text(40).default(""),
   cls: Cls,
   spec: text(24).nullable().default(null),
@@ -71,6 +80,8 @@ export const CharacterInput = z.object({
   race: text(24).nullable().default(null),
   main: z.boolean().default(false),
 })
+
+export const CharacterOwner = z.object({ userId: name(64).nullable() })
 
 export const CharacterPatch = z.object({
   realm: text(40).optional(),
@@ -100,6 +111,9 @@ export type Character = {
   professions: Profession[]
   updated: number
   source: "site" | "addon"
+  /** Istante della scansione nel client, distinto dall'arrivo sul server. */
+  scannedAt: number | null
+  client: { version: string; build: string; interface: number } | null
 }
 
 // ── Candidature ─────────────────────────────────────────────────────────────────────────────────
@@ -342,7 +356,13 @@ export const GuildInput = z.object({
   realm: text(40),
   motto: text(160),
   about: text(8000),
-  discordInvite: z.union([z.literal(""), z.url().max(200).regex(/^https:\/\//)]),
+  discordInvite: z.union([
+    z.literal(""),
+    z
+      .url()
+      .max(200)
+      .regex(/^https:\/\//),
+  ]),
   /** Tassa di candidatura in argenti (0 = nessuna). Si paga in gioco, il sito la annota soltanto. */
   feeSilver: z.number().int().min(0).max(100_000),
   /** Sezione di Wowhead usata per i link agli oggetti, es. "classic". */
@@ -376,7 +396,7 @@ export const AddonAction = z.discriminatedUnion("type", [
     id: name(64),
     at: z.number().int().nonnegative(),
     eventId: name(64),
-    character: name(24),
+    character: CharacterInput.shape.name,
     status: z.enum(signupStatuses),
     note: text(200).default(""),
   }),
@@ -415,6 +435,7 @@ export const RosterEntry = z.object({
 
 export const AddonSync = z.object({
   version: text(20).default(""),
+  client: z.object({ version: text(40), build: text(40), interface: z.number().int() }).optional(),
   characters: z.array(AddonCharacter).max(20).default([]),
   /** Roster di gilda visto in gioco: aggiorna l'armory anche per chi non usa l'addon. */
   roster: z.array(RosterEntry).max(1000).default([]),
@@ -456,9 +477,11 @@ export type Bundle = {
     name: string
     notes: string
     tags: string[]
-    best: Record<Role, { cls: ClassId; spec: string; label: string; score: number }[]>
+    best: Record<Role, { cls: ClassId; spec: string; label: string; score: number | null }[]>
   }[]
   news: { title: string; excerpt: string; published: number }[]
+  guides: { title: string; body: string }[]
+  armory: Pick<Character, "name" | "cls" | "level" | "spec" | "role" | "gear" | "scannedAt">[]
 }
 
 export type SyncResult = { bundle: Bundle; lua: string }
@@ -479,3 +502,14 @@ export type BusEvent = {
 }
 
 export type ApiError = { error: string; issues?: { path: string; message: string }[] }
+
+export type AddonConnection = {
+  userId: string
+  name: string
+  received: number
+  client: AddonSync["client"] | null
+  characters: number
+  roster: number
+  actions: number
+  rejected: Bundle["rejected"]
+}

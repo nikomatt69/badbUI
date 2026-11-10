@@ -5,6 +5,7 @@
 -- Nuovi tipi = nuova funzione in W.Builders (firma: builder(parent, module, opt) -> frame, altezza[, xoff, yoff]).
 -- Tutti i builder ufficiali sono "a prova di errore": un descrittore errato produce una riga rossa, mai un errore Lua.
 local _, ns = ...
+local L = ns.Badb.L
 local Badb = ns.Badb
 
 local W = { Builders = {} }
@@ -69,7 +70,7 @@ function W.CreateFrame(kind, name, parent, ...)
     end
     local ok, f = pcall(CreateFrame, kind, name, parent)
     if ok and f then return f, nil end
-    error("CreateFrame(" .. tostring(kind) .. ") non riuscito: " .. tostring(f), 2)
+    error("CreateFrame(" .. tostring(kind) .. L[") non riuscito: "] .. tostring(f), 2)
 end
 
 function W.Backdrop(f, bg, border)
@@ -91,7 +92,7 @@ function W.MakeButton(parent, text, width, height, onClick)
     end
     b:SetText(text or "")
     if onClick then
-        b:SetScript("OnClick", function(self, mouse) W.Safe(onClick, "pulsante", self, mouse) end)
+        b:SetScript("OnClick", function(self, mouse) W.Safe(onClick, L["pulsante"], self, mouse) end)
     end
     return b
 end
@@ -201,28 +202,28 @@ end
 
 -- Valida un descrittore. Ritorna true oppure false, messaggio.
 function W.Validate(opt, module)
-    if type(opt) ~= "table" then return false, "descrittore non valido (" .. type(opt) .. ")" end
+    if type(opt) ~= "table" then return false, L["descrittore non valido ("] .. type(opt) .. ")" end
     local t = opt.type
-    if type(t) ~= "string" then return false, "campo 'type' mancante" end
+    if type(t) ~= "string" then return false, L["campo 'type' mancante"] end
     if t == "header" or t == "separator" or t == "label" then return true end
     if t == "execute" then
-        if type(opt.func) ~= "function" then return false, "'" .. tostring(opt.label) .. "': func mancante" end
+        if type(opt.func) ~= "function" then return false, "'" .. tostring(opt.label) .. L["': func mancante"] end
         return true
     end
     if t == "list" then
-        if type(opt.items) ~= "function" and type(opt.items) ~= "table" then return false, "list: 'items' mancante" end
+        if type(opt.items) ~= "function" and type(opt.items) ~= "table" then return false, L["list: 'items' mancante"] end
         return true
     end
     if t == "toggle" or t == "range" or t == "text" or t == "color" or t == "dropdown" or t == "select" then
         local name = tostring(opt.label or opt.path or t)
         if not hasAccess(opt) and not (type(opt.get) == "function" and not module) then
-            if not (module and type(opt.path) == "string") then return false, "'" .. name .. "': servono path oppure get+set" end
+            if not (module and type(opt.path) == "string") then return false, "'" .. name .. L["': servono path oppure get+set"] end
         end
         if t == "range" and not (tonumber(opt.min) and tonumber(opt.max) and tonumber(opt.min) < tonumber(opt.max)) then
-            return false, "'" .. name .. "': min/max non validi"
+            return false, "'" .. name .. L["': min/max non validi"]
         end
         if (t == "dropdown" or t == "select") and type(opt.values) ~= "table" and type(opt.values) ~= "function" then
-            return false, "'" .. name .. "': values mancante"
+            return false, "'" .. name .. L["': values mancante"]
         end
         return true
     end
@@ -296,7 +297,7 @@ function W.ErrorLabel(parent, text)
     local fs = parent:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
     fs:SetWidth(WIDTH)
     W.Call(fs, "SetJustifyH", "LEFT")
-    fs:SetText("|cff" .. W.hex.err .. tostring(text or "Opzione non valida") .. "|r")
+    fs:SetText("|cff" .. W.hex.err .. tostring(text or L["Opzione non valida"]) .. "|r")
     return fs, 22
 end
 
@@ -436,15 +437,15 @@ raw.text = function(parent, module, opt)
         local message
         if opt.numeric then
             value = tonumber(txt)
-            if value == nil then message = "numero non valido" end
+            if value == nil then message = L["numero non valido"] end
         end
         if not message and type(opt.validate) == "function" then
             local ok, valid, conv = pcall(opt.validate, txt)
             if not ok then
-                message = "validazione fallita"
+                message = L["validazione fallita"]
                 logError("text %s: %s", label(opt), tostring(valid))
             elseif valid == false or valid == nil then
-                message = type(conv) == "string" and conv or "valore non valido"
+                message = type(conv) == "string" and conv or L["valore non valido"]
             elseif conv ~= nil then
                 value = conv
             end
@@ -496,7 +497,7 @@ raw.color = function(parent, module, opt)
         local r, g, b, a = W.ParseColor(get())
         local ok, e = pcall(function()
             local P = ColorPickerFrame
-            if not P then error("ColorPickerFrame non disponibile") end
+            if not P then error(L["ColorPickerFrame non disponibile"]) end
             local function fromPicker()
                 local nr, ng, nb = P:GetColorRGB()
                 local na = a
@@ -516,7 +517,7 @@ raw.color = function(parent, module, opt)
                 P:Show()
             end
         end)
-        if not ok then logError("Selettore colore: %s", tostring(e)) end
+        if not ok then logError(L["Selettore colore: %s"], tostring(e)) end
     end)
     box:Refresh()
     return box, 30
@@ -571,7 +572,7 @@ raw.list = function(parent, _, opt)
     child:SetWidth(WIDTH - 28)
     local empty = holder:CreateFontString(nil, "ARTWORK", "GameFontDisableSmall")
     empty:SetPoint("CENTER")
-    empty:SetText(tostring(opt.empty or "Nessun elemento"))
+    empty:SetText(tostring(opt.empty or L["Nessun elemento"]))
     box.rows, box.scroll, box.child = {}, sf, child
 
     local function makeRow(i)
@@ -590,7 +591,7 @@ raw.list = function(parent, _, opt)
 
     local function runAction(act, item)
         local function go()
-            W.Safe(act.func, "azione '" .. tostring(act.label) .. "'", item)
+            W.Safe(act.func, L["azione '"] .. tostring(act.label) .. "'", item)
             if not act.noRefresh then box:Refresh() end
         end
         local confirm = W.Eval(type(act.confirm) == "function" and function() return act.confirm(item) end or act.confirm, nil)
@@ -620,7 +621,7 @@ raw.list = function(parent, _, opt)
             row:Show()
             row.text:SetText(tostring(item.text or ""))
             row.detail:SetText(tostring(item.detail or ""))
-            row:SetScript("OnClick", function() if type(item.onClick) == "function" then W.Safe(item.onClick, "riga lista", item) end end)
+            row:SetScript("OnClick", function() if type(item.onClick) == "function" then W.Safe(item.onClick, L["riga lista"], item) end end)
             -- Azioni, ancorate a destra (max 5).
             local acts = type(item.actions) == "table" and item.actions or {}
             local x = -4
@@ -667,13 +668,13 @@ for name, fn in pairs(raw) do
     W.Builders[name] = function(parent, module, opt)
         local ok, msg = W.Validate(opt, module)
         if not ok then
-            logError("Opzione non valida: %s", tostring(msg))
-            return W.ErrorLabel(parent, "Opzione non valida: " .. tostring(msg))
+            logError(L["Opzione non valida: %s"], tostring(msg))
+            return W.ErrorLabel(parent, L["Opzione non valida: "] .. tostring(msg))
         end
         local okb, w, h, xoff, yoff = pcall(fn, parent, module, opt)
         if not okb then
             logError("Builder %s: %s", name, tostring(w))
-            return W.ErrorLabel(parent, "Errore nel widget '" .. name .. "'")
+            return W.ErrorLabel(parent, L["Errore nel widget '"] .. name .. "'")
         end
         return w, h, xoff, yoff
     end
@@ -693,12 +694,12 @@ function W:BuildOne(parent, module, opt)
             w, h, xoff, yoff = a, b, c, d
         else
             logError("Builder %s: %s", tostring(t), tostring(a))
-            w, h = self.ErrorLabel(parent, "Errore nel widget '" .. tostring(t) .. "'")
+            w, h = self.ErrorLabel(parent, L["Errore nel widget '"] .. tostring(t) .. "'")
         end
     else
-        local msg = type(opt) ~= "table" and ("descrittore non valido (" .. type(opt) .. ")") or ("tipo sconosciuto '" .. tostring(t) .. "'")
-        logError("Opzione non valida: %s", msg)
-        w, h = self.ErrorLabel(parent, "Opzione non valida: " .. msg)
+        local msg = type(opt) ~= "table" and (L["descrittore non valido ("] .. type(opt) .. ")") or (L["tipo sconosciuto '"] .. tostring(t) .. "'")
+        logError(L["Opzione non valida: %s"], msg)
+        w, h = self.ErrorLabel(parent, L["Opzione non valida: "] .. msg)
     end
     local entry = { w = w, h = tonumber(h) or 28, x = xoff or 16, y = yoff or 0, opt = type(opt) == "table" and opt or {} }
     if type(opt) == "table" then

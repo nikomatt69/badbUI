@@ -5,7 +5,7 @@ import * as Post from "./post"
 import * as Raid from "./raid"
 
 export const defaults: Schema.Guild = {
-  name: "Badb",
+  name: "Fratelli di Azeroth",
   realm: "",
   motto: "Una gilda, tre fasce orarie, nessuna scusa.",
   about: "",
@@ -21,7 +21,9 @@ export function get(ctx: Ctx): Schema.Guild {
 }
 
 export function set(ctx: Ctx, input: Schema.Guild) {
-  ctx.db.run("INSERT INTO setting (key, value) VALUES ('guild', ?1) ON CONFLICT(key) DO UPDATE SET value = ?1", [JSON.stringify(input)])
+  ctx.db.run("INSERT INTO setting (key, value) VALUES ('guild', ?1) ON CONFLICT(key) DO UPDATE SET value = ?1", [
+    JSON.stringify(input),
+  ])
   touch(ctx, { type: "guild" })
   return get(ctx)
 }

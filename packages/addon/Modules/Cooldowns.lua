@@ -10,12 +10,13 @@
 --    (combattimento) quelle funzioni si disattivano per quel cooldown, senza errori.
 --  * Nessun combat log: lo stato arriva solo dagli hook sui frame Cooldown.
 local _, ns = ...
+local L = ns.Badb.L
 local Badb = ns.Badb
 local Compat, DB, FM, Lib = Badb.Compat, Badb.DB, Badb.FrameManager, Badb.ActionBarsLib
 
 local M = Badb.Modules:New("Cooldowns", {
     title = "Cooldown",
-    category = "Barre",
+    category = L["Barre"],
     defaults = {
         enabled = true,
         numbers = true,
@@ -35,22 +36,22 @@ local M = Badb.Modules:New("Cooldowns", {
 })
 
 M.options = {
-    { type = "header", label = "Numeri" },
-    { type = "toggle", path = "numbers", label = "Mostra i secondi rimanenti" },
-    { type = "range", path = "fontScale", label = "Dimensione testo (rispetto al pulsante)", min = 0.2, max = 0.8, step = 0.02 },
-    { type = "range", path = "minDuration", label = "Nascondi sotto (s, esclude il GCD)", min = 0, max = 5, step = 0.1 },
-    { type = "toggle", path = "colorByTime", label = "Colore per tempo rimanente" },
-    { type = "range", path = "expiringThreshold", label = "Soglia 'in scadenza' (s)", min = 0, max = 15, step = 1 },
-    { type = "header", label = "Animazione" },
-    { type = "range", path = "swipeAlpha", label = "Opacita' dello swipe", min = 0, max = 1, step = 0.05 },
-    { type = "toggle", path = "drawEdge", label = "Bordo luminoso sullo swipe" },
-    { type = "toggle", path = "drawBling", label = "Lampo a fine cooldown" },
-    { type = "toggle", path = "allCooldowns", label = "Applica a tutti i cooldown (buff, oggetti, borse)" },
+    { type = "header", label = L["Numeri"] },
+    { type = "toggle", path = "numbers", label = L["Mostra i secondi rimanenti"] },
+    { type = "range", path = "fontScale", label = L["Dimensione testo (rispetto al pulsante)"], min = 0.2, max = 0.8, step = 0.02 },
+    { type = "range", path = "minDuration", label = L["Nascondi sotto (s, esclude il GCD)"], min = 0, max = 5, step = 0.1 },
+    { type = "toggle", path = "colorByTime", label = L["Colore per tempo rimanente"] },
+    { type = "range", path = "expiringThreshold", label = L["Soglia 'in scadenza' (s)"], min = 0, max = 15, step = 1 },
+    { type = "header", label = L["Animazione"] },
+    { type = "range", path = "swipeAlpha", label = L["Opacita' dello swipe"], min = 0, max = 1, step = 0.05 },
+    { type = "toggle", path = "drawEdge", label = L["Bordo luminoso sullo swipe"] },
+    { type = "toggle", path = "drawBling", label = L["Lampo a fine cooldown"] },
+    { type = "toggle", path = "allCooldowns", label = L["Applica a tutti i cooldown (buff, oggetti, borse)"] },
     { type = "header", label = "Pulse" },
-    { type = "toggle", path = "pulse", label = "Icona al centro quando un'abilita' torna pronta" },
-    { type = "range", path = "pulseMinDuration", label = "Solo cooldown piu' lunghi di (s)", min = 0, max = 60, step = 1 },
-    { type = "range", path = "pulseSize", label = "Dimensione pulse", min = 32, max = 128, step = 4 },
-    { type = "execute", label = "Prova pulse", func = function() M:Pulse(GetSpellTexture and GetSpellTexture(6603) or 136243) end },
+    { type = "toggle", path = "pulse", label = L["Icona al centro quando un'abilita' torna pronta"] },
+    { type = "range", path = "pulseMinDuration", label = L["Solo cooldown piu' lunghi di (s)"], min = 0, max = 60, step = 1 },
+    { type = "range", path = "pulseSize", label = L["Dimensione pulse"], min = 32, max = 128, step = 4 },
+    { type = "execute", label = L["Prova pulse"], func = function() M:Pulse(GetSpellTexture and GetSpellTexture(6603) or 136243) end },
 }
 
 local tracked = setmetatable({}, { __mode = "k" }) -- cooldown dei pulsanti d'azione -> pulsante
@@ -300,7 +301,7 @@ end
 
 function M:OnInitialize()
     pulse = createPulse()
-    FM:Register("CooldownPulse", { frame = pulse, title = "Pulse cooldown", category = "Barre", hideable = false })
+    FM:Register("CooldownPulse", { frame = pulse, title = L["Pulse cooldown"], category = L["Barre"], hideable = false })
 end
 
 function M:OnEnable()

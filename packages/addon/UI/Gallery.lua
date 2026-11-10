@@ -3,6 +3,7 @@
 -- /badb theme [night|dusk|graphite] [accento]  cambia tema da riga di comando.
 -- Serve anche da esempio d'uso completo dell'API Badb.UI.
 local _, ns = ...
+local L = ns.Badb.L
 local Badb = ns.Badb
 local Theme, UI = Badb.Theme, Badb.UI
 
@@ -13,29 +14,29 @@ local demo = { toggle = true, check = false, slider = 0.6, steps = 3, choice = "
 
 local function buildControls(page)
     local st = UI:Stack(page, { gap = 10 })
-    st:Add(UI:SectionHeader(page, "Bottoni"))
+    st:Add(UI:SectionHeader(page, L["Bottoni"]))
     local row = CreateFrame("Frame", nil, page); row:SetHeight(Theme.sizes.button)
     local x = 0
     for _, v in ipairs({ "primary", "secondary", "ghost", "danger" }) do
-        local b = UI:Button(row, v:gsub("^%l", string.upper), 104, nil, function() Badb.Logger:Info("Bottone %s", v) end, v)
+        local b = UI:Button(row, v:gsub("^%l", string.upper), 104, nil, function() Badb.Logger:Info(L["Bottone %s"], v) end, v)
         b:SetPoint("LEFT", x, 0); x = x + 112
     end
-    local confirm = UI:ConfirmButton(row, "Reset", "Conferma?", 104, nil, function() Badb.Logger:Info("Confermato") end)
+    local confirm = UI:ConfirmButton(row, "Reset", L["Conferma?"], 104, nil, function() Badb.Logger:Info(L["Confermato"]) end)
     confirm:SetPoint("LEFT", x, 0)
     st:Add(row)
 
-    st:Add(UI:SectionHeader(page, "Impostazioni"))
-    st:Add(UI:Toggle(page, "Interruttore", function() return demo.toggle end, function(v) demo.toggle = v end, { desc = "Un toggle a pillola." }))
-    st:Add(UI:Checkbox(page, "Casella di controllo", function() return demo.check end, function(v) demo.check = v end))
-    st:Add(UI:Slider(page, "Trasparenza", 0, 1, 0.05, function() return demo.slider end, function(v) demo.slider = v end, { percent = true }))
-    st:Add(UI:Slider(page, "Passi interi", 1, 10, 1, function() return demo.steps end, function(v) demo.steps = v end))
-    st:Add(UI:Dropdown(page, "Scelta", {
-        { value = "a", text = "Opzione A" }, { value = "b", text = "Opzione B" },
-        { value = "c", text = "Opzione C", desc = "Con descrizione" }, { value = "d", text = "Disabilitata", disabled = true },
+    st:Add(UI:SectionHeader(page, L["Impostazioni"]))
+    st:Add(UI:Toggle(page, L["Interruttore"], function() return demo.toggle end, function(v) demo.toggle = v end, { desc = L["Un toggle a pillola."] }))
+    st:Add(UI:Checkbox(page, L["Casella di controllo"], function() return demo.check end, function(v) demo.check = v end))
+    st:Add(UI:Slider(page, L["Trasparenza"], 0, 1, 0.05, function() return demo.slider end, function(v) demo.slider = v end, { percent = true }))
+    st:Add(UI:Slider(page, L["Passi interi"], 1, 10, 1, function() return demo.steps end, function(v) demo.steps = v end))
+    st:Add(UI:Dropdown(page, L["Scelta"], {
+        { value = "a", text = L["Opzione A"] }, { value = "b", text = L["Opzione B"] },
+        { value = "c", text = L["Opzione C"], desc = L["Con descrizione"] }, { value = "d", text = L["Disabilitata"], disabled = true },
     }, function() return demo.choice end, function(v) demo.choice = v end))
-    st:Add(UI:InputRow(page, "Nome profilo", function() return demo.text end, function(v) demo.text = v end, { placeholder = "Scrivi e premi Invio" }))
+    st:Add(UI:InputRow(page, L["Nome profilo"], function() return demo.text end, function(v) demo.text = v end, { placeholder = L["Scrivi e premi Invio"] }))
 
-    st:Add(UI:SectionHeader(page, "Stato"))
+    st:Add(UI:SectionHeader(page, L["Stato"]))
     local chips = CreateFrame("Frame", nil, page); chips:SetHeight(20)
     x = 0
     for _, k in ipairs({ "neutral", "accent", "success", "warning", "danger", "info" }) do
@@ -49,16 +50,16 @@ end
 
 local function buildTheme(page)
     local st = UI:Stack(page, { gap = 10 })
-    st:Add(UI:SectionHeader(page, "Tema"))
-    st:Add(UI:Dropdown(page, "Schema colori", function() return Theme:ListSchemes() end,
+    st:Add(UI:SectionHeader(page, L["Tema"]))
+    st:Add(UI:Dropdown(page, L["Schema colori"], function() return Theme:ListSchemes() end,
         function() return Theme.state.scheme end, function(v) Theme:SetScheme(v) end))
     local accents = {}
     for _, k in ipairs(Theme.ACCENT_ORDER) do accents[#accents + 1] = { value = k, text = k:gsub("^%l", string.upper) } end
-    st:Add(UI:Dropdown(page, "Accento", accents, function() return Theme.state.customAccent and "custom" or Theme.state.accent end,
+    st:Add(UI:Dropdown(page, L["Accento"], accents, function() return Theme.state.customAccent and "custom" or Theme.state.accent end,
         function(v) Theme:SetAccent(v) end))
-    st:Add(UI:Slider(page, "Opacita' sfondo", 0.3, 1, 0.05, function() return Theme.state.opacity end,
+    st:Add(UI:Slider(page, L["Opacita' sfondo"], 0.3, 1, 0.05, function() return Theme.state.opacity end,
         function(v) Theme:SetOpacity(v) end, { percent = true, live = false }))
-    local reset = UI:Button(page, "Ripristina tema", 160, nil, function() Theme:Reset(); st:Refresh() end, "secondary")
+    local reset = UI:Button(page, L["Ripristina tema"], 160, nil, function() Theme:Reset(); st:Refresh() end, "secondary")
     st:Add(reset)
 
     st:Add(UI:SectionHeader(page, "Palette"))
@@ -77,7 +78,7 @@ end
 
 local function buildList(page)
     local data = {}
-    for i = 1, 200 do data[i] = { name = "Elemento " .. i, value = (i * 37) % 100 } end
+    for i = 1, 200 do data[i] = { name = L["Elemento "] .. i, value = (i * 37) % 100 } end
     local list = UI:ScrollList(page, 28, function(parent)
         local r = CreateFrame("Button", nil, parent)
         UI.AddHover(r)
@@ -118,7 +119,7 @@ function Gallery:Build()
         if stacks[id] then stacks[id]:Refresh() end
     end
 
-    w.tabs = UI:Tabs(w.body, { { id = "controls", text = "Controlli" }, { id = "theme", text = "Tema" }, { id = "list", text = "Lista", badge = "200" } },
+    w.tabs = UI:Tabs(w.body, { { id = "controls", text = L["Controlli"] }, { id = "theme", text = L["Tema"] }, { id = "list", text = L["Lista"], badge = "200" } },
         function(id) show(id); if w.nav then w.nav:Select(id) end end)
     w.tabs:SetPoint("TOPLEFT", 8, 0); w.tabs:SetPoint("TOPRIGHT", -8, 0)
 
@@ -127,15 +128,15 @@ function Gallery:Build()
     Theme:OnChange(brand, function() brand:SetText("Badb" .. Theme:Wrap("UI", "accent")) end, true)
     w.nav = UI:NavList(w.sidebar, {
         { id = "h1", text = "Design system", header = true },
-        { id = "controls", text = "Controlli" },
-        { id = "theme", text = "Tema" },
-        { id = "list", text = "Lista", badge = "200" },
+        { id = "controls", text = L["Controlli"] },
+        { id = "theme", text = L["Tema"] },
+        { id = "list", text = L["Lista"], badge = "200" },
     }, function(id, user) if user then w.tabs:Select(id) end end)
     w.nav:SetPoint("TOPLEFT", 0, -56); w.nav:SetPoint("RIGHT", w.sidebar, "RIGHT", -1, 0)
 
-    local hint = UI:Label(w.footer, "/badb gallery  ·  /badb theme <schema> <accento>", "small", "textMuted")
+    local hint = UI:Label(w.footer, L["/badb gallery  ·  /badb theme <schema> <accento>"], "small", "textMuted")
     hint:SetPoint("LEFT", 12, 0)
-    local close = UI:Button(w.footer, "Chiudi", 90, 22, function() w:Hide() end, "ghost")
+    local close = UI:Button(w.footer, L["Chiudi"], 90, 22, function() w:Hide() end, "ghost")
     close:SetPoint("RIGHT", -8, 0)
 
     w.tabs:Select("controls")
@@ -150,19 +151,19 @@ local function themeCommand(args)
     local scheme, accent = strsplit(" ", strtrim(args or ""))
     if scheme and scheme ~= "" and not Theme:SetScheme(scheme) then
         if not Theme:SetAccent(scheme) then
-            Badb.Logger:Warn("Schema sconosciuto '%s'. Schemi: night, dusk, graphite. Accenti: %s", scheme, table.concat(Theme.ACCENT_ORDER, ", "))
+            Badb.Logger:Warn(L["Schema sconosciuto '%s'. Schemi: night, dusk, graphite. Accenti: %s"], scheme, table.concat(Theme.ACCENT_ORDER, ", "))
             return
         end
     end
     if accent and accent ~= "" and not Theme:SetAccent(accent) then
-        Badb.Logger:Warn("Accento sconosciuto '%s'. Accenti: %s", accent, table.concat(Theme.ACCENT_ORDER, ", "))
+        Badb.Logger:Warn(L["Accento sconosciuto '%s'. Accenti: %s"], accent, table.concat(Theme.ACCENT_ORDER, ", "))
         return
     end
-    Badb.Logger:Info("Tema: %s, accento %s", Theme.state.scheme, Theme.state.customAccent and "personalizzato" or Theme.state.accent)
+    Badb.Logger:Info(L["Tema: %s, accento %s"], Theme.state.scheme, Theme.state.customAccent and L["personalizzato"] or Theme.state.accent)
 end
 Gallery.ThemeCommand = themeCommand
 
 if Badb.Slash and Badb.Slash.Register then
-    Badb.Slash:Register("gallery", function() Gallery:Toggle() end, "galleria del design system")
-    Badb.Slash:Register("theme", themeCommand, "theme [night|dusk|graphite] [accento] - cambia tema")
+    Badb.Slash:Register("gallery", function() Gallery:Toggle() end, L["galleria del design system"])
+    Badb.Slash:Register("theme", themeCommand, L["theme [night|dusk|graphite] [accento] - cambia tema"])
 end

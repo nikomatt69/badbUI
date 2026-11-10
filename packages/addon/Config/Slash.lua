@@ -3,6 +3,7 @@
 -- sottocomandi dei moduli (Badb.Modules.list[*].commands = { nome = { help, fn } }) scoperti a ogni invocazione +
 -- comandi registrati con Slash:Register. Comando sconosciuto => suggerimento "intendevi X?".
 local _, ns = ...
+local L = ns.Badb.L
 local Badb = ns.Badb
 local DB, FM, Modules, Logger = Badb.DB, Badb.FrameManager, Badb.Modules, Badb.Logger
 
@@ -27,37 +28,52 @@ end
 -- Wizard e Presets sono moduli di altri agenti: guardia di esistenza (nessuna dipendenza hard).
 local function toggleWizard()
     local w = Badb.Wizard
-    if w and w.Toggle then w:Toggle() else Logger:Warn("Configurazione guidata non disponibile") end
+    if w and w.Toggle then w:Toggle() else Logger:Warn(L["Configurazione guidata non disponibile"]) end
 end
 local function undoPreset()
     local p = Badb.Presets
-    if p and p.Undo then p:Undo() else Logger:Warn("Preset non disponibili") end
+    if p and p.Undo then p:Undo() else Logger:Warn(L["Preset non disponibili"]) end
 end
 
-base("", "apre la finestra di configurazione", function() openConfig("") end)
-base("config", "config [pagina|modulo] - apre la configurazione", openConfig)
-base("unlock", "sblocca/blocca i frame per spostarli", function() FM:SetUnlocked(not FM.unlocked) end)
-base("profile", "profile [nome] - elenca o cambia profilo", function(name)
+base("", L["apre la finestra di configurazione"], function() openConfig("") end)
+base("config", L["config [pagina|modulo] - apre la configurazione"], openConfig)
+base("unlock", L["sblocca/blocca i frame per spostarli"], function() FM:SetUnlocked(not FM.unlocked) end)
+base("profile", L["profile [nome] - elenca o cambia profilo"], function(name)
     if name == "" then
-        Logger:Info("Profili: %s (attivo: %s)", table.concat(DB:ListProfiles(), ", "), DB:GetProfileName())
+        Logger:Info(L["Profili: %s (attivo: %s)"], table.concat(DB:ListProfiles(), ", "), DB:GetProfileName())
     else
         DB:SetProfile(name)
     end
 end)
-base("export", "esporta il profilo attivo", function() Badb.ConfigUI.TextBox("Esporta profilo", DB:ExportProfile()) end)
-base("enable", "enable <modulo> - attiva un modulo", function(name) Modules:SetEnabled(name, true) end)
-base("disable", "disable <modulo> - disattiva un modulo", function(name) Modules:SetEnabled(name, false) end)
-base("setup", "configurazione guidata", toggleWizard)
-base("wizard", "alias di setup", toggleWizard)
-base("undo", "annulla l'ultimo preset applicato", undoPreset)
-base("debug", "attiva/disattiva i messaggi di debug", function()
+base("export", L["esporta il profilo attivo"], function() Badb.ConfigUI.TextBox(L["Esporta profilo"], DB:ExportProfile()) end)
+base("enable", L["enable <modulo> - attiva un modulo"], function(name) Modules:SetEnabled(name, true) end)
+base("disable", L["disable <modulo> - disattiva un modulo"], function(name) Modules:SetEnabled(name, false) end)
+base("setup", L["configurazione guidata"], toggleWizard)
+base("wizard", L["alias di setup"], toggleWizard)
+base("undo", L["annulla l'ultimo preset applicato"], undoPreset)
+base("debug", L["attiva/disattiva i messaggi di debug"], function()
     Logger.level = Logger.level == 1 and 2 or 1
-    Logger:Info("Debug %s", Logger.level == 1 and "attivo" or "disattivo")
+    Logger:Info("Debug %s", Logger.level == 1 and L["attivo"] or L["disattivo"])
 end)
-base("log", "mostra il log", function()
-    Badb.ConfigUI.TextBox("Log BadbUI", table.concat(Logger.buffer, "\n"))
+base("log", L["mostra il log"], function()
+    Badb.ConfigUI.TextBox(L["Log BadbUI"], table.concat(Logger.buffer, "\n"))
 end)
-base("help", "elenco dei comandi", function() Slash:ShowHelp() end)
+base("help", L["Open the manual and list commands; help [topic]"], function(topic)
+    if Badb.Help then Badb.Help:Open(topic) end
+    Slash:ShowHelp()
+end)
+base("language", L["language [auto|enUS|itIT] - choose the addon language (requires /reload)"], function(value)
+    value = strtrim(value or "")
+    local language = Badb.Localization
+    if value == "" then
+        Logger:Info(L["Language preference: %s. Active language: %s."], language:GetPreference(), language.language)
+        return
+    end
+    local aliases = { auto = "auto", enus = "enUS", engb = "enUS", itit = "itIT" }
+    local ok, result = language:SetPreference(aliases[value:lower()] or value)
+    if not ok then Logger:Warn("%s", result); return end
+    Logger:Info(result and L["Language saved. Use /reload to apply it."] or L["Language saved."])
+end)
 
 ---------------------------------------------------------------------------
 -- Logica pura
@@ -101,7 +117,7 @@ function Slash:Resolve()
         if prev then
             local winner, loser = tostring(prev.module or prev.source), tostring(entry.module or entry.source)
             collisions[#collisions + 1] = { name = entry.name, winner = winner, loser = loser }
-            warnOnce("c:" .. entry.name .. ":" .. loser, "Comando '%s' duplicato: vince %s, ignorato %s", entry.name, winner, loser)
+            warnOnce("c:" .. entry.name .. ":" .. loser, L["Comando '%s' duplicato: vince %s, ignorato %s"], entry.name, winner, loser)
             return
         end
         map[entry.name] = entry
@@ -126,7 +142,7 @@ function Slash:Resolve()
                     add({ name = name:lower(), help = type(c.help) == "string" and c.help or "", fn = c.fn,
                         source = "module", module = modName, enabled = m.enabled and true or false })
                 else
-                    warnOnce("i:" .. modName .. ":" .. name, "Comando '%s' del modulo %s non valido (serve { help, fn })", name, modName)
+                    warnOnce("i:" .. modName .. ":" .. name, L["Comando '%s' del modulo %s non valido (serve { help, fn })"], name, modName)
                 end
             end
         end
@@ -165,10 +181,10 @@ end
 
 -- Registra un comando non di modulo. Ritorna ok, err.
 function Slash:Register(name, fn, help)
-    if not validName(name) then return false, "nome non valido" end
-    if type(fn) ~= "function" then return false, "fn mancante" end
+    if not validName(name) then return false, L["nome non valido"] end
+    if type(fn) ~= "function" then return false, L["fn mancante"] end
     name = name:lower()
-    if BASE[name] then return false, "nome riservato ai comandi base" end
+    if BASE[name] then return false, L["nome riservato ai comandi base"] end
     if not self.registered[name] then self.registeredOrder[#self.registeredOrder + 1] = name end
     self.registered[name] = { fn = fn, help = type(help) == "string" and help or "" }
     return true
@@ -184,10 +200,10 @@ end
 
 function Slash:ShowHelp()
     local _, list = self:Resolve()
-    Logger:Info("Comandi /badb (alias /bui):")
+    Logger:Info(L["Comandi /badb (alias /bui):"])
     for _, e in ipairs(list) do
         if e.name ~= "" then
-            local tag = (e.source == "module" and not e.enabled) and " |cff888888(modulo disattivato)|r" or ""
+            local tag = (e.source == "module" and not e.enabled) and L[" |cff888888(modulo disattivato)|r"] or ""
             Logger:Info("  /badb %s%s - %s", e.name, tag, e.help ~= "" and e.help or "-")
         end
     end
@@ -202,16 +218,16 @@ function Slash:Dispatch(msg)
     if not entry then
         local suggestion = self:Suggest(cmd, map)
         if suggestion then
-            Logger:Info("Comando sconosciuto '%s'. Intendevi '%s'? (/badb help)", cmd, suggestion)
+            Logger:Info(L["Comando sconosciuto '%s'. Intendevi '%s'? (/badb help)"], cmd, suggestion)
         else
-            Logger:Warn("Comando sconosciuto '%s'.", cmd)
+            Logger:Warn(L["Comando sconosciuto '%s'."], cmd)
             self:ShowHelp()
         end
         return false, "unknown", suggestion
     end
     local ok, err = pcall(entry.fn, rest)
     if not ok then
-        Logger:Error("Comando '%s': %s", entry.name, tostring(err))
+        Logger:Error(L["Comando '%s': %s"], entry.name, tostring(err))
         return false, "error", tostring(err)
     end
     return true

@@ -1,0 +1,20 @@
+{
+  "name": "@badb/cloudflare",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "bun run build && node --test test/worker.test.mjs",
+    "dev": "wrangler dev --config ../../wrangler.jsonc",
+    "build": "cd ../.. && bun run cloudflare:build"
+  },
+  "dependencies": {
+    "@badb/core": "workspace:*",
+    "@badb/server": "workspace:*"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "5.20261109.1",
+    "typescript": "catalog:"
+  }
+}

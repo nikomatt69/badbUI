@@ -1,19 +1,20 @@
 -- BadbUI - Editor degli script (finestra del design system): elenco a sinistra, codice a destra.
 -- Tutta la logica e' in Badb.Scripts (testabile senza UI): qui solo lettura/scrittura dei campi.
 local _, ns = ...
+local L = ns.Badb.L
 local Badb = ns.Badb
 local UI, Logger = Badb.UI, Badb.Logger
 
 local Editor = { current = nil }
 Badb.ScriptEditor = Editor
 
-local TEMPLATE = [[-- Script BadbUI. Hai a disposizione: Badb (tutta l'API), script.on, script.after, script.every,
+local TEMPLATE = L[ [[-- Script BadbUI. Hai a disposizione: Badb (tutta l'API), script.on, script.after, script.every,
 -- script.data (si salva), script.log e print. Esempio:
 script.on("PLAYER_LEVEL_UP", function(event, level)
     script.data.lastLevel = level
     print("Livello " .. level .. "!")
 end)
-]]
+]] ]
 
 local function scripts() return Badb.Scripts end
 
@@ -24,28 +25,28 @@ local function triggerItems()
 end
 
 function Editor:Build()
-    local w = UI:Window("BadbUIScriptEditor", 880, 580, "Script", { subtitle = "Lua con l'API di BadbUI", sidebar = 220, footer = true })
+    local w = UI:Window("BadbUIScriptEditor", 880, 580, L["Script"], { subtitle = L["Lua con l'API di BadbUI"], sidebar = 220, footer = true })
     self.win = w
     self.nav = UI:NavList(w.sidebar, {}, function(id, byUser) if byUser then Editor:Select(id) end end) -- solo il click: Refresh richiama nav:Select
     self.nav:SetPoint("TOPLEFT", 0, -8); self.nav:SetPoint("BOTTOMRIGHT", 0, 8)
 
     local body = w.body
     self.fields = { trigger = "manual", enabled = false }
-    UI:Label(body, "Nome", "small", "textDim"):SetPoint("TOPLEFT", 8, -8)
-    self.nameBox = UI:EditBox(body, 230, 26, { maxLetters = 40, placeholder = "nome dello script" })
+    UI:Label(body, L["Nome"], "small", "textDim"):SetPoint("TOPLEFT", 8, -8)
+    self.nameBox = UI:EditBox(body, 230, 26, { maxLetters = 40, placeholder = L["nome dello script"] })
     self.nameBox:SetPoint("TOPLEFT", 8, -26)
-    UI:Label(body, "Quando", "small", "textDim"):SetPoint("TOPLEFT", 252, -8)
+    UI:Label(body, L["Quando"], "small", "textDim"):SetPoint("TOPLEFT", 252, -8)
     self.trigger = UI:Dropdown(body, nil, triggerItems(), function() return Editor.fields.trigger end,
         function(v) Editor.fields.trigger = v end, { width = 220 })
     self.trigger:SetPoint("TOPLEFT", 252, -26)
-    UI:Label(body, "Evento / secondi", "small", "textDim"):SetPoint("TOPLEFT", 484, -8)
-    self.param = UI:EditBox(body, 190, 26, { maxLetters = 60, placeholder = "PLAYER_LEVEL_UP o 5" })
+    UI:Label(body, L["Evento / secondi"], "small", "textDim"):SetPoint("TOPLEFT", 484, -8)
+    self.param = UI:EditBox(body, 190, 26, { maxLetters = 60, placeholder = L["PLAYER_LEVEL_UP o 5"] })
     self.param:SetPoint("TOPLEFT", 484, -26)
-    self.enabled = UI:Toggle(body, "Attivo", function() return Editor.fields.enabled end,
+    self.enabled = UI:Toggle(body, L["Attivo"], function() return Editor.fields.enabled end,
         function(v) Editor.fields.enabled = v end, { width = 160 })
     self.enabled:SetPoint("TOPLEFT", 690, -26)
 
-    self.code = UI:EditBox(body, 600, 380, { multiline = true, mono = true, maxLetters = 60000, placeholder = "-- codice Lua" })
+    self.code = UI:EditBox(body, 600, 380, { multiline = true, mono = true, maxLetters = 60000, placeholder = L["-- codice Lua"] })
     self.code:SetPoint("TOPLEFT", 8, -64); self.code:SetPoint("BOTTOMRIGHT", -8, 34)
     self.status = UI:Label(body, "", "small", "textDim")
     self.status:SetPoint("BOTTOMLEFT", 8, 10)
@@ -56,14 +57,14 @@ function Editor:Build()
         b:SetPoint("LEFT", x, 0)
         return b
     end
-    btn("Nuovo", 70, function() Editor:New() end, "secondary", 8)
-    btn("Salva", 70, function() Editor:Save() end, "primary", 84)
-    btn("Esegui", 70, function() Editor:Run() end, "secondary", 160)
-    btn("Ferma", 70, function() if Editor.current then scripts():Stop(Editor.current); Editor:Refresh() end end, "secondary", 236)
-    self.delete = UI:ConfirmButton(f, "Elimina", "Sicuro?", 80, 22, function() Editor:Delete() end)
+    btn(L["Nuovo"], 70, function() Editor:New() end, "secondary", 8)
+    btn(L["Salva"], 70, function() Editor:Save() end, "primary", 84)
+    btn(L["Esegui"], 70, function() Editor:Run() end, "secondary", 160)
+    btn(L["Ferma"], 70, function() if Editor.current then scripts():Stop(Editor.current); Editor:Refresh() end end, "secondary", 236)
+    self.delete = UI:ConfirmButton(f, L["Elimina"], L["Sicuro?"], 80, 22, function() Editor:Delete() end)
     self.delete:SetPoint("LEFT", 312, 0)
-    btn("Esporta", 70, function() Editor:Export() end, "ghost", 400)
-    btn("Importa", 70, function() Editor:ImportDialog() end, "ghost", 476)
+    btn(L["Esporta"], 70, function() Editor:Export() end, "ghost", 400)
+    btn(L["Importa"], 70, function() Editor:ImportDialog() end, "ghost", 476)
 end
 
 function Editor:Refresh()
@@ -77,9 +78,9 @@ function Editor:Refresh()
     if self.current then self.nav:Select(self.current) end
     local rec = self.current and scripts():Record(self.current)
     if rec then
-        self.status:SetText(string.format("Esecuzioni: %d%s%s", rec.runs or 0,
-            rec.imported and " - importato: leggi il codice prima di attivarlo" or "",
-            rec.lastError and ("\nUltimo errore: " .. rec.lastError) or ""))
+        self.status:SetText(string.format(L["Esecuzioni: %d%s%s"], rec.runs or 0,
+            rec.imported and L[" - importato: leggi il codice prima di attivarlo"] or "",
+            rec.lastError and (L["\nUltimo errore: "] .. rec.lastError) or ""))
     else
         self.status:SetText("")
     end
@@ -168,13 +169,13 @@ end
 function Editor:Export()
     if not self.current then return end
     local s, err = scripts():Export(self.current)
-    if s then self:TextDialog("Esporta '" .. self.current .. "' (Ctrl+C)", s) else self.status:SetText(tostring(err)) end
+    if s then self:TextDialog(L["Esporta '"] .. self.current .. "' (Ctrl+C)", s) else self.status:SetText(tostring(err)) end
 end
 
 function Editor:ImportDialog()
-    self:TextDialog("Incolla una stringa BADB1 di uno script", "", function(text)
+    self:TextDialog(L["Incolla una stringa BADB1 di uno script"], "", function(text)
         local name, err = scripts():Import(text)
         if name then self.current = name; self:Load(name); self:Refresh()
-        else self.status:SetText("|cffff6060Import fallito: " .. tostring(err) .. "|r") end
+        else self.status:SetText(L["|cffff6060Import fallito: "] .. tostring(err) .. "|r") end
     end)
 end

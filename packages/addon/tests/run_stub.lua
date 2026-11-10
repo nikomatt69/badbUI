@@ -5,7 +5,8 @@ require("wowstub")
 
 local ns = {}
 local FILES = {
-    "Core/Init.lua", "Core/Compat.lua", "Core/Logger.lua", "Core/Events.lua", "Core/Serializer.lua",
+    "Core/Init.lua", "Core/Localization.lua", "Locales/enUS.lua", "Locales/itIT.lua",
+    "Core/Compat.lua", "Core/Logger.lua", "Core/Events.lua", "Core/Serializer.lua",
     "Core/Database.lua", "Core/Modules.lua", "Core/FrameManager.lua", "Core/CVars.lua",
     "Modules/EditModeBridge.lua", "Modules/Hider.lua", "Modules/Scaling.lua",
     "Modules/Nameplates.lua", "Modules/GroupFrames.lua",

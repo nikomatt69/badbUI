@@ -1,0 +1,21 @@
+{
+  "name": "@badb/web",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@badb/core": "workspace:*",
+    "@badb/sdk": "workspace:*",
+    "solid-js": "catalog:"
+  },
+  "devDependencies": {
+    "vite": "catalog:",
+    "vite-plugin-solid": "2.11.15",
+    "typescript": "catalog:"
+  }
+}

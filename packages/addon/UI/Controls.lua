@@ -4,6 +4,7 @@
 -- opzionale (opts.desc) mostrata come tooltip. get/set sono funzioni: il controllo
 -- non sa dove vive il valore (profilo, modulo, globale).
 local _, ns = ...
+local L = ns.Badb.L
 local Badb = ns.Badb
 local Theme, UI = Badb.Theme, Badb.UI
 
@@ -84,7 +85,7 @@ function UI:ConfirmButton(parent, text, confirmText, w, h, onConfirm)
         if armed then
             armed = nil; self:SetLabel(text); onConfirm(self)
         else
-            armed = true; self:SetLabel(confirmText or "Sicuro?")
+            armed = true; self:SetLabel(confirmText or L["Sicuro?"])
             C_Timer.After(3, function() if armed then armed = nil; self:SetLabel(text) end end)
         end
     end

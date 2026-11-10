@@ -16,6 +16,7 @@
 -- Usa il design system (Badb.Theme / Badb.UI) se presente, altrimenti un fallback locale
 -- con la stessa palette, cosi' il wizard funziona anche da solo.
 local _, ns = ...
+local L = ns.Badb.L
 local Badb = ns.Badb
 local DB, Events, Logger = Badb.DB, Badb.Events, Badb.Logger
 
@@ -56,7 +57,7 @@ end
 -- (called=false se il modulo manca o il metodo ha generato un errore: r2 e' il messaggio).
 local function invoke(name, method, ...)
     local m = avail(name, method)
-    if not m then return false, nil, "modulo non disponibile: " .. name end
+    if not m then return false, nil, L["modulo non disponibile: "] .. name end
     local ok, a, b = pcall(m[method], m, ...)
     if not ok then return false, nil, tostring(a) end
     return true, a, b
@@ -69,7 +70,7 @@ end
 
 local function errText(r1, r2)
     if r2 ~= nil then return tostring(r2) end
-    return "operazione non riuscita"
+    return L["operazione non riuscita"]
 end
 
 local function profileExists(name)
@@ -92,10 +93,10 @@ end
 -- Nome profilo valido: non vuoto, corto, senza caratteri di controllo/colore, non esistente.
 local function validateProfileName(name)
     name = trim(name)
-    if name == "" then return false, "Scrivi un nome per il profilo." end
-    if #name > MAX_NAME then return false, "Il nome del profilo e' troppo lungo (max " .. MAX_NAME .. ")." end
-    if name:find("[%c|]") then return false, "Il nome del profilo contiene caratteri non validi." end
-    if profileExists(name) then return false, "Esiste gia' un profilo chiamato '" .. name .. "'." end
+    if name == "" then return false, L["Scrivi un nome per il profilo."] end
+    if #name > MAX_NAME then return false, L["Il nome del profilo e' troppo lungo (max "] .. MAX_NAME .. ")." end
+    if name:find("[%c|]") then return false, L["Il nome del profilo contiene caratteri non validi."] end
+    if profileExists(name) then return false, L["Esiste gia' un profilo chiamato '"] .. name .. "'." end
     return true
 end
 
@@ -414,7 +415,7 @@ function Wizard:EnsureChoices()
             c.charProfile = profileExists(s.lastProfile) and s.lastProfile or DB:GetProfileName()
         end
         if c.charName == nil then
-            c.charName = uniqueProfileName("Badb - " .. ((UnitName and UnitName("player")) or "Profilo"))
+            c.charName = uniqueProfileName("Badb - " .. ((UnitName and UnitName("player")) or L["Profilo"]))
         end
     end
 end
@@ -466,17 +467,17 @@ end
 local function validateRole(c)
     local Pr = P()
     if not c.role or (Pr and type(Pr.roles) == "table" and not Pr.roles[c.role]) then
-        return false, "Scegli il tuo ruolo."
+        return false, L["Scegli il tuo ruolo."]
     end
     local allowed = Wizard.RoleInfo().allowed
-    if allowed and not allowed[c.role] then return false, "La tua classe non puo' avere questo ruolo." end
+    if allowed and not allowed[c.role] then return false, L["La tua classe non puo' avere questo ruolo."] end
     return true
 end
 
 local function validateContent(c)
     local Pr = P()
     if not c.content or (Pr and type(Pr.content) == "table" and not Pr.content[c.content]) then
-        return false, "Scegli cosa giochi di piu'."
+        return false, L["Scegli cosa giochi di piu'."]
     end
     return true
 end
@@ -484,26 +485,26 @@ end
 local function validateTemplate(c)
     if not usingTemplate() then return true end
     local mode = c.templateMode
-    if mode ~= "pve" and mode ~= "pvp" and mode ~= "both" then return false, "Scegli PvE, PvP o entrambi." end
+    if mode ~= "pve" and mode ~= "pvp" and mode ~= "both" then return false, L["Scegli PvE, PvP o entrambi."] end
     if mode ~= "pvp" then
         local def = findDef(classTemplates("pve"), c.templatePve)
-        if not def then return false, "Scegli un template PvE." end
+        if not def then return false, L["Scegli un template PvE."] end
         local vs = variantsOf(def)
         if #vs > 0 then
             local ok = false
             for _, v in ipairs(vs) do if v == c.raidVariant then ok = true end end
-            if not ok then return false, "Scegli la dimensione del raid." end
+            if not ok then return false, L["Scegli la dimensione del raid."] end
         end
     end
     if mode ~= "pve" and not findDef(classTemplates("pvp"), c.templatePvp) then
-        return false, "Scegli un template PvP."
+        return false, L["Scegli un template PvP."]
     end
     return true
 end
 
 local function validateCharProfile(c)
     if c.charMode == "new" then return validateProfileName(c.charName) end
-    if not profileExists(c.charProfile) then return false, "Scegli un profilo esistente." end
+    if not profileExists(c.charProfile) then return false, L["Scegli un profilo esistente."] end
     return true
 end
 
@@ -513,9 +514,9 @@ end
 local function describeTemplate(def, variant)
     local called, d = invoke("Presets", "Diff", def.key)
     local n = (called and type(d) == "table") and #d or nil
-    local extra = variant and (" - raid a " .. variant) or ""
-    return string.format("Template '%s'%s (%s) in un nuovo profilo", tostring(def.title or def.key), extra,
-        n and (n .. " modifiche") or "anteprima non disponibile")
+    local extra = variant and (L[" - raid a "] .. variant) or ""
+    return string.format(L["Template '%s'%s (%s) in un nuovo profilo"], tostring(def.title or def.key), extra,
+        n and (n .. L[" modifiche"]) or L["anteprima non disponibile"])
 end
 
 local function templateAction(def, slot, c, names, variant)
@@ -527,7 +528,7 @@ local function templateAction(def, slot, c, names, variant)
             local called, r1, r2 = invoke("Presets", "Apply", def.key, opts)
             if not success(called, r1, r2) then return false, errText(r1, r2) end
             names[slot] = DB:GetProfileName()
-            pushUndo(rec, "Annulla il template " .. def.key, undoPresets)
+            pushUndo(rec, L["Annulla il template "] .. def.key, undoPresets)
             return true
         end,
     }
@@ -540,12 +541,12 @@ local function genericPresetAction(c)
     if not okB or type(spec) ~= "table" then return nil end
     return {
         id = "preset", destructive = true,
-        label = string.format("Crea il profilo 'Badb - %s' dal preset", tostring(spec.title or "?")),
+        label = string.format(L["Crea il profilo 'Badb - %s' dal preset"], tostring(spec.title or "?")),
         run = function(rec)
             local ok, name = pcall(Pr.Apply, Pr, spec)
             if not ok then return false, tostring(name) end
-            if not name then return false, "applicazione non riuscita (combattimento o errore)" end
-            if type(Pr.Undo) == "function" then pushUndo(rec, "Annulla il preset", undoPresets) end
+            if not name then return false, L["applicazione non riuscita (combattimento o errore)"] end
+            if type(Pr.Undo) == "function" then pushUndo(rec, L["Annulla il preset"], undoPresets) end
             return true
         end,
     }
@@ -555,11 +556,11 @@ local function roleAction(c)
     local ri = Wizard.RoleInfo()
     if not (ri.needsConfirm and c.role and avail("Player", "SetRoleOverride")) then return nil end
     return {
-        id = "role", label = "Salva il ruolo confermato: " .. c.role,
+        id = "role", label = L["Salva il ruolo confermato: "] .. c.role,
         run = function(rec)
             local called, r1, r2 = invoke("Player", "SetRoleOverride", c.role)
             if not success(called, r1, r2) then return false, errText(r1, r2) end
-            pushUndo(rec, "Rimuovi la conferma del ruolo", function()
+            pushUndo(rec, L["Rimuovi la conferma del ruolo"], function()
                 local c2, a, b = invoke("Player", "SetRoleOverride", nil)
                 if success(c2, a, b) then return true end
                 return false, errText(a, b)
@@ -573,13 +574,13 @@ local function detailActions(c)
     local list = {}
     if c.hideClutter then
         list[#list + 1] = {
-            id = "hide-clutter", destructive = true, label = "Nascondi micro menu, barra borse e barra esperienza",
+            id = "hide-clutter", destructive = true, label = L["Nascondi micro menu, barra borse e barra esperienza"],
             run = function(rec)
                 local failed
                 for _, key in ipairs(CLUTTER) do
                     local called, r1, r2 = invoke("FrameManager", "SetOption", key, "hidden", true)
                     if not called then failed = failed or r2 end
-                    pushUndo(rec, "Mostra " .. key, function()
+                    pushUndo(rec, L["Mostra "] .. key, function()
                         local c2, a, b = invoke("FrameManager", "Restore", key)
                         return c2 and true or false, b
                     end)
@@ -600,8 +601,8 @@ local function detailActions(c)
         }
     end
     -- Con un template il profilo e' gia' completo: i toggle attivi si aggiungono, quelli spenti non lo sovrascrivono.
-    if c.pixelPerfect then option("pixel", "Scala UI pixel perfect", "Scaling", "pixelPerfect", true) end
-    if c.friendlyPlates then option("plates", "Mostra le nameplate degli alleati", "Nameplates", "showFriends", true) end
+    if c.pixelPerfect then option("pixel", L["Scala UI pixel perfect"], "Scaling", "pixelPerfect", true) end
+    if c.friendlyPlates then option("plates", L["Mostra le nameplate degli alleati"], "Nameplates", "showFriends", true) end
     return list
 end
 
@@ -619,20 +620,20 @@ local function copyRuleAction(label, ruleName, instance, suffix)
     return {
         id = "rule-" .. instance, label = label,
         run = function(rec)
-            if not avail("Contexts", "AddRule") then return false, "modulo non disponibile: Contexts" end
+            if not avail("Contexts", "AddRule") then return false, L["modulo non disponibile: Contexts"] end
             local active = DB:GetProfileName()
             local target = uniqueProfileName(active .. suffix)
             local okc, errc = DB:CopyProfile(active, target)
-            if not okc then return false, errc or "copia del profilo non riuscita" end
-            pushUndo(rec, "Elimina il profilo " .. target, function()
+            if not okc then return false, errc or L["copia del profilo non riuscita"] end
+            pushUndo(rec, L["Elimina il profilo "] .. target, function()
                 local ok, err = DB:DeleteProfile(target)
                 return ok ~= false, err
             end)
             if ruleNames()[ruleName] then return true end
             local called, id, err = invoke("Contexts", "AddRule",
                 { name = ruleName, when = { instance = instance }, profile = target, priority = 50, enabled = true })
-            if not called or not id then return false, err or "regola non creata" end
-            pushUndo(rec, "Rimuovi la regola " .. ruleName, function()
+            if not called or not id then return false, err or L["regola non creata"] end
+            pushUndo(rec, L["Rimuovi la regola "] .. ruleName, function()
                 local c2, a, b = invoke("Contexts", "RemoveRule", id)
                 if success(c2, a, b) then return true end
                 return false, errText(a, b)
@@ -646,11 +647,11 @@ end
 local function classRulesAction(names)
     return {
         id = "rules-class",
-        label = "Regole automatiche: campi di battaglia con il profilo PvP, il resto con il PvE",
+        label = L["Regole automatiche: campi di battaglia con il profilo PvP, il resto con il PvE"],
         run = function(rec)
             local class = Wizard.DetectClass()
             local function removeUndo(id)
-                pushUndo(rec, "Rimuovi la regola " .. tostring(id), function()
+                pushUndo(rec, L["Rimuovi la regola "] .. tostring(id), function()
                     local c2, a, b = invoke("Contexts", "RemoveRule", id)
                     if success(c2, a, b) then return true end
                     return false, errText(a, b)
@@ -668,11 +669,11 @@ local function classRulesAction(names)
                 return true
             end
             -- Fallback: una regola semplice per i campi di battaglia (nessuna arena su Forever).
-            if not names.pvp then return false, "profilo PvP non disponibile" end
+            if not names.pvp then return false, L["profilo PvP non disponibile"] end
             if ruleNames()["Wizard: PvP"] then return true end
             local called, id, err = invoke("Contexts", "AddRule",
                 { name = "Wizard: PvP", when = { instance = "pvp" }, profile = names.pvp, priority = 50, enabled = true })
-            if not called or not id then return false, err or "regola non creata" end
+            if not called or not id then return false, err or L["regola non creata"] end
             removeUndo(id)
             return true
         end,
@@ -685,7 +686,7 @@ local function integrationActions(c)
     for _, it in ipairs(integrationList()) do
         if c.integrations[it.id] then
             list[#list + 1] = {
-                id = "integration-" .. it.id, label = "Salva nel profilo la configurazione di " .. tostring(it.title or it.id),
+                id = "integration-" .. it.id, label = L["Salva nel profilo la configurazione di "] .. tostring(it.title or it.id),
                 run = function()
                     local called, r1, r2 = invoke("Integrations", "Capture", it.id)
                     if success(called, r1, r2) then return true end
@@ -702,12 +703,12 @@ local function charProfileActions(c)
     if c.charMode == "new" then
         local name = trim(c.charName)
         list[1] = {
-            id = "char-profile", label = "Crea il profilo '" .. name .. "' e usalo per questo personaggio",
+            id = "char-profile", label = L["Crea il profilo '"] .. name .. L["' e usalo per questo personaggio"],
             run = function(rec)
-                if profileExists(name) then return false, "esiste gia' un profilo con questo nome" end
+                if profileExists(name) then return false, L["esiste gia' un profilo con questo nome"] end
                 local before = DB:GetProfileName()
                 DB:SetProfile(name)
-                pushUndo(rec, "Torna al profilo " .. before, function()
+                pushUndo(rec, L["Torna al profilo "] .. before, function()
                     if profileExists(before) then DB:SetProfile(before) end
                     return true
                 end)
@@ -717,12 +718,12 @@ local function charProfileActions(c)
     elseif c.charProfile and c.charProfile ~= DB:GetProfileName() then
         local name = c.charProfile
         list[1] = {
-            id = "char-profile", label = "Usa il profilo esistente '" .. name .. "'",
+            id = "char-profile", label = L["Usa il profilo esistente '"] .. name .. "'",
             run = function(rec)
-                if not profileExists(name) then return false, "il profilo non esiste piu'" end
+                if not profileExists(name) then return false, L["il profilo non esiste piu'"] end
                 local before = DB:GetProfileName()
                 DB:SetProfile(name)
-                pushUndo(rec, "Torna al profilo " .. before, function()
+                pushUndo(rec, L["Torna al profilo "] .. before, function()
                     if profileExists(before) then DB:SetProfile(before) end
                     return true
                 end)
@@ -739,8 +740,8 @@ end
 local FULL, SHORT, BOTH = { full = true }, { short = true }, { full = true, short = true }
 
 local STEPS = {
-    { key = "welcome", title = "Benvenuto", modes = FULL },
-    { key = "role", title = "Ruolo", modes = FULL, validate = validateRole,
+    { key = "welcome", title = L["Benvenuto"], modes = FULL },
+    { key = "role", title = L["Ruolo"], modes = FULL, validate = validateRole,
       plan = function(c) local a = roleAction(c); return { a } end },
     { key = "template", title = "Template", modes = FULL, applicable = templatesSupported, validate = validateTemplate,
       plan = function(c, names)
@@ -760,31 +761,31 @@ local STEPS = {
           end
           return list
       end },
-    { key = "content", title = "Contenuto", modes = FULL, applicable = function() return not usingTemplate() end,
+    { key = "content", title = L["Contenuto"], modes = FULL, applicable = function() return not usingTemplate() end,
       validate = validateContent,
       plan = function(c)
           if usingTemplate() then return {} end
           local a = genericPresetAction(c)
           return { a }
       end },
-    { key = "details", title = "Dettagli", modes = FULL,
+    { key = "details", title = L["Dettagli"], modes = FULL,
       plan = function(c) if usingTemplate() then return detailActions(c) end return {} end },
-    { key = "rules", title = "Regole", modes = FULL, applicable = contextsAvailable,
+    { key = "rules", title = L["Regole"], modes = FULL, applicable = contextsAvailable,
       plan = function(c, names)
           local list = {}
           if usingTemplate() and c.templateMode == "both" then list[#list + 1] = classRulesAction(names) end
           if c.ruleRaid and avail("Contexts", "AddRule") then
-              list[#list + 1] = copyRuleAction("In raid usa un profilo dedicato (copia di quello scelto)", "Wizard: raid", "raid", " - Raid")
+              list[#list + 1] = copyRuleAction(L["In raid usa un profilo dedicato (copia di quello scelto)"], "Wizard: raid", "raid", " - Raid")
           end
           if c.rulePvp and avail("Contexts", "AddRule") and not (usingTemplate() and c.templateMode == "both") then
-              list[#list + 1] = copyRuleAction("Nei campi di battaglia usa un profilo dedicato (copia di quello scelto)", "Wizard: PvP", "pvp", " - PvP")
+              list[#list + 1] = copyRuleAction(L["Nei campi di battaglia usa un profilo dedicato (copia di quello scelto)"], "Wizard: PvP", "pvp", " - PvP")
           end
           return list
       end },
-    { key = "integrations", title = "Integrazioni", modes = FULL,
+    { key = "integrations", title = L["Integrazioni"], modes = FULL,
       applicable = function() return #integrationList() > 0 end, plan = integrationActions },
-    { key = "charprofile", title = "Profilo", modes = SHORT, validate = validateCharProfile, plan = charProfileActions },
-    { key = "summary", title = "Riepilogo", modes = BOTH },
+    { key = "charprofile", title = L["Profilo"], modes = SHORT, validate = validateCharProfile, plan = charProfileActions },
+    { key = "summary", title = L["Riepilogo"], modes = BOTH },
 }
 Wizard.STEPS = STEPS
 
@@ -841,10 +842,10 @@ local function runValidate(st, c)
     if not st or not st.validate then return true end
     local ok, a, b = pcall(st.validate, c)
     if not ok then
-        Logger:Error("Wizard: validazione del passo %s: %s", st.key, tostring(a))
+        Logger:Error(L["Wizard: validazione del passo %s: %s"], st.key, tostring(a))
         return true -- un validatore difettoso non deve bloccare l'utente
     end
-    if a == false then return false, b or "Dati non validi." end
+    if a == false then return false, b or L["Dati non validi."] end
     return true
 end
 
@@ -894,7 +895,7 @@ function Wizard:BuildPlan()
             if ok and type(list) == "table" then
                 for _, a in ipairs(list) do body[#body + 1] = a end
             elseif not ok then
-                Logger:Error("Wizard: piano del passo %s: %s", st.key, tostring(list))
+                Logger:Error(L["Wizard: piano del passo %s: %s"], st.key, tostring(list))
             end
         end
     end
@@ -902,10 +903,10 @@ function Wizard:BuildPlan()
     for _, a in ipairs(body) do if a.destructive then destructive = true end end
     if destructive and avail("Backups", "Create") then
         plan[1] = {
-            id = "backup", optional = true, label = "Backup di sicurezza: 'Prima del wizard'",
+            id = "backup", optional = true, label = L["Backup di sicurezza: 'Prima del wizard'"],
             run = function(rec)
-                local called, id, err = invoke("Backups", "Create", "Prima del wizard", "pre-preset")
-                if not called or not id then return false, err or "backup non creato" end
+                local called, id, err = invoke("Backups", "Create", L["Prima del wizard"], "pre-preset")
+                if not called or not id then return false, err or L["backup non creato"] end
                 rec.backup = id
                 return true
             end,
@@ -937,8 +938,8 @@ function Wizard:FormatResult(rec)
     local lines = {}
     if not rec then return lines end
     for _, d in ipairs(rec.done) do lines[#lines + 1] = "|cff66cc99OK|r  " .. tostring(d.label) end
-    for _, e in ipairs(rec.errors) do lines[#lines + 1] = "|cffff6060Errore|r  " .. tostring(e.label) .. ": " .. tostring(e.err) end
-    for _, w in ipairs(rec.warnings) do lines[#lines + 1] = "|cffe6ba66Avviso|r  " .. tostring(w.label) .. ": " .. tostring(w.err) end
+    for _, e in ipairs(rec.errors) do lines[#lines + 1] = L["|cffff6060Errore|r  "] .. tostring(e.label) .. ": " .. tostring(e.err) end
+    for _, w in ipairs(rec.warnings) do lines[#lines + 1] = L["|cffe6ba66Avviso|r  "] .. tostring(w.label) .. ": " .. tostring(w.err) end
     return lines
 end
 
@@ -950,21 +951,21 @@ end
 -- "Annulla tutto": ripercorre al contrario le azioni riuscite (Presets:Undo, regole, frame, profili).
 function Wizard:Undo()
     local r = self.lastRun
-    if not r then return false, "nessuna esecuzione da annullare" end
-    if r.undone then return false, "gia' annullato" end
-    if #r.undo == 0 then return false, "nulla da annullare" end
+    if not r then return false, L["nessuna esecuzione da annullare"] end
+    if r.undone then return false, L["gia' annullato"] end
+    if #r.undo == 0 then return false, L["nulla da annullare"] end
     local errs = {}
     for i = #r.undo, 1, -1 do
         local u = r.undo[i]
         local ok, a, b = pcall(u.fn)
         if not ok then errs[#errs + 1] = u.label .. ": " .. tostring(a)
-        elseif a == false then errs[#errs + 1] = u.label .. ": " .. tostring(b or "non riuscito") end
+        elseif a == false then errs[#errs + 1] = u.label .. ": " .. tostring(b or L["non riuscito"]) end
     end
     -- Rete di sicurezza: si torna comunque al profilo di partenza (Presets:Undo potrebbe essere a un solo livello).
     local before = r.profileBefore
     if before and profileExists(before) and DB:GetProfileName() ~= before then
         local ok = pcall(DB.SetProfile, DB, before)
-        if not ok then errs[#errs + 1] = "profilo di partenza non ripristinato" end
+        if not ok then errs[#errs + 1] = L["profilo di partenza non ripristinato"] end
     end
     r.undone = true
     if #errs > 0 then return false, table.concat(errs, "; ") end
@@ -976,7 +977,7 @@ end
 function Wizard:Finish()
     if InCombatLockdown() then
         -- Presets rifiuta di applicare in combattimento: nulla viene toccato, si riprova da soli a fine combattimento.
-        local msg = "Sei in combattimento: la configurazione verra' applicata appena finisce."
+        local msg = L["Sei in combattimento: la configurazione verra' applicata appena finisce."]
         self:SetError(msg)
         Events:RunOutOfCombat("wizardFinish", function()
             if Wizard.wasOpen and not InCombatLockdown() then Wizard:Next() end
@@ -996,9 +997,9 @@ function Wizard:Finish()
     markDone(false)
     self.stepId, self.visited, self.mode = nil, {}, "full"
     if #rec.errors > 0 then
-        Logger:Warn("Configurazione guidata: %d azioni riuscite, %d fallite (annulla dal riepilogo)", #rec.done, #rec.errors)
+        Logger:Warn(L["Configurazione guidata: %d azioni riuscite, %d fallite (annulla dal riepilogo)"], #rec.done, #rec.errors)
     else
-        Logger:Info("Configurazione guidata completata")
+        Logger:Info(L["Configurazione guidata completata"])
     end
     Events:Fire("BADB_WIZARD_DONE")
     if self.wasOpen then self:ShowResult(rec) end
@@ -1022,8 +1023,8 @@ function Wizard:ApplyRecommended()
     if Wizard.RoleInfo().needsConfirm then
         -- la conferma del ruolo non si puo' saltare
         self:GoId("role")
-        self:SetError("Conferma il tuo ruolo prima di applicare il layout consigliato.")
-        return false, "ruolo da confermare"
+        self:SetError(L["Conferma il tuo ruolo prima di applicare il layout consigliato."])
+        return false, L["ruolo da confermare"]
     end
     return self:Finish()
 end
@@ -1263,7 +1264,7 @@ local function buildShell()
     end
     local title = label(header, "BADB|cffe6ba66UI|r", 18, "text")
     title:SetPoint("LEFT", 18, 0)
-    local subtitle = label(header, "Configurazione guidata", 12, "textMuted")
+    local subtitle = label(header, L["Configurazione guidata"], 12, "textMuted")
     subtitle:SetPoint("LEFT", title, "RIGHT", 12, -1)
     local close = CreateFrame("Button", nil, header, "UIPanelCloseButtonNoScripts")
     close:SetPoint("RIGHT", -6, 0)
@@ -1326,27 +1327,27 @@ local function buildShell()
     onRefresh(function()
         local n = math.max(1, #Wizard:GetSteps())
         prog:SetWidth(math.max(1, 180 * Wizard.step / n))
-        progText:SetFormattedText("Passo %d di %d", Wizard.step, n)
+        progText:SetFormattedText(L["Passo %d di %d"], Wizard.step, n)
     end)
 
-    f.next = button(footer, "Avanti", 120, function() Wizard:Next() end, "primary")
+    f.next = button(footer, L["Avanti"], 120, function() Wizard:Next() end, "primary")
     f.next:SetPoint("RIGHT", -24, 0)
-    f.back = button(footer, "Indietro", 100, function() Wizard:Back() end, "secondary")
+    f.back = button(footer, L["Indietro"], 100, function() Wizard:Back() end, "secondary")
     f.back:SetPoint("RIGHT", f.next, "LEFT", -8, 0)
-    f.skip = button(footer, "Salta", 80, function() Wizard:AskSkip() end, "ghost")
+    f.skip = button(footer, L["Salta"], 80, function() Wizard:AskSkip() end, "ghost")
     f.skip:SetPoint("RIGHT", f.back, "LEFT", -8, 0)
 
     -- Conferma "salta": non mostrare piu' / piu' tardi / continua
     local cf = overlay(f, header)
-    local ct = label(cf, "Interrompere la configurazione guidata?", 18, "text")
+    local ct = label(cf, L["Interrompere la configurazione guidata?"], 18, "text")
     ct:SetPoint("TOPLEFT", 48, -56)
-    local cd = label(cf, "Puoi non vederla piu' oppure rimandarla: la ritrovi con /badb wizard o dal pannello BadbUI.", 12, "textDim")
+    local cd = label(cf, L["Puoi non vederla piu' oppure rimandarla: la ritrovi con /badb wizard o dal pannello BadbUI."], 12, "textDim")
     cd:SetPoint("TOPLEFT", 48, -92); cd:SetWidth(620); cd:SetWordWrap(true)
-    local c1 = button(cf, "Non mostrare piu'", 260, function() Wizard:Skip() end, "secondary")
+    local c1 = button(cf, L["Non mostrare piu'"], 260, function() Wizard:Skip() end, "secondary")
     c1:SetPoint("TOPLEFT", 48, -150)
-    local c2 = button(cf, "Piu' tardi", 260, function() Wizard:Close() end, "secondary")
+    local c2 = button(cf, L["Piu' tardi"], 260, function() Wizard:Close() end, "secondary")
     c2:SetPoint("TOPLEFT", 48, -188)
-    local c3 = button(cf, "Continua la configurazione", 260, function() cf:Hide() end, "primary")
+    local c3 = button(cf, L["Continua la configurazione"], 260, function() cf:Hide() end, "primary")
     c3:SetPoint("TOPLEFT", 48, -226)
     f.confirm = cf
     f.confirmButtons = { never = c1, later = c2, resume = c3 }
@@ -1358,14 +1359,14 @@ local function buildShell()
     rs.body = label(rs, "", 12, "text")
     rs.body:SetPoint("TOPLEFT", 48, -84); rs.body:SetWidth(640); rs.body:SetWordWrap(true)
     rs.body:SetSpacing(4)
-    rs.undo = button(rs, "Annulla tutto", 150, function()
+    rs.undo = button(rs, L["Annulla tutto"], 150, function()
         local ok, err = Wizard:Undo()
-        rs.title:SetText(ok and "Modifiche annullate" or "Annullamento incompleto")
-        rs.body:SetText(ok and "Tutto e' stato riportato com'era prima della configurazione." or tostring(err))
+        rs.title:SetText(ok and L["Modifiche annullate"] or L["Annullamento incompleto"])
+        rs.body:SetText(ok and L["Tutto e' stato riportato com'era prima della configurazione."] or tostring(err))
         rs.undo:SetShown(false)
     end, "ghost")
     rs.undo:SetPoint("BOTTOMLEFT", 48, 36)
-    rs.close = button(rs, "Chiudi", 150, function() Wizard:Close() end, "primary")
+    rs.close = button(rs, L["Chiudi"], 150, function() Wizard:Close() end, "primary")
     rs.close:SetPoint("BOTTOMRIGHT", -48, 36)
     f.result = rs
 
@@ -1392,24 +1393,24 @@ end
 
 local Builders = {}
 
-local CLASSIC_NOTICE = "Nota: al primo accesso Blizzard propone il preset Classic o Enhanced "
-    .. "(Opzioni > Sistema > Preset). Sceglilo prima di proseguire: BadbUI lavora sopra quel layout."
+local CLASSIC_NOTICE = L["Nota: al primo accesso Blizzard propone il preset Classic o Enhanced "]
+    .. L["(Opzioni > Sistema > Preset). Sceglilo prima di proseguire: BadbUI lavora sopra quel layout."]
 
 Builders.welcome = function(page)
-    local intro = pageHeading(page, "Il tuo layout in un minuto",
-        "BadbUI configura nameplate, frame di raid e party, scala dell'interfaccia ed elementi superflui in base al tuo ruolo e al contenuto che giochi. Viene creato un nuovo profilo: quello attuale resta intatto e puoi tornare indietro in qualsiasi momento.")
+    local intro = pageHeading(page, L["Il tuo layout in un minuto"],
+        L["BadbUI configura nameplate, frame di raid e party, scala dell'interfaccia ed elementi superflui in base al tuo ruolo e al contenuto che giochi. Viene creato un nuovo profilo: quello attuale resta intatto e puoi tornare indietro in qualsiasi momento."])
 
     local quick = CreateFrame("Frame", nil, page, "BackdropTemplate")
     quick:SetPoint("TOPLEFT", intro, "BOTTOMLEFT", 0, -20)
     quick:SetPoint("RIGHT", 0, 0)
     quick:SetHeight(112)
     skin(quick, "panel", "accentDim")
-    local qt = label(quick, "Consigliato per questo personaggio", 14, "accent")
+    local qt = label(quick, L["Consigliato per questo personaggio"], 14, "accent")
     qt:SetPoint("TOPLEFT", 16, -14)
     local qd = label(quick, "", 12, "textDim")
     qd:SetPoint("TOPLEFT", qt, "BOTTOMLEFT", 0, -8)
     qd:SetPoint("RIGHT", -16, 0)
-    local apply = button(quick, "Applica consigliato", 170, function() Wizard:ApplyRecommended() end, "primary")
+    local apply = button(quick, L["Applica consigliato"], 170, function() Wizard:ApplyRecommended() end, "primary")
     apply:SetPoint("BOTTOMLEFT", 16, 14)
     onRefresh(function()
         local Pr = P()
@@ -1423,11 +1424,11 @@ Builders.welcome = function(page)
             if Wizard.choices.templateMode == "pvp" then def = findDef(classTemplates("pvp"), Wizard.choices.templatePvp) end
             if def then extra = "\nTemplate: " .. tostring(def.title or def.key) end
         end
-        qd:SetFormattedText("%s  ·  %s%s\nRilevato dal tuo personaggio (classe, talenti, livello e gruppo).",
+        qd:SetFormattedText(L["%s  ·  %s%s\nRilevato dal tuo personaggio (classe, talenti, livello e gruppo)."],
             role and role.title or "?", c and c.title or "?", extra)
     end)
 
-    local custom = label(page, "Oppure premi |cffe6ba66Avanti|r per scegliere tu ogni dettaglio.", 12, "textMuted")
+    local custom = label(page, L["Oppure premi |cffe6ba66Avanti|r per scegliere tu ogni dettaglio."], 12, "textMuted")
     custom:SetPoint("TOPLEFT", quick, "BOTTOMLEFT", 0, -14)
 
     local notice = label(page, CLASSIC_NOTICE, 11, "textMuted")
@@ -1441,17 +1442,17 @@ Builders.welcome = function(page)
     envText:SetWordWrap(true)
     onRefresh(function()
         local env = Wizard.env or {}
-        local parts = { "Client " .. tostring(env.client or "?"), env.editMode and "Edit Mode disponibile" or "Edit Mode non disponibile" }
+        local parts = { "Client " .. tostring(env.client or "?"), env.editMode and L["Edit Mode disponibile"] or L["Edit Mode non disponibile"] }
         if env.issues and #env.issues > 0 then
             local shown = {}
             for i = 1, math.min(3, #env.issues) do shown[i] = env.issues[i] end
             local more = #env.issues > 3 and (" +" .. (#env.issues - 3)) or ""
-            parts[#parts + 1] = "|cffe6ba66Avvisi: " .. shorten(table.concat(shown, ", "), 120) .. more .. "|r"
+            parts[#parts + 1] = L["|cffe6ba66Avvisi: "] .. shorten(table.concat(shown, ", "), 120) .. more .. "|r"
         end
         envText:SetText(table.concat(parts, "  ·  "))
     end)
 
-    local undo = button(page, "Annulla ultimo preset", 170, function()
+    local undo = button(page, L["Annulla ultimo preset"], 170, function()
         local Pr = P()
         if Pr and Pr.Undo then Pr:Undo() end
         Wizard:Refresh()
@@ -1483,8 +1484,8 @@ end
 
 Builders.role = function(page)
     local Pr = P()
-    local p = pageHeading(page, "Che ruolo giochi?",
-        "Il ruolo decide dimensioni dei frame di gruppo, informazioni mostrate e quanto risaltano le nameplate.")
+    local p = pageHeading(page, L["Che ruolo giochi?"],
+        L["Il ruolo decide dimensioni dei frame di gruppo, informazioni mostrate e quanto risaltano le nameplate."])
     -- Riquadro "Conferma il tuo ruolo": visibile solo se Badb.Player non e' sicuro (confidenza < alta o ruolo ambiguo).
     local banner = label(page, "", 12, "accent")
     banner:SetPoint("TOPLEFT", p, "BOTTOMLEFT", 0, -10)
@@ -1494,8 +1495,8 @@ Builders.role = function(page)
         local ri = Wizard.RoleInfo()
         if not ri.needsConfirm then banner:SetText(""); return end
         local rr = Pr and Pr.roles and Pr.roles[ri.role or ""]
-        local conf = ri.confidence == "medium" and "media" or "bassa"
-        banner:SetFormattedText("Conferma il tuo ruolo: rilevato %s (fonte %s, affidabilita' %s). Scegli quello giusto e premi Avanti.",
+        local conf = ri.confidence == "medium" and L["media"] or L["bassa"]
+        banner:SetFormattedText(L["Conferma il tuo ruolo: rilevato %s (fonte %s, affidabilita' %s). Scegli quello giusto e premi Avanti."],
             rr and rr.title or tostring(ri.role or "?"), tostring(ri.source or "?"), conf)
     end)
     if Pr and Pr.roleOrder then
@@ -1508,16 +1509,16 @@ end
 
 Builders.content = function(page)
     local Pr = P()
-    local p = pageHeading(page, "Cosa giochi di piu'?",
-        "Puoi rifare la configurazione per ogni attivita' e associare un profilo a ciascuna specializzazione.")
+    local p = pageHeading(page, L["Cosa giochi di piu'?"],
+        L["Puoi rifare la configurazione per ogni attivita' e associare un profilo a ciascuna specializzazione."])
     if Pr and Pr.contentOrder then cardGrid(page, p, Pr.contentOrder, Pr.content, "content") end
 end
 
 local TEMPLATE_ICON = "Interface\\Icons\\INV_Misc_Map_01"
 
 Builders.template = function(page)
-    local p = pageHeading(page, "Il template della tua classe",
-        "Ogni template e' pensato per la tua classe e il tuo ruolo. Scegli dove giochi: PvE, PvP o entrambi (con cambio profilo automatico).")
+    local p = pageHeading(page, L["Il template della tua classe"],
+        L["Ogni template e' pensato per la tua classe e il tuo ruolo. Scegli dove giochi: PvE, PvP o entrambi (con cambio profilo automatico)."])
     local gap = 12
     local cw = math.floor((BODY_W - gap * 2) / 3)
 
@@ -1535,8 +1536,8 @@ Builders.template = function(page)
     end
     modePill("PvE", "pve", 0, 100)
     modePill("PvP", "pvp", 108, 100)
-    modePill("Entrambi", "both", 216, 110)
-    local generic = pill(page, "Scelta generica", 140, function() return Wizard.choices.useTemplate == false end,
+    modePill(L["Entrambi"], "both", 216, 110)
+    local generic = pill(page, L["Scelta generica"], 140, function() return Wizard.choices.useTemplate == false end,
         function() Wizard.choices.useTemplate = false end)
     generic:SetPoint("TOPLEFT", p, "BOTTOMLEFT", 334, -12)
     onRefresh(function() generic:Refresh() end)
@@ -1599,7 +1600,7 @@ Builders.template = function(page)
         for i, b in ipairs(variantPills) do
             local v = vs[i]
             b.variant = v
-            if v then b.text:SetText("Raid a " .. v); b:Show(); b:Refresh() else b:Hide() end
+            if v then b.text:SetText(L["Raid a "] .. v); b:Show(); b:Refresh() else b:Hide() end
         end
         local y = 58
         pveBox:ClearAllPoints(); pvpBox:ClearAllPoints()
@@ -1613,11 +1614,11 @@ Builders.template = function(page)
 end
 
 Builders.details = function(page)
-    local p = pageHeading(page, "Ultimi ritocchi", "Opzioni generali, modificabili in seguito dal pannello BadbUI.")
+    local p = pageHeading(page, L["Ultimi ritocchi"], L["Opzioni generali, modificabili in seguito dal pannello BadbUI."])
     local items = {
-        { "pixelPerfect", "Scala interfaccia pixel perfect (bordi nitidi a ogni risoluzione)" },
-        { "hideClutter", "Nascondi micro menu, barra borse e barra esperienza" },
-        { "friendlyPlates", "Mostra le nameplate degli alleati" },
+        { "pixelPerfect", L["Scala interfaccia pixel perfect (bordi nitidi a ogni risoluzione)"] },
+        { "hideClutter", L["Nascondi micro menu, barra borse e barra esperienza"] },
+        { "friendlyPlates", L["Mostra le nameplate degli alleati"] },
     }
     local prev = p
     for _, it in ipairs(items) do
@@ -1631,21 +1632,21 @@ Builders.details = function(page)
 end
 
 Builders.rules = function(page)
-    local p = pageHeading(page, "Regole automatiche",
-        "BadbUI puo' cambiare profilo da solo in base a dove ti trovi. Ogni regola usa una copia del profilo che stai creando, cosi' puoi ritoccarla senza toccare l'originale.")
+    local p = pageHeading(page, L["Regole automatiche"],
+        L["BadbUI puo' cambiare profilo da solo in base a dove ti trovi. Ogni regola usa una copia del profilo che stai creando, cosi' puoi ritoccarla senza toccare l'originale."])
     local note = label(page, "", 11, "accent")
     note:SetPoint("TOPLEFT", p, "BOTTOMLEFT", 0, -14)
     note:SetPoint("RIGHT", 0, 0)
     note:SetWordWrap(true)
-    local raid = toggle(page, "In raid usa un profilo dedicato", function() return Wizard.choices.ruleRaid end,
+    local raid = toggle(page, L["In raid usa un profilo dedicato"], function() return Wizard.choices.ruleRaid end,
         function(v) Wizard.choices.ruleRaid = v end)
     raid:SetPoint("TOPLEFT", note, "BOTTOMLEFT", 0, -16)
-    local pvp = toggle(page, "Nei campi di battaglia usa un profilo dedicato", function() return Wizard.choices.rulePvp end,
+    local pvp = toggle(page, L["Nei campi di battaglia usa un profilo dedicato"], function() return Wizard.choices.rulePvp end,
         function(v) Wizard.choices.rulePvp = v end)
     pvp:SetPoint("TOPLEFT", raid, "BOTTOMLEFT", 0, -10)
     onRefresh(function()
         local both = usingTemplate() and Wizard.choices.templateMode == "both"
-        note:SetText(both and "Con 'Entrambi' le regole PvE/PvP della tua classe vengono create automaticamente (campi di battaglia -> profilo PvP)." or "")
+        note:SetText(both and L["Con 'Entrambi' le regole PvE/PvP della tua classe vengono create automaticamente (campi di battaglia -> profilo PvP)."] or "")
         if raid.Refresh then raid:Refresh() end
         if pvp.Refresh then pvp:Refresh() end
         pvp:SetShown(not both)
@@ -1653,12 +1654,12 @@ Builders.rules = function(page)
 end
 
 Builders.integrations = function(page)
-    local p = pageHeading(page, "Altri addon",
-        "Ho trovato questi addon: puoi salvare la loro configurazione attuale nel profilo BadbUI (best-effort, non verificato in gioco).")
+    local p = pageHeading(page, L["Altri addon"],
+        L["Ho trovato questi addon: puoi salvare la loro configurazione attuale nel profilo BadbUI (best-effort, non verificato in gioco)."])
     local prev = p
     for _, it in ipairs(integrationList()) do
         local id = it.id
-        local t = toggle(page, "Salva la configurazione di " .. tostring(it.title or id), function()
+        local t = toggle(page, L["Salva la configurazione di "] .. tostring(it.title or id), function()
             return type(Wizard.choices.integrations) == "table" and Wizard.choices.integrations[id]
         end, function(v)
             if type(Wizard.choices.integrations) ~= "table" then Wizard.choices.integrations = {} end
@@ -1672,16 +1673,16 @@ end
 
 -- Personaggio nuovo (modalita' breve): usa un profilo esistente o creane uno.
 Builders.charprofile = function(page)
-    local p = pageHeading(page, "Personaggio nuovo",
-        "Hai gia' configurato BadbUI su questo account. Vuoi usare un profilo esistente o crearne uno nuovo per questo personaggio?")
-    local pe = pill(page, "Usa un profilo esistente", 230, function() return Wizard.choices.charMode ~= "new" end,
+    local p = pageHeading(page, L["Personaggio nuovo"],
+        L["Hai gia' configurato BadbUI su questo account. Vuoi usare un profilo esistente o crearne uno nuovo per questo personaggio?"])
+    local pe = pill(page, L["Usa un profilo esistente"], 230, function() return Wizard.choices.charMode ~= "new" end,
         function() Wizard.choices.charMode = "existing" end)
     pe:SetPoint("TOPLEFT", p, "BOTTOMLEFT", 0, -20)
-    local pn = pill(page, "Crea un nuovo profilo", 230, function() return Wizard.choices.charMode == "new" end,
+    local pn = pill(page, L["Crea un nuovo profilo"], 230, function() return Wizard.choices.charMode == "new" end,
         function() Wizard.choices.charMode = "new" end)
     pn:SetPoint("LEFT", pe, "RIGHT", 10, 0)
 
-    local cycleLabel = label(page, "Profilo da usare (clic per cambiare):", 12, "textDim")
+    local cycleLabel = label(page, L["Profilo da usare (clic per cambiare):"], 12, "textDim")
     cycleLabel:SetPoint("TOPLEFT", pe, "BOTTOMLEFT", 0, -24)
     local cycle = button(page, "", 280, function()
         local list = listProfiles()
@@ -1693,7 +1694,7 @@ Builders.charprofile = function(page)
     end, "secondary")
     cycle:SetPoint("TOPLEFT", cycleLabel, "BOTTOMLEFT", 0, -8)
 
-    local nameLabel = label(page, "Nome del nuovo profilo:", 12, "textDim")
+    local nameLabel = label(page, L["Nome del nuovo profilo:"], 12, "textDim")
     nameLabel:SetPoint("TOPLEFT", pe, "BOTTOMLEFT", 0, -24)
     local eb = editBox(page, 280, function(text) Wizard.choices.charName = cleanStr(text, MAX_STR) end)
     eb:SetPoint("TOPLEFT", nameLabel, "BOTTOMLEFT", 6, -8)
@@ -1710,7 +1711,7 @@ Builders.charprofile = function(page)
 end
 
 Builders.summary = function(page)
-    local p = pageHeading(page, "Riepilogo", "Ecco cosa verra' applicato. Premi |cffe6ba66Applica|r per procedere: viene creato prima un backup e puoi annullare tutto.")
+    local p = pageHeading(page, L["Riepilogo"], L["Ecco cosa verra' applicato. Premi |cffe6ba66Applica|r per procedere: viene creato prima un backup e puoi annullare tutto."])
     local box = CreateFrame("Frame", nil, page, "BackdropTemplate")
     box:SetPoint("TOPLEFT", p, "BOTTOMLEFT", 0, -18)
     box:SetPoint("RIGHT", 0, 0)
@@ -1722,7 +1723,7 @@ Builders.summary = function(page)
     lines:SetPoint("TOPLEFT", profile, "BOTTOMLEFT", 0, -10)
     lines:SetPoint("RIGHT", -16, 0)
     lines:SetSpacing(6)
-    local note = label(page, "Il profilo attuale non viene modificato. /badb undo per tornare indietro.", 11, "textMuted")
+    local note = label(page, L["Il profilo attuale non viene modificato. /badb undo per tornare indietro."], 11, "textMuted")
     note:SetPoint("TOPLEFT", box, "BOTTOMLEFT", 0, -10)
     page.summaryLines = lines
     onRefresh(function()
@@ -1731,30 +1732,30 @@ Builders.summary = function(page)
         local plan = Wizard:BuildPlan()
         local Pr = P()
         if Wizard.mode == "short" then
-            profile:SetText("Profilo di questo personaggio")
+            profile:SetText(L["Profilo di questo personaggio"])
             for _, a in ipairs(plan) do add(a.label) end
         elseif usingTemplate() then
-            profile:SetText("Template della tua classe")
+            profile:SetText(L["Template della tua classe"])
             for _, a in ipairs(plan) do add(a.label) end
         else
             local okS, spec = false, nil
             if Pr and Pr.Build then okS, spec = pcall(Pr.Build, Pr, Wizard.choices) end
             if okS and type(spec) == "table" then
-                profile:SetText("Nuovo profilo: Badb - " .. tostring(spec.title))
+                profile:SetText(L["Nuovo profilo: Badb - "] .. tostring(spec.title))
                 local okD, desc = pcall(Pr.Describe, Pr, spec)
                 if okD and type(desc) == "table" then for _, l in ipairs(desc) do add(l) end end
             else
-                profile:SetText("Configurazione")
+                profile:SetText(L["Configurazione"])
             end
             for _, a in ipairs(plan) do
                 if a.id ~= "preset" then add(a.label) end
             end
         end
-        if #out == 0 then add("Nessuna modifica: l'interfaccia resta com'e'.") end
+        if #out == 0 then add(L["Nessuna modifica: l'interfaccia resta com'e'."]) end
         if #out > 10 then
             local extra = #out - 9
             for i = #out, 10, -1 do out[i] = nil end
-            out[10] = string.format("... e altre %d azioni", extra)
+            out[10] = string.format(L["... e altre %d azioni"], extra)
         end
         lines:SetText(table.concat(out, "\n"))
     end)
@@ -1772,9 +1773,9 @@ local function pageFor(key)
         local ok, err = pcall(build, page)
         if not ok then
             -- un passo che non si costruisce non deve bloccare il wizard: box d'errore al suo posto
-            Logger:Error("Wizard: passo %s: %s", key, tostring(err))
+            Logger:Error(L["Wizard: passo %s: %s"], key, tostring(err))
             page.buildError = tostring(err)
-            local msg = label(page, "|cffff6060Impossibile mostrare questo passo.|r\n" .. shorten(err, 300), 12, "textDim")
+            local msg = label(page, L["|cffff6060Impossibile mostrare questo passo.|r\n"] .. shorten(err, 300), 12, "textDim")
             msg:SetPoint("TOPLEFT", 0, 0); msg:SetPoint("RIGHT", 0, 0); msg:SetWordWrap(true)
         end
     end
@@ -1805,7 +1806,7 @@ function Wizard:Refresh()
     end
     for _, fn in ipairs(refreshers) do pcall(fn) end
     pcall(frame.back.SetEnabled, frame.back, idx > 1)
-    setButtonText(frame.next, idx >= #steps and "Applica" or "Avanti")
+    setButtonText(frame.next, idx >= #steps and L["Applica"] or L["Avanti"])
 end
 
 function Wizard:Go(i)
@@ -1833,16 +1834,16 @@ function Wizard:ShowResult(rec)
     if not frame or not rec then return end
     local rs = frame.result
     local nerr = #rec.errors
-    rs.title:SetText(nerr == 0 and "Fatto!" or string.format("Completato con %d errori", nerr))
+    rs.title:SetText(nerr == 0 and L["Fatto!"] or string.format(L["Completato con %d errori"], nerr))
     local lines = self:FormatResult(rec)
-    if #lines == 0 then lines[1] = "Nessuna modifica necessaria." end
+    if #lines == 0 then lines[1] = L["Nessuna modifica necessaria."] end
     if #lines > 14 then
         local extra = #lines - 13
         for i = #lines, 14, -1 do lines[i] = nil end
-        lines[14] = string.format("... e altre %d righe", extra)
+        lines[14] = string.format(L["... e altre %d righe"], extra)
     end
-    if nerr > 0 then lines[#lines + 1] = "\nAlcune azioni non sono riuscite: le altre sono state applicate. Puoi annullare tutto."
-    elseif rec.backup then lines[#lines + 1] = "\nBackup creato prima delle modifiche." end
+    if nerr > 0 then lines[#lines + 1] = L["\nAlcune azioni non sono riuscite: le altre sono state applicate. Puoi annullare tutto."]
+    elseif rec.backup then lines[#lines + 1] = L["\nBackup creato prima delle modifiche."] end
     rs.body:SetText(table.concat(lines, "\n"))
     rs.undo:SetShown(self:CanUndo())
     frame.confirm:Hide()
@@ -1852,15 +1853,15 @@ end
 -- Apre la finestra. mode: "full" (default) | "short" (personaggio nuovo). Non genera mai errori.
 function Wizard:Open(mode)
     local m = Badb.Modules:Get("Wizard")
-    if not (m and m.enabled) then return false, "modulo disattivato" end
+    if not (m and m.enabled) then return false, L["modulo disattivato"] end
     if not P() then
-        Logger:Warn("Configurazione guidata: modulo Presets non disponibile")
-        return false, "Presets non disponibile"
+        Logger:Warn(L["Configurazione guidata: modulo Presets non disponibile"])
+        return false, L["Presets non disponibile"]
     end
     if InCombatLockdown() then
-        Logger:Info("La configurazione guidata si aprira' a fine combattimento")
+        Logger:Info(L["La configurazione guidata si aprira' a fine combattimento"])
         Events:RunOutOfCombat("wizardOpen", function() Wizard:Open(mode) end)
-        return false, "in combattimento"
+        return false, L["in combattimento"]
     end
     if mode and mode ~= self.mode then self.mode, self.stepId, self.visited = mode, nil, {} end
     self.choices = state().answers
@@ -1870,7 +1871,7 @@ function Wizard:Open(mode)
     if not frame then
         local ok, f = pcall(buildShell)
         if not ok then
-            Logger:Error("Configurazione guidata: finestra non creata: %s", tostring(f))
+            Logger:Error(L["Configurazione guidata: finestra non creata: %s"], tostring(f))
             return false, tostring(f)
         end
         frame = f
@@ -1912,12 +1913,12 @@ end
 -- Ritorna true | false, motivo.
 function Wizard:Start(force)
     local m = Badb.Modules:Get("Wizard")
-    if not (m and m.enabled) then return false, "modulo disattivato" end
+    if not (m and m.enabled) then return false, L["modulo disattivato"] end
     local mode = force and "full" or self:DetectMode()
-    if not mode then return false, "gia' completato" end
+    if not mode then return false, L["gia' completato"] end
     if InCombatLockdown() then
         Events:RunOutOfCombat("wizardOpen", function() Wizard:Start(force) end)
-        return false, "in combattimento: partira' a fine combattimento"
+        return false, L["in combattimento: partira' a fine combattimento"]
     end
     if force then self.stepId, self.visited, self.lastRun = nil, {}, nil end
     return self:Open(mode)
@@ -1935,7 +1936,7 @@ function Wizard:AutoStart(isLogin, isReload)
             local mode = self:DetectMode()
             if not mode then return end
             local ok, err = pcall(self.Open, self, mode)
-            if not ok then Logger:Error("Configurazione guidata: %s", tostring(err)) end
+            if not ok then Logger:Error(L["Configurazione guidata: %s"], tostring(err)) end
         end)
     end)
 end
@@ -1946,30 +1947,30 @@ end
 local pageStatus
 local function statusText()
     local s = state()
-    if not s.completed then return "Stato: non ancora completato." end
-    if s.skipped then return "Stato: saltato (non viene piu' proposto)." end
-    return "Stato: completato."
+    if not s.completed then return L["Stato: non ancora completato."] end
+    if s.skipped then return L["Stato: saltato (non viene piu' proposto)."] end
+    return L["Stato: completato."]
 end
 
 local M = Badb.Modules:New("Wizard", {
-    title = "Configurazione guidata",
-    category = "Strumenti",
+    title = L["Configurazione guidata"],
+    category = L["Strumenti"],
     defaults = { enabled = true },
     options = {
-        { type = "execute", label = "Rilancia la configurazione guidata", func = function() Wizard:Start(true) end },
+        { type = "execute", label = L["Rilancia la configurazione guidata"], func = function() Wizard:Start(true) end },
     },
     page = {
-        title = "Setup guidato", order = 90, category = "Strumenti",
+        title = L["Setup guidato"], order = 90, category = L["Strumenti"],
         build = function(parent)
-            local h = label(parent, "Setup guidato", 18, "text")
+            local h = label(parent, L["Setup guidato"], 18, "text")
             h:SetPoint("TOPLEFT", 0, 0)
-            local d = label(parent, "Rilancia la configurazione guidata per scegliere ruolo, template della tua classe e regole automatiche. Prima di applicare viene creato un backup e puoi annullare tutto.", 12, "textDim")
+            local d = label(parent, L["Rilancia la configurazione guidata per scegliere ruolo, template della tua classe e regole automatiche. Prima di applicare viene creato un backup e puoi annullare tutto."], 12, "textDim")
             d:SetPoint("TOPLEFT", h, "BOTTOMLEFT", 0, -8); d:SetWidth(540); d:SetWordWrap(true)
             pageStatus = label(parent, statusText(), 12, "text")
             pageStatus:SetPoint("TOPLEFT", d, "BOTTOMLEFT", 0, -14)
-            local b1 = button(parent, "Rilancia il setup guidato", 200, function() Wizard:Start(true) end, "primary")
+            local b1 = button(parent, L["Rilancia il setup guidato"], 200, function() Wizard:Start(true) end, "primary")
             b1:SetPoint("TOPLEFT", pageStatus, "BOTTOMLEFT", 0, -16)
-            local b2 = button(parent, "Reimposta lo stato", 160, function()
+            local b2 = button(parent, L["Reimposta lo stato"], 160, function()
                 Wizard:Reset(); pageStatus:SetText(statusText())
             end, "secondary")
             b2:SetPoint("LEFT", b1, "RIGHT", 10, 0)
@@ -1981,14 +1982,14 @@ local M = Badb.Modules:New("Wizard", {
     -- qui solo i sottocomandi aggiuntivi, per non collidere con i base.
     commands = {
         wizardreset = {
-            help = "wizardreset [status] - reimposta il setup guidato (o ne mostra lo stato)",
+            help = L["wizardreset [status] - reimposta il setup guidato (o ne mostra lo stato)"],
             fn = function(args)
                 if trim(args):lower() == "status" then
                     Logger:Info("%s", statusText())
                     return
                 end
                 Wizard:Reset()
-                Logger:Info("Setup guidato reimpostato: ripartira' al prossimo accesso.")
+                Logger:Info(L["Setup guidato reimpostato: ripartira' al prossimo accesso."])
             end,
         },
     },

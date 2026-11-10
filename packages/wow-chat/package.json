@@ -1,0 +1,22 @@
+{
+  "name": "@badb/wow-chat",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "bun src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test",
+    "test:embedded": "bun test/embedded.fixture.ts"
+  },
+  "dependencies": {
+    "@badb/core": "workspace:*",
+    "@nikcli-ai/sdk-next": "1.428.0",
+    "effect": "4.0.0-rc.112",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/bun": "catalog:",
+    "typescript": "catalog:"
+  }
+}

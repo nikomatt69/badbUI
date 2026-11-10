@@ -11,6 +11,7 @@
 --   * `noName = true` esclude la famiglia dal riconoscimento per nome (nomi troppo generici).
 -- Nessun dato proviene da Skill Capped o da altri addon: e' una selezione nostra.
 local _, ns = ...
+local L = ns.Badb.L
 local Badb = ns.Badb
 
 local D = {}
@@ -18,24 +19,24 @@ Badb.AuraData = D
 
 -- Ordine = priorita' di default (piu' alta = mostrata prima). `harmful` indica dove cercarla.
 D.CATEGORIES = {
-    { key = "immunity", title = "Immunita'", priority = 100, harmful = false, color = { 1.00, 0.85, 0.10 },
-      desc = "Bolle e immunita': inutile attaccare, cambia bersaglio." },
-    { key = "cc", title = "Controllo (stun, fear, poly, sleep)", priority = 90, harmful = true, color = { 0.95, 0.20, 0.20 },
-      desc = "Perdita totale di controllo." },
-    { key = "silence", title = "Silence e disarm", priority = 80, harmful = true, color = { 0.70, 0.35, 0.95 },
-      desc = "Non puo' lanciare o attaccare in mischia." },
-    { key = "defensive", title = "Difensivi", priority = 70, harmful = false, color = { 0.25, 0.75, 1.00 },
-      desc = "Riduzioni del danno e fughe." },
-    { key = "offensive", title = "Offensivi", priority = 60, harmful = false, color = { 1.00, 0.45, 0.10 },
-      desc = "Cooldown di danno o cura attivi: pericolo." },
+    { key = "immunity", title = L["Immunita'"], priority = 100, harmful = false, color = { 1.00, 0.85, 0.10 },
+      desc = L["Bolle e immunita': inutile attaccare, cambia bersaglio."] },
+    { key = "cc", title = L["Controllo (stun, fear, poly, sleep)"], priority = 90, harmful = true, color = { 0.95, 0.20, 0.20 },
+      desc = L["Perdita totale di controllo."] },
+    { key = "silence", title = L["Silence e disarm"], priority = 80, harmful = true, color = { 0.70, 0.35, 0.95 },
+      desc = L["Non puo' lanciare o attaccare in mischia."] },
+    { key = "defensive", title = L["Difensivi"], priority = 70, harmful = false, color = { 0.25, 0.75, 1.00 },
+      desc = L["Riduzioni del danno e fughe."] },
+    { key = "offensive", title = L["Offensivi"], priority = 60, harmful = false, color = { 1.00, 0.45, 0.10 },
+      desc = L["Cooldown di danno o cura attivi: pericolo."] },
     { key = "root", title = "Root", priority = 50, harmful = true, color = { 0.30, 0.85, 0.35 },
-      desc = "Immobilizzato ma puo' lanciare." },
-    { key = "utility", title = "Utilita'", priority = 40, harmful = false, color = { 0.85, 0.85, 0.85 },
-      desc = "Libero movimento, mana, protezioni dalla paura." },
-    { key = "snare", title = "Rallentamenti", priority = 30, harmful = true, color = { 0.55, 0.75, 0.55 },
-      desc = "Movimento ridotto." },
-    { key = "drink", title = "Sta bevendo", priority = 20, harmful = false, color = { 0.40, 0.70, 1.00 },
-      desc = "Healer o caster che recupera mana: momento per attaccarlo." },
+      desc = L["Immobilizzato ma puo' lanciare."] },
+    { key = "utility", title = L["Utilita'"], priority = 40, harmful = false, color = { 0.85, 0.85, 0.85 },
+      desc = L["Libero movimento, mana, protezioni dalla paura."] },
+    { key = "snare", title = L["Rallentamenti"], priority = 30, harmful = true, color = { 0.55, 0.75, 0.55 },
+      desc = L["Movimento ridotto."] },
+    { key = "drink", title = L["Sta bevendo"], priority = 20, harmful = false, color = { 0.40, 0.70, 1.00 },
+      desc = L["Healer o caster che recupera mana: momento per attaccarlo."] },
 }
 
 D.SPELLS = {

@@ -4,7 +4,7 @@ import { context, create } from "./server"
 
 const settings = config()
 const ctx = context(settings)
-if (ensure(ctx)) console.log("Contenuto iniziale creato (gruppi, boss d'esempio, pagine di benvenuto)")
+if (ensure(ctx)) console.log("Contenuto iniziale creato (gruppi, scheda raid ufficiale, pagine di benvenuto)")
 const app = create(ctx)
 const port = Number(process.env.PORT ?? 4096)
 

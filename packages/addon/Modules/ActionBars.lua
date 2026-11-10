@@ -10,6 +10,7 @@
 --    il client blocchi in combattimento, quindi niente taint sui pulsanti secure.
 --  * Valori restituiti da API di stato (IsUsableAction ecc.) passano da Compat.IsSecret.
 local _, ns = ...
+local L = ns.Badb.L
 local Badb = ns.Badb
 local Compat, Lib = Badb.Compat, Badb.ActionBarsLib
 
@@ -17,8 +18,8 @@ local fadeDefaults, fadeOptions = {}, {}
 for _, bar in ipairs(Lib.BARS) do fadeDefaults[bar.key] = false end
 
 local M = Badb.Modules:New("ActionBars", {
-    title = "Barre azioni",
-    category = "Barre",
+    title = L["Barre azioni"],
+    category = L["Barre"],
     defaults = {
         enabled = true,
         -- Stile
@@ -47,27 +48,27 @@ local M = Badb.Modules:New("ActionBars", {
 })
 
 M.options = {
-    { type = "header", label = "Stile pulsanti" },
-    { type = "toggle", path = "skin", label = "Icone piatte con bordo del tema" },
-    { type = "range", path = "iconZoom", label = "Zoom icona", min = 0, max = 0.2, step = 0.01 },
-    { type = "range", path = "borderSize", label = "Spessore bordo", min = 0, max = 4, step = 1 },
-    { type = "range", path = "backgroundAlpha", label = "Opacita' sfondo slot", min = 0, max = 1, step = 0.05 },
-    { type = "header", label = "Testi" },
-    { type = "toggle", path = "showKeybinds", label = "Mostra keybind" },
-    { type = "toggle", path = "shortKeybinds", label = "Keybind abbreviati (S, C, A, M4, N5...)" },
-    { type = "range", path = "keybindSize", label = "Dimensione keybind", min = 6, max = 20, step = 1 },
-    { type = "toggle", path = "showMacroNames", label = "Mostra nomi delle macro" },
-    { type = "range", path = "macroNameSize", label = "Dimensione nomi macro", min = 6, max = 18, step = 1 },
-    { type = "range", path = "countSize", label = "Dimensione cariche/quantita'", min = 6, max = 22, step = 1 },
-    { type = "header", label = "Colore dello stato" },
-    { type = "toggle", path = "rangeColor", label = "Rosso se il bersaglio e' fuori portata" },
-    { type = "toggle", path = "manaColor", label = "Blu se manca la risorsa" },
-    { type = "toggle", path = "unusableColor", label = "Grigio se non utilizzabile" },
-    { type = "header", label = "Dissolvenza (mouseover)" },
-    { type = "range", path = "fadeAlpha", label = "Opacita' quando nascoste", min = 0, max = 1, step = 0.05 },
-    { type = "toggle", path = "fadeShowInCombat", label = "Mostra sempre in combattimento" },
-    { type = "toggle", path = "fadeShowWithTarget", label = "Mostra quando hai un bersaglio" },
-    { type = "range", path = "fadeDuration", label = "Durata transizione (s)", min = 0, max = 1, step = 0.05 },
+    { type = "header", label = L["Stile pulsanti"] },
+    { type = "toggle", path = "skin", label = L["Icone piatte con bordo del tema"] },
+    { type = "range", path = "iconZoom", label = L["Zoom icona"], min = 0, max = 0.2, step = 0.01 },
+    { type = "range", path = "borderSize", label = L["Spessore bordo"], min = 0, max = 4, step = 1 },
+    { type = "range", path = "backgroundAlpha", label = L["Opacita' sfondo slot"], min = 0, max = 1, step = 0.05 },
+    { type = "header", label = L["Testi"] },
+    { type = "toggle", path = "showKeybinds", label = L["Mostra keybind"] },
+    { type = "toggle", path = "shortKeybinds", label = L["Keybind abbreviati (S, C, A, M4, N5...)"] },
+    { type = "range", path = "keybindSize", label = L["Dimensione keybind"], min = 6, max = 20, step = 1 },
+    { type = "toggle", path = "showMacroNames", label = L["Mostra nomi delle macro"] },
+    { type = "range", path = "macroNameSize", label = L["Dimensione nomi macro"], min = 6, max = 18, step = 1 },
+    { type = "range", path = "countSize", label = L["Dimensione cariche/quantita'"], min = 6, max = 22, step = 1 },
+    { type = "header", label = L["Colore dello stato"] },
+    { type = "toggle", path = "rangeColor", label = L["Rosso se il bersaglio e' fuori portata"] },
+    { type = "toggle", path = "manaColor", label = L["Blu se manca la risorsa"] },
+    { type = "toggle", path = "unusableColor", label = L["Grigio se non utilizzabile"] },
+    { type = "header", label = L["Dissolvenza (mouseover)"] },
+    { type = "range", path = "fadeAlpha", label = L["Opacita' quando nascoste"], min = 0, max = 1, step = 0.05 },
+    { type = "toggle", path = "fadeShowInCombat", label = L["Mostra sempre in combattimento"] },
+    { type = "toggle", path = "fadeShowWithTarget", label = L["Mostra quando hai un bersaglio"] },
+    { type = "range", path = "fadeDuration", label = L["Durata transizione (s)"], min = 0, max = 1, step = 0.05 },
 }
 for _, bar in ipairs(Lib.BARS) do
     M.options[#M.options + 1] = { type = "toggle", path = "fade." .. bar.key, label = "Mouseover: " .. bar.title }

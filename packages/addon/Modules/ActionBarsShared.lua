@@ -3,6 +3,7 @@
 -- e accesso al tema visivo. Se il design system (Badb.Theme) e' caricato lo usa,
 -- altrimenti ricade su una palette locale equivalente.
 local _, ns = ...
+local L = ns.Badb.L
 local Badb = ns.Badb
 local Compat = Badb.Compat
 
@@ -12,16 +13,16 @@ Badb.ActionBarsLib = Lib
 -- key: chiave nelle opzioni; frames: candidati per la barra (il primo esistente vince);
 -- prefix/count: pulsanti "<prefix><n>".
 Lib.BARS = {
-    { key = "main",        title = "Barra principale", frames = { "MainActionBar", "MainMenuBar" }, prefix = "ActionButton",              count = 12 },
-    { key = "bottomLeft",  title = "Barra 2",          frames = { "MultiBarBottomLeft" },           prefix = "MultiBarBottomLeftButton",  count = 12 },
-    { key = "bottomRight", title = "Barra 3",          frames = { "MultiBarBottomRight" },          prefix = "MultiBarBottomRightButton", count = 12 },
-    { key = "right",       title = "Barra 4",          frames = { "MultiBarRight" },                prefix = "MultiBarRightButton",       count = 12 },
-    { key = "left",        title = "Barra 5",          frames = { "MultiBarLeft" },                 prefix = "MultiBarLeftButton",        count = 12 },
-    { key = "bar6",        title = "Barra 6",          frames = { "MultiBar5" },                    prefix = "MultiBar5Button",           count = 12 },
-    { key = "bar7",        title = "Barra 7",          frames = { "MultiBar6" },                    prefix = "MultiBar6Button",           count = 12 },
-    { key = "bar8",        title = "Barra 8",          frames = { "MultiBar7" },                    prefix = "MultiBar7Button",           count = 12 },
-    { key = "pet",         title = "Barra famiglio",   frames = { "PetActionBar", "PetActionBarFrame" }, prefix = "PetActionButton",  count = 10 },
-    { key = "stance",      title = "Barra forme",      frames = { "StanceBar", "StanceBarFrame" },  prefix = "StanceButton",              count = 10 },
+    { key = "main",        title = L["Barra principale"], frames = { "MainActionBar", "MainMenuBar" }, prefix = "ActionButton",              count = 12 },
+    { key = "bottomLeft",  title = L["Barra 2"],          frames = { "MultiBarBottomLeft" },           prefix = "MultiBarBottomLeftButton",  count = 12 },
+    { key = "bottomRight", title = L["Barra 3"],          frames = { "MultiBarBottomRight" },          prefix = "MultiBarBottomRightButton", count = 12 },
+    { key = "right",       title = L["Barra 4"],          frames = { "MultiBarRight" },                prefix = "MultiBarRightButton",       count = 12 },
+    { key = "left",        title = L["Barra 5"],          frames = { "MultiBarLeft" },                 prefix = "MultiBarLeftButton",        count = 12 },
+    { key = "bar6",        title = L["Barra 6"],          frames = { "MultiBar5" },                    prefix = "MultiBar5Button",           count = 12 },
+    { key = "bar7",        title = L["Barra 7"],          frames = { "MultiBar6" },                    prefix = "MultiBar6Button",           count = 12 },
+    { key = "bar8",        title = L["Barra 8"],          frames = { "MultiBar7" },                    prefix = "MultiBar7Button",           count = 12 },
+    { key = "pet",         title = L["Barra famiglio"],   frames = { "PetActionBar", "PetActionBarFrame" }, prefix = "PetActionButton",  count = 10 },
+    { key = "stance",      title = L["Barra forme"],      frames = { "StanceBar", "StanceBarFrame" },  prefix = "StanceButton",              count = 10 },
 }
 
 function Lib.GetBarFrame(bar)

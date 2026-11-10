@@ -2,6 +2,7 @@
 -- Unifica eventi di gioco (RegisterEvent) e messaggi interni (Fire) in un'unica API.
 -- Gli errori nei listener sono isolati: un modulo rotto non blocca gli altri.
 local _, ns = ...
+local L = ns.Badb.L
 local Badb = ns.Badb
 local Logger = Badb.Logger
 
@@ -17,7 +18,7 @@ local function dispatch(event, ...)
     for owner, fn in pairs(list) do
         local ok, err = pcall(fn, event, ...)
         if not ok then
-            Logger:Error("Listener %s su %s: %s", tostring(owner.name or owner), event, err)
+            Logger:Error(L["Listener %s su %s: %s"], tostring(owner.name or owner), event, err)
         end
     end
 end
@@ -65,6 +66,6 @@ Events:On(Events, "PLAYER_REGEN_ENABLED", function()
     for key, fn in pairs(queue) do
         queue[key] = nil
         local ok, err = pcall(fn)
-        if not ok then Logger:Error("Azione differita %s: %s", key, err) end
+        if not ok then Logger:Error(L["Azione differita %s: %s"], key, err) end
     end
 end)

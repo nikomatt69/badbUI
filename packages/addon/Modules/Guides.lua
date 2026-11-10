@@ -14,6 +14,7 @@
 -- Badb.Guides esiste gia' quando il file viene caricato, cosi' Data/Guides.lua (e altri
 -- addon) possono registrare pack subito, prima ancora che il database sia inizializzato.
 local _, ns = ...
+local L = ns.Badb.L
 local Badb = ns.Badb
 local Events, Logger, Compat = Badb.Events, Badb.Logger, Badb.Compat
 
@@ -187,33 +188,33 @@ end
 
 -- Testo sanificato o nil, errore.
 local function cleanString(v, maxLen, label, singleLine, allowEmpty)
-    if type(v) ~= "string" then return nil, label .. ": atteso un testo" end
-    if #v > maxLen then return nil, string.format("%s: testo troppo lungo (%d > %d)", label, #v, maxLen) end
+    if type(v) ~= "string" then return nil, label .. L[": atteso un testo"] end
+    if #v > maxLen then return nil, string.format(L["%s: testo troppo lungo (%d > %d)"], label, #v, maxLen) end
     local s = sanitize(v)
     if singleLine then s = s:gsub("\n", " ") end
-    if not allowEmpty and trimStr(stripEscapes(s)) == "" then return nil, label .. ": testo vuoto" end
+    if not allowEmpty and trimStr(stripEscapes(s)) == "" then return nil, label .. L[": testo vuoto"] end
     return s
 end
 
 -- Ritorna blocco normalizzato, byte di testo; oppure nil, errore.
 local function validateBlock(b, pos)
-    if type(b) ~= "table" then return nil, "blocco #" .. pos .. " non e' una tabella" end
+    if type(b) ~= "table" then return nil, L["blocco #"] .. pos .. L[" non e' una tabella"] end
     local t = b.type
     if type(t) ~= "string" or not BLOCK_TYPES[t] then
-        return nil, string.format("blocco #%d: tipo sconosciuto '%s'", pos, shortStr(t))
+        return nil, string.format(L["blocco #%d: tipo sconosciuto '%s'"], pos, shortStr(t))
     end
-    local label = "blocco #" .. pos .. " (" .. t .. ")"
+    local label = L["blocco #"] .. pos .. " (" .. t .. ")"
     if t == "list" then
         local items = b.items
-        if type(items) ~= "table" then return nil, label .. ": items mancante" end
+        if type(items) ~= "table" then return nil, label .. L[": items mancante"] end
         local out, bytes = {}, 0
         for i, it in ipairs(items) do
-            if i > LIM.itemsPerList then return nil, label .. ": troppe voci" end
-            local s, err = cleanString(it, LIM.textLength, label .. " voce " .. i, true)
+            if i > LIM.itemsPerList then return nil, label .. L[": troppe voci"] end
+            local s, err = cleanString(it, LIM.textLength, label .. L[" voce "] .. i, true)
             if not s then return nil, err end
             out[i] = s; bytes = bytes + #s
         end
-        if #out == 0 then return nil, label .. ": lista vuota" end
+        if #out == 0 then return nil, label .. L[": lista vuota"] end
         return { type = "list", items = out }, bytes
     end
     local s, err = cleanString(b.text, LIM.textLength, label)
@@ -235,10 +236,10 @@ local function validateLevel(v)
 end
 
 local function validateEntry(e, packId, pos)
-    if type(e) ~= "table" then return nil, "entry #" .. pos .. " non e' una tabella" end
-    if not validId(e.id) then return nil, "entry #" .. pos .. ": id non valido (" .. shortStr(e.id) .. ")" end
+    if type(e) ~= "table" then return nil, "entry #" .. pos .. L[" non e' una tabella"] end
+    if not validId(e.id) then return nil, "entry #" .. pos .. L[": id non valido ("] .. shortStr(e.id) .. ")" end
     local where = "entry '" .. e.id .. "'"
-    local title, err = cleanString(e.title, LIM.titleLength, where .. " titolo", true)
+    local title, err = cleanString(e.title, LIM.titleLength, where .. L[" titolo"], true)
     if not title then return nil, err end
 
     local entry = {
@@ -251,15 +252,15 @@ local function validateEntry(e, packId, pos)
     -- C = ipotesi da verificare in gioco. Default "A".
     if e.confidence ~= nil then
         if type(e.confidence) ~= "string" or not CONFIDENCE[e.confidence:upper()] then
-            return nil, where .. ": confidence deve essere A, B o C"
+            return nil, where .. L[": confidence deve essere A, B o C"]
         end
         entry.confidence = e.confidence:upper()
     end
 
     if e.tags ~= nil then
-        if type(e.tags) ~= "table" then return nil, where .. ": tags deve essere una lista" end
+        if type(e.tags) ~= "table" then return nil, where .. L[": tags deve essere una lista"] end
         for i, t in ipairs(e.tags) do
-            if i > LIM.tagsPerEntry then return nil, where .. ": troppi tag" end
+            if i > LIM.tagsPerEntry then return nil, where .. L[": troppi tag"] end
             local s, terr = cleanString(t, LIM.tagLength, where .. " tag " .. i, true)
             if not s then return nil, terr end
             entry.tags[#entry.tags + 1] = s
@@ -269,25 +270,25 @@ local function validateEntry(e, packId, pos)
     if e.zone ~= nil then
         local list = type(e.zone) == "table" and e.zone or { e.zone }
         for i, z in ipairs(list) do
-            if i > LIM.zonesPerEntry then return nil, where .. ": troppe zone" end
-            local s, zerr = cleanString(z, 100, where .. " zona", true)
+            if i > LIM.zonesPerEntry then return nil, where .. L[": troppe zone"] end
+            local s, zerr = cleanString(z, 100, where .. L[" zona"], true)
             if not s then return nil, zerr end
             entry.zones[#entry.zones + 1] = s
         end
-        if #entry.zones == 0 then return nil, where .. ": zone vuoto" end
+        if #entry.zones == 0 then return nil, where .. L[": zone vuoto"] end
         entry.zone = entry.zones[1]
     end
 
     if e.level ~= nil then
         local ok, lo, hi, range = validateLevel(e.level)
-        if not ok then return nil, where .. ": level non valido" end
+        if not ok then return nil, where .. L[": level non valido"] end
         entry.level, entry.minLevel, entry.maxLevel = range or lo, lo, hi
     end
 
-    if type(e.body) ~= "table" then return nil, where .. ": body mancante o non valido" end
+    if type(e.body) ~= "table" then return nil, where .. L[": body mancante o non valido"] end
     for i, b in ipairs(e.body) do
         if i > LIM.blocksPerEntry then
-            return nil, string.format("%s: troppi blocchi (max %d)", where, LIM.blocksPerEntry)
+            return nil, string.format(L["%s: troppi blocchi (max %d)"], where, LIM.blocksPerEntry)
         end
         local nb, n = validateBlock(b, i)
         if not nb then return nil, where .. ": " .. n end
@@ -300,14 +301,14 @@ local function validateEntry(e, packId, pos)
     end
 
     if e.links ~= nil then
-        if type(e.links) ~= "table" then return nil, where .. ": links deve essere una lista" end
+        if type(e.links) ~= "table" then return nil, where .. L[": links deve essere una lista"] end
         for i, l in ipairs(e.links) do
-            if i > LIM.linksPerEntry then return nil, where .. ": troppi link" end
-            if type(l) ~= "table" then return nil, where .. ": link #" .. i .. " non valido" end
+            if i > LIM.linksPerEntry then return nil, where .. L[": troppi link"] end
+            if type(l) ~= "table" then return nil, where .. ": link #" .. i .. L[" non valido"] end
             local url = l.url or l[2]
             local label = l.label or l[1]
             if not G.IsValidUrl(url) then
-                return nil, where .. ": link #" .. i .. " con URL non consentito (solo http/https)"
+                return nil, where .. ": link #" .. i .. L[" con URL non consentito (solo http/https)"]
             end
             local ls = label ~= nil and cleanString(label, 200, where .. " link", true, true) or nil
             if not ls or trimStr(stripEscapes(ls)) == "" then ls = url end
@@ -325,24 +326,24 @@ local function validateEntry(e, packId, pos)
 end
 
 local function registerImpl(pack)
-    if type(pack) ~= "table" then return nil, "il pack deve essere una tabella" end
-    if not validId(pack.id) then return nil, "pack: id non valido (" .. shortStr(pack.id) .. ")" end
-    if pack.id:find(":", 1, true) then return nil, "pack: l'id non puo' contenere ':'" end
-    local title, err = cleanString(pack.title, LIM.titleLength, "pack '" .. pack.id .. "' titolo", true)
+    if type(pack) ~= "table" then return nil, L["il pack deve essere una tabella"] end
+    if not validId(pack.id) then return nil, L["pack: id non valido ("] .. shortStr(pack.id) .. ")" end
+    if pack.id:find(":", 1, true) then return nil, L["pack: l'id non puo' contenere ':'"] end
+    local title, err = cleanString(pack.title, LIM.titleLength, "pack '" .. pack.id .. L["' titolo"], true)
     if not title then return nil, err end
-    local category = "Generale"
+    local category = L["Generale"]
     if pack.category ~= nil then
-        category, err = cleanString(pack.category, 60, "pack categoria", true)
+        category, err = cleanString(pack.category, 60, L["pack categoria"], true)
         if not category then return nil, err end
     end
     local author
     if pack.author ~= nil then
-        author, err = cleanString(pack.author, 100, "pack autore", true)
+        author, err = cleanString(pack.author, 100, L["pack autore"], true)
         if not author then return nil, err end
     end
     local version = pack.version == nil and 1 or tonumber(pack.version)
-    if not version or version ~= version then return nil, "pack: version non valida" end
-    if type(pack.entries) ~= "table" then return nil, "pack: entries mancante" end
+    if not version or version ~= version then return nil, L["pack: version non valida"] end
+    if type(pack.entries) ~= "table" then return nil, L["pack: entries mancante"] end
 
     local out = {
         id = pack.id, title = title, category = category, author = author, version = version,
@@ -351,16 +352,16 @@ local function registerImpl(pack)
     local skipped, errors, bytes = 0, {}, 0
     for i, e in ipairs(pack.entries) do
         if i > LIM.entriesPerPack then
-            return nil, string.format("pack '%s': troppe entry (max %d)", pack.id, LIM.entriesPerPack)
+            return nil, string.format(L["pack '%s': troppe entry (max %d)"], pack.id, LIM.entriesPerPack)
         end
         local entry, n = validateEntry(e, pack.id, i)
         if entry and out.byId[entry.id] then
-            entry, n = nil, "id duplicato '" .. entry.id .. "'"
+            entry, n = nil, L["id duplicato '"] .. entry.id .. "'"
         end
         if entry then
             bytes = bytes + n
             if bytes > LIM.packBytes then
-                return nil, string.format("pack '%s': contenuto troppo grande", pack.id)
+                return nil, string.format(L["pack '%s': contenuto troppo grande"], pack.id)
             end
             entry.category, entry.packTitle = category, title
             entry._s.cat, entry._s.pack = fold(stripEscapes(category)), fold(stripEscapes(title))
@@ -372,7 +373,7 @@ local function registerImpl(pack)
         end
     end
     if #out.entries == 0 then
-        return nil, string.format("pack '%s': nessuna entry valida%s", pack.id,
+        return nil, string.format(L["pack '%s': nessuna entry valida%s"], pack.id,
             errors[1] and (" (" .. errors[1] .. ")") or "")
     end
 
@@ -396,26 +397,26 @@ end
 function G:Register(pack)
     local ok, a, b = pcall(registerImpl, pack)
     if not ok then
-        Logger:Warn("Guide: registrazione fallita: %s", shortStr(a))
-        return nil, "errore interno nella validazione"
+        Logger:Warn(L["Guide: registrazione fallita: %s"], shortStr(a))
+        return nil, L["errore interno nella validazione"]
     end
     if not a then
-        Logger:Warn("Guide: pack rifiutato - %s", tostring(b))
+        Logger:Warn(L["Guide: pack rifiutato - %s"], tostring(b))
         return nil, b
     end
     for i, msg in ipairs(b.errors) do
         if i > 5 then
-            Logger:Warn("Guide: pack '%s': altre %d entry saltate", a, #b.errors - 5)
+            Logger:Warn(L["Guide: pack '%s': altre %d entry saltate"], a, #b.errors - 5)
             break
         end
-        Logger:Warn("Guide: pack '%s': entry saltata - %s", a, tostring(msg))
+        Logger:Warn(L["Guide: pack '%s': entry saltata - %s"], a, tostring(msg))
     end
     return a, b
 end
 
 function G:Unregister(packId)
     local p = type(packId) == "string" and packs[packId]
-    if not p then return false, "pack inesistente" end
+    if not p then return false, L["pack inesistente"] end
     for _, e in ipairs(p.entries) do entryIndex[e.gid] = nil end
     packs[packId] = nil
     for i, id in ipairs(packOrder) do
@@ -477,7 +478,7 @@ end
 -- Copia completa (modificabile dal chiamante) di una entry; nil, errore se inesistente.
 function G:Get(entryId)
     local e = lookup(entryId)
-    if not e then return nil, "guida inesistente" end
+    if not e then return nil, L["guida inesistente"] end
     local copy = summary(e)
     copy.packTitle = e.packTitle
     copy.zones = Badb.CopyTable(e.zones)
@@ -644,7 +645,7 @@ end
 
 -- Segnalibro: value true/false, nil = inverte. Ritorna true, nuovoStato oppure nil, errore.
 function G:Bookmark(entryId, value)
-    if not lookup(entryId) then return nil, "guida inesistente" end
+    if not lookup(entryId) then return nil, L["guida inesistente"] end
     local s = store()
     if value == nil then value = not (s.bookmarks[entryId] == true) end
     s.bookmarks[entryId] = value and true or nil
@@ -668,7 +669,7 @@ end
 -- Progresso: numero di step completati e totale. nil, errore se la guida non esiste.
 function G:GetProgress(entryId)
     local e = lookup(entryId)
-    if not e then return nil, "guida inesistente" end
+    if not e then return nil, L["guida inesistente"] end
     local _, count = doneSet(e)
     return count, e.stepCount
 end
@@ -688,9 +689,9 @@ end
 -- Imposta il progresso a "primi n step completati" (n limitato a 0..totale).
 function G:SetProgress(entryId, n)
     local e = lookup(entryId)
-    if not e then return nil, "guida inesistente" end
+    if not e then return nil, L["guida inesistente"] end
     n = tonumber(n)
-    if not n or n ~= n then return nil, "valore non valido" end
+    if not n or n ~= n then return nil, L["valore non valido"] end
     n = max(0, min(floor(n), e.stepCount))
     local set = {}
     for i = 1, n do set[i] = true end
@@ -701,10 +702,10 @@ end
 -- Spunta/toglie un singolo step (1..totale).
 function G:SetStep(entryId, index, done)
     local e = lookup(entryId)
-    if not e then return nil, "guida inesistente" end
+    if not e then return nil, L["guida inesistente"] end
     index = tonumber(index)
     if not index or index ~= floor(index) or index < 1 or index > e.stepCount then
-        return nil, "step inesistente"
+        return nil, L["step inesistente"]
     end
     local set, count = doneSet(e)
     if done == nil then done = not set[index] end
@@ -786,7 +787,7 @@ function G:Search(query, filter)
         return G.SearchList(allEntries(), query, f, LIM.results)
     end)
     if not ok then
-        Logger:Warn("Guide: ricerca fallita: %s", shortStr(res))
+        Logger:Warn(L["Guide: ricerca fallita: %s"], shortStr(res))
         return {}
     end
     return res
@@ -855,8 +856,8 @@ function G:FindByZone(zone)
 end
 
 local function notify(zone, matches)
-    local text = string.format("Guide disponibili per %s: %s%s. Aprile con /badb guide.", zone,
-        matches[1].title, #matches > 1 and (" e altre " .. (#matches - 1)) or "")
+    local text = string.format(L["Guide disponibili per %s: %s%s. Aprile con /badb guide."], zone,
+        matches[1].title, #matches > 1 and (L[" e altre "] .. (#matches - 1)) or "")
     local UI = Badb.ConfigUI
     if UI and type(UI.Toast) == "function" then
         local ok = pcall(UI.Toast, UI, text, "info")
@@ -1065,15 +1066,15 @@ function V:Render(entry)
             local fs = text(FONT_FOR.step, b.text, 30, 8)
             row.fs = fs
         elseif t == "tip" then
-            text(FONT_FOR.tip, paint("tip", "Consiglio: ") .. b.text, 12)
+            text(FONT_FOR.tip, paint("tip", L["Consiglio: "]) .. b.text, 12)
         elseif t == "warn" then
-            text(FONT_FOR.warn, paint("warn", "Attenzione: ") .. b.text, 12)
+            text(FONT_FOR.warn, paint("warn", L["Attenzione: "]) .. b.text, 12)
         end
     end
 
     if #entry.links > 0 then
         y = y + 8
-        text(FONT_FOR.h, paint("accent", "Link (seleziona e copia con Ctrl+C)"), 0, 6)
+        text(FONT_FOR.h, paint("accent", L["Link (seleziona e copia con Ctrl+C)"]), 0, 6)
         for _, l in ipairs(entry.links) do
             text("GameFontNormalSmall", l.label, 0, 2)
             local eb = self:AcquireEdit()
@@ -1096,7 +1097,7 @@ function V:UpdateProgress()
     if not e or not self.progressFS then return end
     if e.stepCount > 0 then
         local c = G:GetProgress(e.gid)
-        self.progressFS:SetText(string.format("Progresso: %d/%d passi", c or 0, e.stepCount))
+        self.progressFS:SetText(string.format(L["Progresso: %d/%d passi"], c or 0, e.stepCount))
     else
         self.progressFS:SetText("")
     end
@@ -1108,7 +1109,7 @@ function V:UpdateBookmark()
     local on = e and G:IsBookmarked(e.gid) or false
     self.starBtn.on = on
     if self.starBtn.label then
-        self.starBtn.label:SetText(on and paint("gold", "Segnalibro") or paint("dim", "Segnalibro"))
+        self.starBtn.label:SetText(on and paint("gold", L["Segnalibro"]) or paint("dim", L["Segnalibro"]))
     end
     if self.starBtn.icon then
         if self.starBtn.icon.SetDesaturated then self.starBtn.icon:SetDesaturated(not on) end
@@ -1117,18 +1118,18 @@ end
 
 function V:ShowEntry(gid)
     local e = lookup(gid)
-    if not e then return nil, "guida inesistente" end
+    if not e then return nil, L["guida inesistente"] end
     self.current = gid
     local meta = { e.packTitle, e.category }
     if e.zone then meta[#meta + 1] = e.zone end
     if e.minLevel then
-        meta[#meta + 1] = e.maxLevel and e.maxLevel ~= e.minLevel and ("livello " .. e.minLevel .. "-" .. e.maxLevel)
-            or ("livello " .. e.minLevel)
+        meta[#meta + 1] = e.maxLevel and e.maxLevel ~= e.minLevel and (L["livello "] .. e.minLevel .. "-" .. e.maxLevel)
+            or (L["livello "] .. e.minLevel)
     end
     if e.confidence and e.confidence ~= "A" then
-        meta[#meta + 1] = paint("warn", "Confidenza " .. e.confidence .. ": da verificare in gioco")
+        meta[#meta + 1] = paint("warn", L["Confidenza "] .. e.confidence .. L[": da verificare in gioco"])
     else
-        meta[#meta + 1] = "Confidenza A"
+        meta[#meta + 1] = L["Confidenza A"]
     end
     self.titleFS:SetText(e.title)
     self.metaFS:SetText(paint("dim", table.concat(meta, "  -  ")))
@@ -1141,13 +1142,13 @@ end
 
 function V:ShowWelcome()
     self.current = nil
-    self.titleFS:SetText("Libreria guide")
+    self.titleFS:SetText(L["Libreria guide"])
     self.metaFS:SetText("")
     self:Reset()
     local fs = self:AcquireFS("GameFontHighlight")
-    local s = string.format("Scegli una guida dall'elenco a sinistra o cerca per parola chiave.\n\n" ..
-        "Hai %d guide in %d pack. I link vanno copiati con Ctrl+C e aperti nel browser: " ..
-        "dal gioco non e' possibile riprodurre video.", #allEntries(), #packOrder)
+    local s = string.format(L["Scegli una guida dall'elenco a sinistra o cerca per parola chiave.\n\n"] ..
+        L["Hai %d guide in %d pack. I link vanno copiati con Ctrl+C e aperti nel browser: "] ..
+        L["dal gioco non e' possibile riprodurre video."], #allEntries(), #packOrder)
     fs:SetWidth(READER_W)
     fs:SetText(s)
     fs:ClearAllPoints()
@@ -1165,7 +1166,7 @@ function V:BuildRows()
     local filter = self.onlyBookmarks and { bookmarked = true } or nil
     if self.query ~= "" then
         local res = G:Search(self.query, filter)
-        rows[#rows + 1] = { kind = "label", text = paint("dim", string.format("Risultati: %d", #res)) }
+        rows[#rows + 1] = { kind = "label", text = paint("dim", string.format(L["Risultati: %d"], #res)) }
         for _, s in ipairs(res) do rows[#rows + 1] = { kind = "entry", id = s.id, s = s } end
         return rows
     end
@@ -1183,7 +1184,7 @@ function V:BuildRows()
             for _, s in ipairs(g.items) do rows[#rows + 1] = { kind = "entry", id = s.id, s = s } end
         end
     end
-    if #rows == 0 then rows[1] = { kind = "label", text = paint("dim", "Nessuna guida.") } end
+    if #rows == 0 then rows[1] = { kind = "label", text = paint("dim", L["Nessuna guida."]) } end
     return rows
 end
 
@@ -1193,7 +1194,7 @@ function V:RefreshList()
     local extra = #rows - LIM.listRows
     if extra > 0 then
         for i = #rows, LIM.listRows + 1, -1 do rows[i] = nil end
-        rows[#rows + 1] = { kind = "label", text = paint("dim", string.format("... altre %d: usa la ricerca", extra)) }
+        rows[#rows + 1] = { kind = "label", text = paint("dim", string.format(L["... altre %d: usa la ricerca"], extra)) }
     end
     self.rows = rows
     local pool = self.rowPool
@@ -1271,7 +1272,7 @@ function V:Build()
 
     local title = f:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     title:SetPoint("TOPLEFT", f, "TOPLEFT", 16, -12)
-    title:SetText("BadbUI - Guide")
+    title:SetText(L["BadbUI - Guide"])
 
     local okClose, close = pcall(CreateFrame, "Button", nil, f, "UIPanelCloseButton")
     if not okClose or not close then
@@ -1307,7 +1308,7 @@ function V:Build()
     cb:SetPoint("TOPLEFT", f, "TOPLEFT", 12, -70)
     local cbLabel = f:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
     cbLabel:SetPoint("LEFT", cb, "RIGHT", 2, 0)
-    cbLabel:SetText("Solo segnalibri")
+    cbLabel:SetText(L["Solo segnalibri"])
     cb:SetScript("OnClick", function(s)
         V.onlyBookmarks = s:GetChecked() and true or false
         V:RefreshList()
@@ -1377,11 +1378,11 @@ end
 
 -- Apre la libreria (e opzionalmente una guida). Nessun errore verso il chiamante.
 local function openImpl(entryId, query)
-    if not M or M.enabled ~= true then return nil, "modulo Guide disattivato" end
+    if not M or M.enabled ~= true then return nil, L["modulo Guide disattivato"] end
     local entry
     if entryId ~= nil then
         entry = lookup(entryId)
-        if not entry then return nil, "guida inesistente: " .. shortStr(entryId) end
+        if not entry then return nil, L["guida inesistente: "] .. shortStr(entryId) end
     end
     V:Build()
     V.frame:Show()
@@ -1404,10 +1405,10 @@ end
 function G:Open(entryId)
     local ok, a, b = pcall(openImpl, entryId, nil)
     if not ok then
-        Logger:Error("Guide: apertura fallita: %s", shortStr(a))
-        return nil, "errore interno"
+        Logger:Error(L["Guide: apertura fallita: %s"], shortStr(a))
+        return nil, L["errore interno"]
     end
-    if not a then Logger:Warn("Guide: %s", tostring(b)) end
+    if not a then Logger:Warn(L["Guide: %s"], tostring(b)) end
     return a, b
 end
 
@@ -1415,8 +1416,8 @@ end
 function G:OpenLibrary(query)
     local ok, a, b = pcall(openImpl, nil, query or "")
     if not ok then
-        Logger:Error("Guide: apertura fallita: %s", shortStr(a))
-        return nil, "errore interno"
+        Logger:Error(L["Guide: apertura fallita: %s"], shortStr(a))
+        return nil, L["errore interno"]
     end
     return a, b
 end
@@ -1461,9 +1462,9 @@ local function buildPage(parent, ctx)
         return rows
     end
 
-    page.header = label("GameFontNormalLarge", "Libreria guide")
+    page.header = label("GameFontNormalLarge", L["Libreria guide"])
     page.intro = label("GameFontHighlightSmall",
-        "Guide testuali per interfaccia, classi e contenuti. I link ai video vanno copiati e aperti nel browser.")
+        L["Guide testuali per interfaccia, classi e contenuti. I link ai video vanno copiati e aperti nel browser."])
     page.intro:SetWidth(540)
 
     page.search = newFrame("EditBox", parent)
@@ -1484,22 +1485,22 @@ local function buildPage(parent, ctx)
     local okBtn, openBtn = pcall(CreateFrame, "Button", nil, parent, "UIPanelButtonTemplate")
     if not okBtn or not openBtn then openBtn = CreateFrame("Button", nil, parent) end
     openBtn:SetSize(150, 24)
-    openBtn:SetText("Apri libreria")
+    openBtn:SetText(L["Apri libreria"])
     openBtn:SetScript("OnClick", function() G:Open() end)
     page.openBtn = openBtn
 
-    page.hResults = label("GameFontNormal", "Risultati")
+    page.hResults = label("GameFontNormal", L["Risultati"])
     page.rResults = makeRows(ROWS_RESULTS)
-    page.hRecent = label("GameFontNormal", "Ultime guide")
+    page.hRecent = label("GameFontNormal", L["Ultime guide"])
     page.rRecent = makeRows(ROWS_RECENT)
-    page.hMarks = label("GameFontNormal", "Segnalibri")
+    page.hMarks = label("GameFontNormal", L["Segnalibri"])
     page.rMarks = makeRows(ROWS_MARKS)
-    page.empty = label("GameFontDisableSmall", "Nessun risultato.")
+    page.empty = label("GameFontDisableSmall", L["Nessun risultato."])
 
     local okCb, cb = pcall(CreateFrame, "CheckButton", nil, parent, "UICheckButtonTemplate")
     if not okCb or not cb then cb = CreateFrame("CheckButton", nil, parent) end
     cb:SetSize(24, 24)
-    local cbLabel = label("GameFontHighlight", "Suggerisci guide quando entro in una zona con guide dedicate")
+    local cbLabel = label("GameFontHighlight", L["Suggerisci guide quando entro in una zona con guide dedicate"])
     cb:SetScript("OnClick", function(s) M:Set("autoSuggest", s:GetChecked() and true or false) end)
     page.autoSuggest = cb
 
@@ -1556,7 +1557,7 @@ local function buildPage(parent, ctx)
         put(page.hMarks, 0, 18, 2)
         if #marks == 0 then
             fill(page.rMarks, {})
-            page.noMarks = page.noMarks or label("GameFontDisableSmall", "Nessun segnalibro: usa la stella nel lettore.")
+            page.noMarks = page.noMarks or label("GameFontDisableSmall", L["Nessun segnalibro: usa la stella nel lettore."])
             put(page.noMarks, 4, 18)
             page.noMarks:Show()
         else
@@ -1580,21 +1581,21 @@ local function buildPage(parent, ctx)
 end
 
 M = Badb.Modules:New("Guides", {
-    title = "Guide",
-    category = "Contenuti",
+    title = L["Guide"],
+    category = L["Contenuti"],
     defaults = { enabled = true, autoSuggest = true },
     options = {
-        { type = "toggle", path = "autoSuggest", label = "Suggerisci guide quando entri in una zona con guide dedicate" },
-        { type = "execute", label = "Apri libreria guide", func = function() G:Open() end },
+        { type = "toggle", path = "autoSuggest", label = L["Suggerisci guide quando entri in una zona con guide dedicate"] },
+        { type = "execute", label = L["Apri libreria guide"], func = function() G:Open() end },
     },
     page = {
-        title = "Guide", order = 60, category = "Contenuti",
+        title = L["Guide"], order = 60, category = L["Contenuti"],
         build = buildPage,
         refresh = function() if M._page and M._page.refresh then M._page.refresh() end end,
     },
     commands = {
         guide = {
-            help = "guide [open [id]] | search <testo> | bookmarks",
+            help = L["guide [open [id]] | search <testo> | bookmarks"],
             fn = function(args)
                 args = trimStr(tostring(args or ""))
                 local sub, rest = args:match("^(%S*)%s*(.-)$")
@@ -1602,27 +1603,27 @@ M = Badb.Modules:New("Guides", {
                 if sub == "" or sub == "open" then
                     if rest ~= "" then G:Open(rest) else G:Open() end
                 elseif sub == "search" then
-                    if rest == "" then Logger:Info("Uso: /badb guide search <testo>"); return end
+                    if rest == "" then Logger:Info(L["Uso: /badb guide search <testo>"]); return end
                     local res = G:Search(rest)
                     if #res == 0 then
-                        Logger:Info("Nessuna guida trovata per '%s'", rest)
+                        Logger:Info(L["Nessuna guida trovata per '%s'"], rest)
                     else
-                        Logger:Info("%d guide trovate per '%s':", #res, rest)
+                        Logger:Info(L["%d guide trovate per '%s':"], #res, rest)
                         for _, line in ipairs(listLines(res, 5)) do Logger:Info("  %s", line) end
-                        if #res > 5 then Logger:Info("  ... altre %d nella libreria", #res - 5) end
+                        if #res > 5 then Logger:Info(L["  ... altre %d nella libreria"], #res - 5) end
                     end
                     G:OpenLibrary(rest)
                 elseif sub == "bookmarks" or sub == "segnalibri" then
                     local list = G:GetBookmarks()
                     if #list == 0 then
-                        Logger:Info("Nessun segnalibro.")
+                        Logger:Info(L["Nessun segnalibro."])
                     else
                         for _, line in ipairs(listLines(list, 20)) do Logger:Info("  %s", line) end
                     end
                 else
                     -- un id di guida passato direttamente
                     if lookup(args) then G:Open(args)
-                    else Logger:Info("/badb guide [open [id]] | search <testo> | bookmarks") end
+                    else Logger:Info(L["/badb guide [open [id]] | search <testo> | bookmarks"]) end
                 end
             end,
         },

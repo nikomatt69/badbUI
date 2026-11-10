@@ -8,6 +8,7 @@
 --     mostrare e nascondere anche in combattimento. Solo dimensioni e ancoraggi del bottone
 --     stesso passano da Events:RunOutOfCombat (vedi UnitFrames.lua).
 local _, ns = ...
+local L = ns.Badb.L
 local Badb = ns.Badb
 local Compat = Badb.Compat
 
@@ -44,7 +45,7 @@ local function unitState(u)
     if Safe(UnitIsDead(u), false) then return "dead" end
 end
 
-local STATE_TEXT = { offline = "Offline", ghost = "Spirito", dead = "Morto" }
+local STATE_TEXT = { offline = "Offline", ghost = L["Spirito"], dead = L["Morto"] }
 
 ---------------------------------------------------------------------------
 -- Costruzione
@@ -594,7 +595,7 @@ function E.Preview(f)
         cast:SetScript("OnUpdate", nil)
         cast:SetMinMaxValues(0, 1); cast:SetValue(0.6)
         castColor(cast, false)
-        cast.Text:SetText("Incantesimo di prova"); cast.Time:SetText("1.2")
+        cast.Text:SetText(L["Incantesimo di prova"]); cast.Time:SetText("1.2")
         cast.Icon:SetTexture(136243)
         cast:Show()
     end

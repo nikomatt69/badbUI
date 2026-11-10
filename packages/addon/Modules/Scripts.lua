@@ -20,6 +20,7 @@
 -- si disattiva da solo. Il client non permette di limitare il tempo di esecuzione: un ciclo infinito
 -- blocca il gioco (come qualunque addon).
 local _, ns = ...
+local L = ns.Badb.L
 local Badb = ns.Badb
 local Events, Logger, Modules = Badb.Events, Badb.Logger, Badb.Modules
 
@@ -28,9 +29,9 @@ local TRIGGERS = { "manual", "login", "event", "combatStart", "combatEnd", "time
 local TRIGGER_OK = {}
 for _, t in ipairs(TRIGGERS) do TRIGGER_OK[t] = true end
 local TRIGGER_CHOICES = {
-    { value = "manual", label = "Solo manuale" }, { value = "login", label = "All'avvio / dopo /reload" },
-    { value = "event", label = "A ogni evento di gioco" }, { value = "combatStart", label = "Entrando in combattimento" },
-    { value = "combatEnd", label = "Uscendo dal combattimento" }, { value = "timer", label = "Ogni N secondi" },
+    { value = "manual", label = L["Solo manuale"] }, { value = "login", label = L["All'avvio / dopo /reload"] },
+    { value = "event", label = L["A ogni evento di gioco"] }, { value = "combatStart", label = L["Entrando in combattimento"] },
+    { value = "combatEnd", label = L["Uscendo dal combattimento"] }, { value = "timer", label = L["Ogni N secondi"] },
 }
 
 -- Funzioni che uno script non deve poter chiamare: aggirano la sandbox o agiscono a nome del giocatore.
@@ -42,18 +43,18 @@ local DENY = {
 }
 
 local M = Modules:New("Scripts", {
-    title = "Script",
-    category = "Interfaccia",
-    description = "Script Lua salvati nel profilo, con trigger (avvio, evento, combattimento, timer) e API di BadbUI.",
+    title = L["Script"],
+    category = L["Interfaccia"],
+    description = L["Script Lua salvati nel profilo, con trigger (avvio, evento, combattimento, timer) e API di BadbUI."],
     defaults = { enabled = true, scripts = {} },
     options = {
-        { type = "execute", label = "Apri l'editor di script", func = function() if Badb.ScriptEditor then Badb.ScriptEditor:Open() end end,
-          tooltip = "Come /badb script edit." },
+        { type = "execute", label = L["Apri l'editor di script"], func = function() if Badb.ScriptEditor then Badb.ScriptEditor:Open() end end,
+          tooltip = L["Come /badb script edit."] },
     },
-    page = { title = "Script", order = 90, category = "Interfaccia", keywords = { "script", "lua", "macro", "automazione" } },
+    page = { title = L["Script"], order = 90, category = L["Interfaccia"], keywords = { "script", "lua", "macro", L["automazione"] } },
     commands = {
-        script = { help = "script list|edit|run|stop|enable|disable|delete|export|import <nome|stringa>", fn = function(a) M:Command(a) end },
-        lua = { help = "lua <codice> - esegue una riga di Lua nella sandbox degli script", fn = function(a) M:RunSnippet(a) end },
+        script = { help = L["script list|edit|run|stop|enable|disable|delete|export|import <nome|stringa>"], fn = function(a) M:Command(a) end },
+        lua = { help = L["lua <codice> - esegue una riga di Lua nella sandbox degli script"], fn = function(a) M:RunSnippet(a) end },
     },
 })
 Badb.Scripts = M
@@ -115,9 +116,9 @@ end
 ---------------------------------------------------------------------------
 
 function M:Compile(code, name)
-    if type(code) ~= "string" then return nil, "codice non valido" end
-    if #code > MAX_CODE then return nil, "codice troppo lungo (max " .. MAX_CODE .. " caratteri)" end
-    if type(loadstring) ~= "function" then return nil, "questo client non permette di eseguire codice dinamico" end
+    if type(code) ~= "string" then return nil, L["codice non valido"] end
+    if #code > MAX_CODE then return nil, L["codice troppo lungo (max "] .. MAX_CODE .. L[" caratteri)"] end
+    if type(loadstring) ~= "function" then return nil, L["questo client non permette di eseguire codice dinamico"] end
     local fn, err = loadstring(code, "=BadbScript:" .. tostring(name or "?"))
     if not fn then return nil, err end
     return fn
@@ -143,7 +144,7 @@ local function recordError(name, err)
     if rec.errors >= AUTO_DISABLE then
         rec.enabled = false
         M:Stop(name)
-        Logger:Warn("script %s disattivato dopo %d errori consecutivi", name, AUTO_DISABLE)
+        Logger:Warn(L["script %s disattivato dopo %d errori consecutivi"], name, AUTO_DISABLE)
     end
 end
 
@@ -216,7 +217,7 @@ end
 -- Prepara l'esecuzione (compila, crea ambiente e trigger). `manual` = avvio esplicito dell'utente.
 function M:Start(name, manual)
     local rec = self:Record(name)
-    if not rec then return false, "script inesistente" end
+    if not rec then return false, L["script inesistente"] end
     if not manual and not rec.enabled then return false, "disattivato" end
     local fn, err = self:Compile(rec.code, name)
     if not fn then
@@ -247,7 +248,7 @@ function M:Run(name) return self:Start(name, true) end
 -- Una riga di Lua nella stessa sandbox, senza salvarla.
 function M:RunSnippet(code)
     code = tostring(code or "")
-    if code:match("^%s*$") then return false, "nessun codice" end
+    if code:match("^%s*$") then return false, L["nessun codice"] end
     local fn, err = self:Compile(code, "lua")
     if not fn then Logger:Error("lua: %s", tostring(err)); return false, err end
     local run = { owner = { name = "script:lua" }, tickers = {}, listeners = 0 }
@@ -269,26 +270,26 @@ end
 
 -- fields: code, trigger, event, interval, enabled. Crea o aggiorna; se e' in esecuzione la riavvia.
 function M:Save(name, fields)
-    if not validName(name) then return false, "nome non valido (1-" .. MAX_NAME .. " caratteri: lettere, numeri, spazio, - _)" end
+    if not validName(name) then return false, L["nome non valido (1-"] .. MAX_NAME .. L[" caratteri: lettere, numeri, spazio, - _)"] end
     fields = type(fields) == "table" and fields or {}
     local scripts = store()
     local rec = scripts[name]
     if not rec then
         local n = 0
         for _ in pairs(scripts) do n = n + 1 end
-        if n >= MAX_SCRIPTS then return false, "troppi script (max " .. MAX_SCRIPTS .. ")" end
+        if n >= MAX_SCRIPTS then return false, L["troppi script (max "] .. MAX_SCRIPTS .. ")" end
         rec = { code = "", trigger = "manual", enabled = false, data = {} }
         scripts[name] = rec
     end
     if fields.code ~= nil then
-        if type(fields.code) ~= "string" then return false, "codice non valido" end
-        if #fields.code > MAX_CODE then return false, "codice troppo lungo (max " .. MAX_CODE .. ")" end
+        if type(fields.code) ~= "string" then return false, L["codice non valido"] end
+        if #fields.code > MAX_CODE then return false, L["codice troppo lungo (max "] .. MAX_CODE .. ")" end
         rec.code = fields.code
     end
     for _, k in ipairs({ "trigger", "event", "interval", "enabled" }) do
         if fields[k] ~= nil then rec[k] = fields[k] end
     end
-    if rec.trigger ~= nil and not TRIGGER_OK[rec.trigger] then return false, "trigger sconosciuto" end
+    if rec.trigger ~= nil and not TRIGGER_OK[rec.trigger] then return false, L["trigger sconosciuto"] end
     sanitize(rec)
     rec.errors, rec.lastError = 0, nil
     local wasRunning = self.running[name] ~= nil
@@ -300,7 +301,7 @@ end
 
 function M:SetScriptEnabled(name, value)
     local rec = self:Record(name)
-    if not rec then return false, "script inesistente" end
+    if not rec then return false, L["script inesistente"] end
     rec.enabled = value and true or false
     rec.errors = 0
     if rec.enabled then
@@ -312,7 +313,7 @@ function M:SetScriptEnabled(name, value)
 end
 
 function M:Delete(name)
-    if not validName(name) or not store()[name] then return false, "script inesistente" end
+    if not validName(name) or not store()[name] then return false, L["script inesistente"] end
     self:Stop(name)
     store()[name] = nil
     return true
@@ -320,7 +321,7 @@ end
 
 function M:Export(name)
     local rec = self:Record(name)
-    if not rec then return nil, "script inesistente" end
+    if not rec then return nil, L["script inesistente"] end
     return Badb.Serializer:Export("script", { name = name, code = rec.code, trigger = rec.trigger,
                                               event = rec.event, interval = rec.interval })
 end
@@ -329,8 +330,8 @@ end
 function M:Import(str)
     local d, err = Badb.Serializer:Import(tostring(str or ""), "script") -- ritorna i dati (o nil, errore)
     if not d then return nil, err end
-    if type(d) ~= "table" or type(d.code) ~= "string" then return nil, "contenuto non valido" end
-    local base = validName(d.name) and d.name or "Importato"
+    if type(d) ~= "table" or type(d.code) ~= "string" then return nil, L["contenuto non valido"] end
+    local base = validName(d.name) and d.name or L["Importato"]
     local name, i = base, 2
     while store()[name] do name = string.sub(base, 1, MAX_NAME - 4) .. " " .. i; i = i + 1 end
     local ok, e2 = self:Save(name, { code = d.code, trigger = d.trigger, event = d.event, interval = d.interval, enabled = false })
@@ -350,17 +351,17 @@ function M:Command(args)
     local function out(fmt, ...) Logger:Info(fmt, ...) end
     if cmd == "" or cmd == "list" then
         local list = self:List()
-        if #list == 0 then out("Nessuno script. /badb script edit per crearne uno.") end
+        if #list == 0 then out(L["Nessuno script. /badb script edit per crearne uno."]) end
         for _, s in ipairs(list) do
-            out("%s [%s] %s%s%s", s.name, s.trigger, s.enabled and "attivo" or "spento", s.running and ", in esecuzione" or "",
-                s.lastError and (", ultimo errore: " .. s.lastError) or "")
+            out("%s [%s] %s%s%s", s.name, s.trigger, s.enabled and L["attivo"] or L["spento"], s.running and L[", in esecuzione"] or "",
+                s.lastError and (L[", ultimo errore: "] .. s.lastError) or "")
         end
     elseif cmd == "edit" or cmd == "new" then
-        if Badb.ScriptEditor then Badb.ScriptEditor:Open(rest ~= "" and rest or nil) else Logger:Warn("Editor non disponibile") end
+        if Badb.ScriptEditor then Badb.ScriptEditor:Open(rest ~= "" and rest or nil) else Logger:Warn(L["Editor non disponibile"]) end
     elseif cmd == "run" then
         local ok, err = self:Run(rest); if not ok then Logger:Warn("%s", tostring(err)) end
     elseif cmd == "stop" then
-        if not self:Stop(rest) then Logger:Warn("Non in esecuzione: %s", rest) end
+        if not self:Stop(rest) then Logger:Warn(L["Non in esecuzione: %s"], rest) end
     elseif cmd == "enable" or cmd == "disable" then
         local ok, err = self:SetScriptEnabled(rest, cmd == "enable"); if not ok then Logger:Warn("%s", tostring(err)) end
     elseif cmd == "delete" then
@@ -368,14 +369,14 @@ function M:Command(args)
     elseif cmd == "export" then
         local s, err = self:Export(rest)
         if s then
-            out("Export di %s:", rest); out("%s", s)
+            out(L["Export di %s:"], rest); out("%s", s)
         else Logger:Warn("%s", tostring(err)) end
     elseif cmd == "import" then
         local name, err = self:Import(rest)
-        if name then out("Importato come '%s' (spento: leggilo e poi /badb script enable %s)", name, name)
-        else Logger:Warn("Import fallito: %s", tostring(err)) end
+        if name then out(L["Importato come '%s' (spento: leggilo e poi /badb script enable %s)"], name, name)
+        else Logger:Warn(L["Import fallito: %s"], tostring(err)) end
     else
-        Logger:Warn("Uso: /badb script list|edit|run|stop|enable|disable|delete|export|import")
+        Logger:Warn(L["Uso: /badb script list|edit|run|stop|enable|disable|delete|export|import"])
     end
 end
 

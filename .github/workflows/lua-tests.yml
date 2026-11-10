@@ -1,35 +1,43 @@
-name: Lua tests
-
+name: Monorepo checks
 on:
   push:
     branches: [main]
   pull_request:
-
 permissions:
   contents: read
-
 concurrency:
-  group: lua-tests-${{ github.ref }}
+  group: checks-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
-
 jobs:
-  test:
-    name: Lua 5.1 (API WoW simulate)
+  typescript:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Install Lua 5.1
-        run: sudo apt-get update -q && sudo apt-get install -y -q lua5.1
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+      - run: bun install --frozen-lockfile
+      - run: bun run typecheck
+      - run: bun run test
+      - run: bun run web:build
+      - run: bun run --cwd packages/mobile build
+  addon:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: packages/addon
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - run: sudo apt-get update -q && sudo apt-get install -y -q lua5.1
       - name: Syntax check
-        run: for f in $(git ls-files '*.lua'); do luac5.1 -p "$f" || exit 1; done
-      - name: Tests
-        run: lua5.1 tests/run.lua .
-      - name: "Tests (suite stub: CVars, Nameplates, GroupFrames, Presets)"
-        run: lua5.1 tests/run_stub.lua
-      - name: Tests (design system UI)
-        run: lua5.1 tests/ui/run.lua .
-      - name: Tests (gestore addon, Python)
-        run: python3 tests/scripts/test_addons.py
+        run: find . -name '*.lua' -exec luac5.1 -p {} +
+      - run: lua5.1 tests/run.lua .
+      - run: lua5.1 tests/run_stub.lua
+      - run: lua5.1 tests/ui/run.lua .
+      - run: python3 tests/scripts/test_addons.py

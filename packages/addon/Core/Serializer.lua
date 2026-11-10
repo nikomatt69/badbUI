@@ -3,6 +3,7 @@
 -- Formato: "BADB1:" .. base64(serializzazione) .. ":" .. checksum
 -- Nessun loadstring sull'input: il parser e' scritto a mano, quindi un import malevolo non esegue codice.
 local _, ns = ...
+local L = ns.Badb.L
 local Badb = ns.Badb
 
 local S = {}
@@ -29,15 +30,15 @@ local function ser(v, out)
 end
 
 local function deser(str, pos, depth)
-    if depth > 40 then error("struttura troppo profonda") end
+    if depth > 40 then error(L["struttura troppo profonda"]) end
     local c = str:sub(pos, pos)
     if c == "n" then
-        local e = str:find(";", pos, true); if not e then error("numero malformato") end
-        local n = tonumber(str:sub(pos + 1, e - 1)); if not n then error("numero non valido") end
+        local e = str:find(";", pos, true); if not e then error(L["numero malformato"]) end
+        local n = tonumber(str:sub(pos + 1, e - 1)); if not n then error(L["numero non valido"]) end
         return n, e + 1
     elseif c == "s" then
-        local e = str:find(":", pos, true); if not e then error("stringa malformata") end
-        local len = tonumber(str:sub(pos + 1, e - 1)); if not len then error("lunghezza non valida") end
+        local e = str:find(":", pos, true); if not e then error(L["stringa malformata"]) end
+        local len = tonumber(str:sub(pos + 1, e - 1)); if not len then error(L["lunghezza non valida"]) end
         return str:sub(e + 1, e + len), e + 1 + len
     elseif c == "T" then return true, pos + 1
     elseif c == "F" then return false, pos + 1
@@ -45,7 +46,7 @@ local function deser(str, pos, depth)
         local t = {}
         pos = pos + 1
         while str:sub(pos, pos) ~= "}" do
-            if pos > #str then error("tabella non chiusa") end
+            if pos > #str then error(L["tabella non chiusa"]) end
             local k, v
             k, pos = deser(str, pos, depth + 1)
             v, pos = deser(str, pos, depth + 1)
@@ -53,7 +54,7 @@ local function deser(str, pos, depth)
         end
         return t, pos + 1
     end
-    error("token inatteso '" .. c .. "' a " .. pos)
+    error(L["token inatteso '"] .. c .. L["' a "] .. pos)
 end
 
 -- Base64
@@ -82,7 +83,7 @@ local function b64dec(data)
     for i = 1, #data, 4 do
         local a, b, c, d = data:byte(i, i + 3)
         local va, vb = B64INV[a], B64INV[b]
-        if not va or not vb then error("base64 non valido") end
+        if not va or not vb then error(L["base64 non valido"]) end
         local vc, vd = B64INV[c] or 0, B64INV[d] or 0
         local n = va * 262144 + vb * 4096 + vc * 64 + vd
         out[#out + 1] = string.char(math.floor(n / 65536) % 256)
@@ -107,18 +108,18 @@ function S:Export(kind, data)
 end
 
 function S:Import(str, expectedKind)
-    if type(str) ~= "string" then return nil, "input vuoto" end
+    if type(str) ~= "string" then return nil, L["input vuoto"] end
     str = str:gsub("%s", "")
     local ver, body, sum = str:match("^" .. PREFIX .. "(%d+):([^:]+):(%x+)$")
-    if not ver then return nil, "formato non riconosciuto" end
-    if tonumber(ver) > VERSION then return nil, "stringa creata da una versione piu' recente di BadbUI" end
+    if not ver then return nil, L["formato non riconosciuto"] end
+    if tonumber(ver) > VERSION then return nil, L["stringa creata da una versione piu' recente di BadbUI"] end
     local ok, raw = pcall(b64dec, body)
     if not ok then return nil, raw end
-    if checksum(raw) ~= sum then return nil, "checksum non valido (stringa incompleta o modificata)" end
+    if checksum(raw) ~= sum then return nil, L["checksum non valido (stringa incompleta o modificata)"] end
     local ok2, payload = pcall(deser, raw, 1, 0)
-    if not ok2 or type(payload) ~= "table" then return nil, "dati corrotti: " .. tostring(payload) end
+    if not ok2 or type(payload) ~= "table" then return nil, L["dati corrotti: "] .. tostring(payload) end
     if expectedKind and payload.kind ~= expectedKind then
-        return nil, string.format("tipo atteso '%s', ricevuto '%s'", expectedKind, tostring(payload.kind))
+        return nil, string.format(L["tipo atteso '%s', ricevuto '%s'"], expectedKind, tostring(payload.kind))
     end
     return payload.data, payload
 end

@@ -1,0 +1,29 @@
+{
+  "expo": {
+    "name": "Fratelli di Azeroth",
+    "slug": "fratelli-di-azeroth",
+    "scheme": "badb",
+    "version": "0.3.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "plugins": ["expo-router", "expo-secure-store"],
+    "ios": {
+      "bundleIdentifier": "com.badb.guild",
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.badb.guild"
+    },
+    "owner": "nikomatt69",
+    "extra": {
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
+      "eas": {
+        "projectId": "c322087d-1726-413c-8f2c-5f64ec604589"
+      }
+    }
+  }
+}

@@ -3,9 +3,15 @@ import { context, create } from "@badb/server"
 import { ApiError, createClient } from "../src"
 
 function setup() {
-  const ctx = context({ db: ":memory:", tz: "Europe/Rome", origins: [], bot: "s3cret", webhook: "", web: "" }, { announce: () => {} })
+  const ctx = context(
+    { db: ":memory:", tz: "Europe/Rome", origins: [], bot: "s3cret", webhook: "", web: "" },
+    { announce: () => {} },
+  )
   const app = create(ctx)
-  const local: typeof fetch = Object.assign((input: RequestInfo | URL, init?: RequestInit) => app.request(String(input), init), { preconnect: fetch.preconnect })
+  const local: typeof fetch = Object.assign(
+    async (input: RequestInfo | URL, init?: RequestInit) => app.request(String(input), init),
+    { preconnect: fetch.preconnect },
+  )
   return { ctx, local }
 }
 
@@ -22,7 +28,9 @@ test("flusso completo attraverso l'SDK", async () => {
   const group = await client.group.create({ name: "Sera", slot: "sera", raid: "onyxia", start: 1260, days: [2] })
   const [event] = await client.group.schedule(group.id, said.week)
   await client.event.signup(event!.id, { status: "yes" })
-  expect((await client.event.list({ from: 0, to: event!.startsAt + 1 }))[0]!.signups[0]!.name).toBe("Capone")
+  expect((await client.event.list({ from: event!.startsAt - 1, to: event!.startsAt + 1 }))[0]!.signups[0]!.name).toBe(
+    "Capone",
+  )
   const failure = await client.event.get("nope").catch((error) => error)
   expect(failure).toBeInstanceOf(ApiError)
   expect(failure.status).toBe(404)

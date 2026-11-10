@@ -9,6 +9,7 @@
 --   IO:Apply(action, str, name)   -> ok, risultato | errore     action = "new" | "replace" | "module"
 --   IO:DefaultName()              -> nome libero "Importato AAAA-MM-GG HH.MM[ (n)]"
 local _, ns = ...
+local L = ns.Badb.L
 local Badb = ns.Badb
 local DB, Modules, W, Logger = Badb.DB, Badb.Modules, Badb.Widgets, Badb.Logger
 local UI = Badb.ConfigUI
@@ -22,7 +23,7 @@ local MAX_INPUT = 500000 -- oltre questa lunghezza la stringa non e' un export B
 -- Logica pura
 ---------------------------------------------------------------------------
 function IO:DefaultName()
-    local base = "Importato " .. date("%Y-%m-%d %H.%M")
+    local base = L["Importato "] .. date("%Y-%m-%d %H.%M")
     local name, n = base, 1
     while DB:ProfileExists(name) do n = n + 1; name = base .. " (" .. n .. ")" end
     return name
@@ -30,11 +31,11 @@ end
 
 function IO:Export(kind, target)
     if kind == "module" then
-        if type(target) ~= "string" or not Modules:Get(target) then return nil, "scegli un modulo" end
+        if type(target) ~= "string" or not Modules:Get(target) then return nil, L["scegli un modulo"] end
         return DB:ExportModule(target)
     end
     target = target or DB:GetProfileName()
-    if not DB:ProfileExists(target) then return nil, "profilo inesistente: " .. tostring(target) end
+    if not DB:ProfileExists(target) then return nil, L["profilo inesistente: "] .. tostring(target) end
     return DB:ExportProfile(target)
 end
 
@@ -46,12 +47,12 @@ end
 function IO:Analyze(str)
     local a = { ok = false, actions = {} }
     if type(str) ~= "string" or str:gsub("%s", "") == "" then
-        a.error = "Incolla una stringa di export BadbUI."
+        a.error = L["Incolla una stringa di export BadbUI."]
         a.empty = true
         return a
     end
     if #str > MAX_INPUT then
-        a.error = "Testo troppo lungo per essere un export BadbUI."
+        a.error = L["Testo troppo lungo per essere un export BadbUI."]
         return a
     end
     local info, err = DB:PreviewImport(str)
@@ -66,29 +67,29 @@ function IO:Analyze(str)
         a.actions.module = true
     else
         a.ok = false
-        a.error = "Il modulo '" .. tostring(info.unknown[1]) .. "' non e' installato."
+        a.error = L["Il modulo '"] .. tostring(info.unknown[1]) .. L["' non e' installato."]
     end
     return a
 end
 
 -- Testo leggibile dell'analisi (usato dalla pagina e dai test).
 function IO:Describe(a)
-    if not a then return "Incolla una stringa e premi Analizza. Niente viene applicato prima della tua scelta." end
+    if not a then return L["Incolla una stringa e premi Analizza. Niente viene applicato prima della tua scelta."] end
     if not a.ok then return "|cffff5555" .. tostring(a.error) .. "|r" end
     local info = a.info
     local lines = {}
     if info.kind == "profile" then
-        lines[#lines + 1] = "|cff55dd77Profilo completo valido|r  (creato con BadbUI " .. tostring(info.addon or "?") .. ")"
+        lines[#lines + 1] = L["|cff55dd77Profilo completo valido|r  (creato con BadbUI "] .. tostring(info.addon or "?") .. ")"
         local titles = {}
         for _, n in ipairs(info.modules) do titles[#titles + 1] = moduleTitle(n) end
-        lines[#lines + 1] = "Moduli: " .. (#titles > 0 and table.concat(titles, ", ") or "nessuno")
-        lines[#lines + 1] = "Frame configurati: " .. info.frames .. "   Layout Edit Mode: " .. (info.hasLayout and "incluso" or "non incluso")
+        lines[#lines + 1] = L["Moduli: "] .. (#titles > 0 and table.concat(titles, ", ") or L["nessuno"])
+        lines[#lines + 1] = L["Frame configurati: "] .. info.frames .. L["   Layout Edit Mode: "] .. (info.hasLayout and L["incluso"] or L["non incluso"])
         if #info.unknown > 0 then
-            lines[#lines + 1] = "|cffffcc00Ignorati (moduli non installati): " .. table.concat(info.unknown, ", ") .. "|r"
+            lines[#lines + 1] = L["|cffffcc00Ignorati (moduli non installati): "] .. table.concat(info.unknown, ", ") .. "|r"
         end
     else
-        lines[#lines + 1] = "|cff55dd77Opzioni del modulo '" .. moduleTitle(info.modules[1]) .. "'|r  (BadbUI " .. tostring(info.addon or "?") .. ")"
-        lines[#lines + 1] = "Sovrascrive solo le opzioni di questo modulo nel profilo attivo."
+        lines[#lines + 1] = L["|cff55dd77Opzioni del modulo '"] .. moduleTitle(info.modules[1]) .. "'|r  (BadbUI " .. tostring(info.addon or "?") .. ")"
+        lines[#lines + 1] = L["Sovrascrive solo le opzioni di questo modulo nel profilo attivo."]
     end
     return table.concat(lines, "\n")
 end
@@ -96,7 +97,7 @@ end
 function IO:Apply(action, str, name)
     local a = self:Analyze(str)
     if not a.ok then return false, a.error end
-    if not a.actions[action] then return false, "azione non disponibile per questa stringa" end
+    if not a.actions[action] then return false, L["azione non disponibile per questa stringa"] end
     if action == "new" then
         local ok, res = DB:ImportProfile(str, name or self:DefaultName())
         if ok then DB:SetProfile(res) end
@@ -107,7 +108,7 @@ function IO:Apply(action, str, name)
     elseif action == "module" then
         return DB:ImportModule(str)
     end
-    return false, "azione sconosciuta"
+    return false, L["azione sconosciuta"]
 end
 
 ---------------------------------------------------------------------------
@@ -173,28 +174,28 @@ function IO:BuildPage(parent, ctx)
     end
 
     text("Import / Export", "GameFontNormalLarge", 28)
-    text("Tutta la tua interfaccia in una stringa: opzioni dei moduli, frame e layout Edit Mode. "
-        .. "Incollala su un altro personaggio o condividila.", "GameFontDisableSmall", 30)
+    text(L["Tutta la tua interfaccia in una stringa: opzioni dei moduli, frame e layout Edit Mode. "]
+        .. L["Incollala su un altro personaggio o condividila."], "GameFontDisableSmall", 30)
 
     -- Esporta
-    text("Esporta", "GameFontNormal", 22)
+    text(L["Esporta"], "GameFontNormal", 22)
     local h, _, group = W:Build(parent, nil, y, {
-        { type = "dropdown", label = "Contenuto", values = {
-            { value = "profile", label = "Profilo completo" },
-            { value = "module", label = "Opzioni di un modulo" } },
+        { type = "dropdown", label = L["Contenuto"], values = {
+            { value = "profile", label = L["Profilo completo"] },
+            { value = "module", label = L["Opzioni di un modulo"] } },
           get = function() return s.kind end,
           set = function(v) s.kind = v; s.target = nil; if self.group then self.group:Refresh() end end },
-        { type = "dropdown", label = "Da", values = sourceChoices, get = currentSource,
+        { type = "dropdown", label = L["Da"], values = sourceChoices, get = currentSource,
           set = function(v) s.target = v end },
     })
     self.group = group
     y = y + h + 4
 
-    local exportBtn = W.MakeButton(parent, "Genera stringa", 140, 24, function() self:DoExport() end)
+    local exportBtn = W.MakeButton(parent, L["Genera stringa"], 140, 24, function() self:DoExport() end)
     exportBtn:SetPoint("TOPLEFT", parent, "TOPLEFT", x, -y)
     local hint = parent:CreateFontString(nil, "ARTWORK", "GameFontDisableSmall")
     hint:SetPoint("LEFT", exportBtn, "RIGHT", 10, 0)
-    hint:SetText("La stringa viene selezionata: copiala con Ctrl+C.")
+    hint:SetText(L["La stringa viene selezionata: copiala con Ctrl+C."])
     y = y + 34
 
     -- Area di testo condivisa
@@ -211,10 +212,10 @@ function IO:BuildPage(parent, ctx)
     y = y + 158
 
     -- Importa
-    text("Importa", "GameFontNormal", 22)
-    local analyze = W.MakeButton(parent, "Analizza", 110, 24, function() self:DoAnalyze() end)
+    text(L["Importa"], "GameFontNormal", 22)
+    local analyze = W.MakeButton(parent, L["Analizza"], 110, 24, function() self:DoAnalyze() end)
     analyze:SetPoint("TOPLEFT", parent, "TOPLEFT", x, -y)
-    local clear = W.MakeButton(parent, "Svuota", 90, 24, function()
+    local clear = W.MakeButton(parent, L["Svuota"], 90, 24, function()
         s.text, s.analysis = "", nil
         area.edit:SetText("")
         W.Call(area.edit, "SetFocus")
@@ -228,13 +229,13 @@ function IO:BuildPage(parent, ctx)
     W.Call(self.preview, "SetHeight", 60)
 
     local nh, _, ngroup = W:Build(parent, nil, y, {
-        { type = "text", label = "Nome del nuovo profilo", width = 260, maxLetters = DB.MAX_NAME,
+        { type = "text", label = L["Nome del nuovo profilo"], width = 260, maxLetters = DB.MAX_NAME,
           get = function() return s.name or "" end,
           set = function(v) s.name = v end,
           validate = function(v)
               local n, err = DB.NormalizeName(v)
               if not n then return false, err end
-              if DB:ProfileExists(n) then return false, "esiste gia' un profilo con questo nome" end
+              if DB:ProfileExists(n) then return false, L["esiste gia' un profilo con questo nome"] end
               return true, n
           end,
           hidden = function() return not (s.analysis and s.analysis.actions.new) end },
@@ -242,11 +243,11 @@ function IO:BuildPage(parent, ctx)
     self.nameGroup = ngroup
     y = y + math.max(nh, 44) + 4
 
-    self.btnNew = W.MakeButton(parent, "Importa come nuovo profilo", 210, 24, function() self:DoApply("new") end)
+    self.btnNew = W.MakeButton(parent, L["Importa come nuovo profilo"], 210, 24, function() self:DoApply("new") end)
     self.btnNew:SetPoint("TOPLEFT", parent, "TOPLEFT", x, -y)
-    self.btnReplace = W.MakeButton(parent, "Sostituisci profilo attivo", 190, 24, function() self:DoApply("replace") end)
+    self.btnReplace = W.MakeButton(parent, L["Sostituisci profilo attivo"], 190, 24, function() self:DoApply("replace") end)
     self.btnReplace:SetPoint("LEFT", self.btnNew, "RIGHT", 8, 0)
-    self.btnModule = W.MakeButton(parent, "Importa nel profilo attivo", 200, 24, function() self:DoApply("module") end)
+    self.btnModule = W.MakeButton(parent, L["Importa nel profilo attivo"], 200, 24, function() self:DoApply("module") end)
     self.btnModule:SetPoint("TOPLEFT", parent, "TOPLEFT", x, -y)
     y = y + 36
 
@@ -259,15 +260,15 @@ end
 function IO:DoExport()
     local s = self.state
     local str, err = self:Export(s.kind, currentSource())
-    if not str then toast("Export non riuscito: " .. tostring(err), "error"); return end
+    if not str then toast(L["Export non riuscito: "] .. tostring(err), "error"); return end
     s.text, s.analysis = str, nil
     if self.area then
         self.area.edit:SetText(str)
         W.Call(self.area.edit, "SetFocus")
         W.Call(self.area.edit, "HighlightText")
     end
-    self:RefreshPreview(string.format("Stringa generata (%d caratteri). Il checksum fa rifiutare copie incomplete.", #str))
-    toast("Stringa di export pronta", "ok")
+    self:RefreshPreview(string.format(L["Stringa generata (%d caratteri). Il checksum fa rifiutare copie incomplete."], #str))
+    toast(L["Stringa di export pronta"], "ok")
 end
 
 function IO:DoAnalyze()
@@ -287,8 +288,8 @@ local function finish(ok, res, okText)
         IO.state.text, IO.state.analysis, IO.state.name = "", nil, nil
         if IO.area then IO.area.edit:SetText("") end
     else
-        toast("Import non riuscito: " .. tostring(res), "error")
-        Logger:Warn("Import non riuscito: %s", tostring(res))
+        toast(L["Import non riuscito: "] .. tostring(res), "error")
+        Logger:Warn(L["Import non riuscito: %s"], tostring(res))
     end
     IO:RefreshPreview()
     if UI and UI.Refresh then UI:Refresh() end
@@ -298,18 +299,18 @@ function IO:DoApply(action)
     local s = self.state
     if self.area then s.text = self.area.edit:GetText() or "" end
     if action == "replace" then
-        UI:Confirm("Sostituire TUTTO il profilo attivo '" .. tostring(DB:GetProfileName())
-            .. "' con la stringa importata? Non si puo' annullare: esporta prima il profilo se vuoi una copia.", function()
+        UI:Confirm(L["Sostituire TUTTO il profilo attivo '"] .. tostring(DB:GetProfileName())
+            .. L["' con la stringa importata? Non si puo' annullare: esporta prima il profilo se vuoi una copia."], function()
             local ok, res = self:Apply("replace", s.text)
-            finish(ok, res, "Profilo attivo sostituito")
+            finish(ok, res, L["Profilo attivo sostituito"])
         end)
         return
     end
     local ok, res = self:Apply(action, s.text, s.name)
     if action == "new" then
-        finish(ok, res, "Profilo '" .. tostring(res) .. "' importato e attivato")
+        finish(ok, res, L["Profilo '"] .. tostring(res) .. L["' importato e attivato"])
     else
-        finish(ok, res, "Opzioni di '" .. moduleTitle(tostring(res)) .. "' importate")
+        finish(ok, res, L["Opzioni di '"] .. moduleTitle(tostring(res)) .. L["' importate"])
     end
 end
 
@@ -349,13 +350,13 @@ function IO:OpenExport(kind, target)
 end
 
 UI:RegisterPage("io", {
-    title = "Import / Export", category = "Gestione", order = 20,
-    keywords = { "import", "export", "condividi", "stringa", "backup", "copia" },
+    title = "Import / Export", category = L["Gestione"], order = 20,
+    keywords = { "import", "export", L["condividi"], L["stringa"], "backup", L["copia"] },
     build = function(parent, ctx) return IO:BuildPage(parent, ctx) end,
 })
 
 -- /badb import apre la pagina pronta per incollare (export resta il comando base).
 if Badb.Slash and type(Badb.Slash.Register) == "function" then
-    Badb.Slash:Register("import", function() IO:OpenImport() end, "apre Import / Export per incollare una stringa")
-    Badb.Slash:Register("io", function() UI:Open("io") end, "apre la pagina Import / Export")
+    Badb.Slash:Register("import", function() IO:OpenImport() end, L["apre Import / Export per incollare una stringa"])
+    Badb.Slash:Register("io", function() UI:Open("io") end, L["apre la pagina Import / Export"])
 end

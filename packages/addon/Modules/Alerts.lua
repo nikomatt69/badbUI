@@ -7,24 +7,25 @@
 --     i nomi manuali si confrontano solo se leggibili.
 --   * Di default attivo solo nei campi di battaglia (instanceType "pvp").
 local _, ns = ...
+local L = ns.Badb.L
 local Badb = ns.Badb
 local Compat, Auras, Logger = Badb.Compat, Badb.Auras, Badb.Logger
 local SafeValue = Compat.SafeValue
 
 local WHEN = {
-    { value = "pvp", text = "Solo campi di battaglia" },
-    { value = "instance", text = "In qualunque istanza" },
-    { value = "group", text = "Sempre, se in gruppo" },
-    { value = "always", text = "Sempre" },
+    { value = "pvp", text = L["Solo campi di battaglia"] },
+    { value = "instance", text = L["In qualunque istanza"] },
+    { value = "group", text = L["Sempre, se in gruppo"] },
+    { value = "always", text = L["Sempre"] },
 }
 local MAX_ROWS = 3
 local SOUND_THROTTLE = 1.5
 local TEST_SECONDS = 6
 
 local M = Badb.Modules:New("Alerts", {
-    title = "Avvisi",
-    category = "Combattimento",
-    description = "Avviso grande quando l'healer del gruppo o il focus finisce in CC.",
+    title = L["Avvisi"],
+    category = L["Combattimento"],
+    description = L["Avviso grande quando l'healer del gruppo o il focus finisce in CC."],
     dependencies = { "Auras" },
     defaults = {
         enabled = false,
@@ -42,16 +43,16 @@ local M = Badb.Modules:New("Alerts", {
 
 M.options = {
     { type = "header", label = "Healer in CC" },
-    { type = "toggle", path = "healerCC", label = "Avvisa quando un healer del gruppo e' in CC" },
-    { type = "toggle", path = "focusCC", label = "Avvisa anche per il focus amico" },
-    { type = "toggle", path = "includeSilence", label = "Conta anche silence e disarm" },
-    { type = "select", path = "when", label = "Quando", values = WHEN },
-    { type = "toggle", path = "sound", label = "Suono" },
-    { type = "header", label = "Posizione" },
-    { type = "range", path = "scale", label = "Scala", min = 0.6, max = 2, step = 0.05 },
-    { type = "range", path = "x", label = "Orizzontale", min = -800, max = 800, step = 5 },
-    { type = "range", path = "y", label = "Verticale", min = -600, max = 0, step = 5 },
-    { type = "execute", label = "Prova avviso", func = function() M:Test() end },
+    { type = "toggle", path = "healerCC", label = L["Avvisa quando un healer del gruppo e' in CC"] },
+    { type = "toggle", path = "focusCC", label = L["Avvisa anche per il focus amico"] },
+    { type = "toggle", path = "includeSilence", label = L["Conta anche silence e disarm"] },
+    { type = "select", path = "when", label = L["Quando"], values = WHEN },
+    { type = "toggle", path = "sound", label = L["Suono"] },
+    { type = "header", label = L["Posizione"] },
+    { type = "range", path = "scale", label = L["Scala"], min = 0.6, max = 2, step = 0.05 },
+    { type = "range", path = "x", label = L["Orizzontale"], min = -800, max = 800, step = 5 },
+    { type = "range", path = "y", label = L["Verticale"], min = -600, max = 0, step = 5 },
+    { type = "execute", label = L["Prova avviso"], func = function() M:Test() end },
 }
 
 ------------------------------------------------------------------------------
@@ -261,7 +262,7 @@ end
 function M:Test()
     local now = GetTime()
     self.testRows = { {
-        unit = "test", kind = "healer", since = now, name = "Healer di prova",
+        unit = "test", kind = "healer", since = now, name = L["Healer di prova"],
         entry = { category = "cc", aura = { icon = "Interface\\Icons\\Spell_Nature_Polymorph",
             duration = TEST_SECONDS, expirationTime = now + TEST_SECONDS, applications = 0 } },
     } }
@@ -281,9 +282,9 @@ end
 -- Elenco manuale degli healer
 ------------------------------------------------------------------------------
 function M:SetManualHealer(name, on)
-    if type(name) ~= "string" then return false, "serve un nome" end
+    if type(name) ~= "string" then return false, L["serve un nome"] end
     name = string.lower(strtrim(name))
-    if name == "" then return false, "serve un nome" end
+    if name == "" then return false, L["serve un nome"] end
     local t = self:Get("healers")
     if type(t) ~= "table" then t = {}; self:Set("healers", t) end
     t[name] = on and true or nil
@@ -298,7 +299,7 @@ function M:ListManualHealers()
     return list
 end
 
-local HELP = "alert test | status | healer add <nome> | healer remove <nome> | healers"
+local HELP = L["alert test | status | healer add <nome> | healer remove <nome> | healers"]
 M.commands = {
     alert = {
         help = HELP,
@@ -311,19 +312,19 @@ M.commands = {
                 local watch = M.enabled and M:RebuildWatch() or {}
                 local n = 0
                 for _ in pairs(watch) do n = n + 1 end
-                Logger:Info("Avvisi %s, contesto %s, unita' sorvegliate: %d", M.enabled and "attivi" or "spenti",
-                    M:IsActiveContext() and "attivo" or "non attivo", n)
+                Logger:Info(L["Avvisi %s, contesto %s, unita' sorvegliate: %d"], M.enabled and L["attivi"] or L["spenti"],
+                    M:IsActiveContext() and L["attivo"] or L["non attivo"], n)
             elseif sub == "healers" then
                 local list = M:ListManualHealers()
-                Logger:Info(#list > 0 and ("Healer manuali: " .. table.concat(list, ", ")) or "Nessun healer manuale.")
+                Logger:Info(#list > 0 and (L["Healer manuali: "] .. table.concat(list, ", ")) or L["Nessun healer manuale."])
             elseif sub == "healer" then
                 local action, name = rest:match("^(%S+)%s*(.-)$")
                 action = action and string.lower(action)
                 if (action == "add" or action == "remove") and name and name ~= "" then
                     local ok, err = M:SetManualHealer(name, action == "add")
-                    Logger:Info(ok and "Elenco healer aggiornato." or ("Errore: " .. tostring(err)))
+                    Logger:Info(ok and L["Elenco healer aggiornato."] or (L["Errore: "] .. tostring(err)))
                 else
-                    Logger:Info("Uso: /badb alert healer add|remove <nome>")
+                    Logger:Info(L["Uso: /badb alert healer add|remove <nome>"])
                 end
             else
                 Logger:Info("/badb " .. HELP)

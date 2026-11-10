@@ -1,15 +1,16 @@
 -- BadbUI - Scaling: UI scale globale "pixel perfect" e scala per singolo frame non-Edit Mode.
 local _, ns = ...
+local L = ns.Badb.L
 local Badb = ns.Badb
 local Events, Logger = Badb.Events, Badb.Logger
 
 local M = Badb.Modules:New("Scaling", {
-    title = "Scala interfaccia",
-    category = "Interfaccia",
+    title = L["Scala interfaccia"],
+    category = L["Interfaccia"],
     defaults = { enabled = false, pixelPerfect = true, uiScale = 0.71 },
     options = {
-        { type = "toggle", path = "pixelPerfect", label = "Scala pixel perfect (768 / altezza schermo)" },
-        { type = "range", path = "uiScale", label = "Scala manuale", min = 0.4, max = 1.15, step = 0.01 },
+        { type = "toggle", path = "pixelPerfect", label = L["Scala pixel perfect (768 / altezza schermo)"] },
+        { type = "range", path = "uiScale", label = L["Scala manuale"], min = 0.4, max = 1.15, step = 0.01 },
     },
 })
 

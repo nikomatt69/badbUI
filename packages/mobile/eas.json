@@ -1,0 +1,22 @@
+{
+  "build": {
+    "preview": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_BADB_SERVER": "https://badb-guild.nikoemme-work.workers.dev"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_BADB_SERVER": "https://badb-guild.nikoemme-work.workers.dev"
+      }
+    }
+  },
+  "cli": {
+    "appVersionSource": "remote"
+  }
+}

@@ -14,6 +14,7 @@
 --   spec      API Mainline GetSpecialization*, se presente
 --   class     ruolo primario della classe (confidenza bassa)
 local _, ns = ...
+local L = ns.Badb.L
 local Badb = ns.Badb
 local Events, Logger, Compat = Badb.Events, Badb.Logger, Badb.Compat
 
@@ -210,9 +211,9 @@ end
 
 -- ---------------------------------------------------------------- ruolo
 function Player:SetRoleOverride(role, group)
-    if role ~= nil and not (role == "tank" or role == "healer" or role == "dps") then return false, "ruolo non valido" end
+    if role ~= nil and not (role == "tank" or role == "healer" or role == "dps") then return false, L["ruolo non valido"] end
     local sv, key = Badb.DB and Badb.DB.sv, charKey()
-    if not sv or not key then return false, "database non pronto" end
+    if not sv or not key then return false, L["database non pronto"] end
     sv.global.roleOverrides = type(sv.global.roleOverrides) == "table" and sv.global.roleOverrides or {}
     local perChar = type(sv.global.roleOverrides[key]) == "table" and sv.global.roleOverrides[key] or {}
     sv.global.roleOverrides[key] = perChar

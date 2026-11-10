@@ -6,6 +6,7 @@
 --   OnProfileChanged() dopo un cambio profilo
 -- Dipendenze dichiarate: un modulo non si abilita se una dipendenza e' disattivata.
 local ADDON_NAME, ns = ...
+local L = ns.Badb.L
 local Badb = ns.Badb
 local Events, Logger, DB = Badb.Events, Badb.Logger, Badb.DB
 
@@ -30,7 +31,7 @@ local M = Badb.Modules:New("Hider", {
 })
 ]]
 function Modules:New(name, info)
-    assert(not self.list[name], "Modulo duplicato: " .. name)
+    assert(not self.list[name], L["Modulo duplicato: "] .. name)
     local m = setmetatable(info or {}, ModuleProto)
     m.name = name
     m.title = m.title or name
@@ -59,7 +60,7 @@ function Modules:Enable(name)
     for _, dep in ipairs(m.dependencies) do
         local d = self.list[dep]
         if not d or not d.enabled then
-            Logger:Warn("%s richiede %s, non attivo", name, dep)
+            Logger:Warn(L["%s richiede %s, non attivo"], name, dep)
             return
         end
     end
@@ -109,7 +110,7 @@ end)
 
 Events:On(Modules, "PLAYER_LOGIN", function()
     Modules:ApplyAll()
-    Logger:Info("v%s caricato - profilo '%s'. Digita /badb", Badb.version, DB:GetProfileName())
+    Logger:Info(L["v%s caricato - profilo '%s'. Digita /badb"], Badb.version, DB:GetProfileName())
 end)
 
 Events:On(Modules, "BADB_PROFILE_CHANGED", function()

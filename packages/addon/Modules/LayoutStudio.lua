@@ -11,17 +11,18 @@
 --    senza emettere eventi (fine drag di un mover, FM:Restore).
 --  * Tutte le API pubbliche ritornano `ok, err` e non lanciano errori verso il chiamante.
 local _, ns = ...
+local L = ns.Badb.L
 local Badb = ns.Badb
 local Compat, DB, Events, FM, Logger = Badb.Compat, Badb.DB, Badb.Events, Badb.FrameManager, Badb.Logger
 
-local MSG_EDITMODE = "gestito dall'Edit Mode"
-local MSG_COMBAT = "in combattimento"
-local MSG_LOCKED = "gruppo bloccato"
-local MSG_OFF = "modulo disattivato"
+local MSG_EDITMODE = L["gestito dall'Edit Mode"]
+local MSG_COMBAT = L["in combattimento"]
+local MSG_LOCKED = L["gruppo bloccato"]
+local MSG_OFF = L["modulo disattivato"]
 
 -- Suggerimento aggiunto al messaggio quando il layout Edit Mode attivo e' un preset Blizzard
 -- (non modificabile ne' esportabile: va duplicato).
-local MSG_EDITMODE_PRESET = MSG_EDITMODE .. " (layout preset Blizzard: duplicalo in Edit Mode e usa EditModeBridge)"
+local MSG_EDITMODE_PRESET = MSG_EDITMODE .. L[" (layout preset Blizzard: duplicalo in Edit Mode e usa EditModeBridge)"]
 
 local MAX_HISTORY_CAP = 500
 local MAX_GROUPS, MAX_GROUP_KEYS = 50, 100
@@ -99,9 +100,9 @@ end
 
 -- Allineamento: ritorna { [key] = {x=, y=} } (centri interi) oppure nil, errore.
 function Calc.Align(rects, mode)
-    if not ALIGN_MODES[mode] then return nil, "modo di allineamento non valido" end
+    if not ALIGN_MODES[mode] then return nil, L["modo di allineamento non valido"] end
     local list = Calc.Normalize(rects)
-    if #list < 2 then return nil, "servono almeno 2 frame" end
+    if #list < 2 then return nil, L["servono almeno 2 frame"] end
     local l, r, b, t = Calc.Bounds(list)
     local out = {}
     for _, q in ipairs(list) do
@@ -119,9 +120,9 @@ end
 
 -- Distribuzione: spazi uguali tra i bordi, primo e ultimo frame fermi.
 function Calc.Distribute(rects, axis)
-    if axis ~= "h" and axis ~= "v" then return nil, "asse non valido (h|v)" end
+    if axis ~= "h" and axis ~= "v" then return nil, L["asse non valido (h|v)"] end
     local list = Calc.Normalize(rects)
-    if #list < 3 then return nil, "servono almeno 3 frame" end
+    if #list < 3 then return nil, L["servono almeno 3 frame"] end
     local horizontal = axis == "h"
     local function size(q) return horizontal and q.w or q.h end
     local function center(q) return horizontal and q.x or q.y end
@@ -217,7 +218,7 @@ function Calc.Diff(before, after)
         local a, b = before[f], after[f]
         if not same(a, b) and not (hasXY and (f == "point" or f == "relPoint")) then
             if f == "hidden" then
-                parts[#parts + 1] = b and "nascosto" or "mostrato"
+                parts[#parts + 1] = b and L["nascosto"] or L["mostrato"]
             else
                 parts[#parts + 1] = string.format("%s %s -> %s", tostring(f), fmtNum(a), fmtNum(b))
             end
@@ -321,7 +322,7 @@ end
 -- Rect del frame (centro relativo a UIParent). Ritorna rect oppure nil, motivo.
 local function rectOf(key)
     local f = resolveFrame(key)
-    if not f then return nil, "frame non disponibile" end
+    if not f then return nil, L["frame non disponibile"] end
     local w, h = frameSize(f)
     local ok, cx, cy = pcall(function() return f:GetCenter() end)
     if ok and isnum(cx) and isnum(cy) and not Compat.IsSecret(cx) and not Compat.IsSecret(cy) then
@@ -332,7 +333,7 @@ local function rectOf(key)
     if c and c.point == "CENTER" and (c.relPoint == nil or c.relPoint == "CENTER") and isnum(c.x) and isnum(c.y) then
         return { key = key, x = c.x, y = c.y, w = w, h = h }
     end
-    return nil, "geometria non disponibile"
+    return nil, L["geometria non disponibile"]
 end
 
 -- Posizione corrente per il nudge: preferisce quanto salvato dal FrameManager.
@@ -373,16 +374,16 @@ end
 
 function M:Group(name, keys)
     if not self._active then return false, MSG_OFF end
-    if type(name) ~= "string" or name == "" or #name > 40 then return false, "nome gruppo non valido" end
+    if type(name) ~= "string" or name == "" or #name > 40 then return false, L["nome gruppo non valido"] end
     local valid = {}
     for _, k in ipairs(Calc.Unique(keys)) do
         if FM.registry[k] and #valid < MAX_GROUP_KEYS then valid[#valid + 1] = k end
     end
-    if #valid == 0 then return false, "nessun frame valido" end
+    if #valid == 0 then return false, L["nessun frame valido"] end
     local groups = self:_groups()
     local count = 0
     for _ in pairs(groups) do count = count + 1 end
-    if not groups[name] and count >= MAX_GROUPS then return false, "troppi gruppi" end
+    if not groups[name] and count >= MAX_GROUPS then return false, L["troppi gruppi"] end
     local locked = type(groups[name]) == "table" and groups[name].locked or false
     groups[name] = { keys = valid, locked = locked and true or false }
     self:Set("groups", groups)
@@ -392,7 +393,7 @@ end
 function M:Ungroup(name)
     if not self._active then return false, MSG_OFF end
     local groups = self:_groups()
-    if type(name) ~= "string" or not groups[name] then return false, "gruppo inesistente" end
+    if type(name) ~= "string" or not groups[name] then return false, L["gruppo inesistente"] end
     groups[name] = nil
     self:Set("groups", groups)
     return true
@@ -404,7 +405,7 @@ function M:SetGroupLock(name, locked)
     if not self._active then return false, MSG_OFF end
     local groups = self:_groups()
     local g = type(name) == "string" and groups[name]
-    if type(g) ~= "table" then return false, "gruppo inesistente" end
+    if type(g) ~= "table" then return false, L["gruppo inesistente"] end
     g.locked = locked and true or false
     self:Set("groups", groups)
     return true
@@ -422,7 +423,7 @@ end
 
 function M:SelectGroup(name)
     local g = type(name) == "string" and self:_groups()[name]
-    if type(g) ~= "table" then return false, "gruppo inesistente" end
+    if type(g) ~= "table" then return false, L["gruppo inesistente"] end
     self._selection = {}
     for _, k in ipairs(Calc.Unique(g.keys)) do
         if FM.registry[k] then self._selection[#self._selection + 1] = k end
@@ -439,8 +440,8 @@ end
 function M:_guard(key, mode)
     local f = resolveFrame(key)
     if mode == "move" then
-        if not FM.registry[key] then return false, "frame sconosciuto: " .. tostring(key) end
-        if not f then return false, "frame non disponibile: " .. tostring(key) end
+        if not FM.registry[key] then return false, L["frame sconosciuto: "] .. tostring(key) end
+        if not f then return false, L["frame non disponibile: "] .. tostring(key) end
         if Compat.IsEditModeFrame(f) then return false, editModeMessage() end
     end
     local g = self:LockedGroupOf(key)
@@ -658,16 +659,16 @@ function M:_step(from, to, stateKey, emptyMsg)
     return true
 end
 
-function M:Undo() return self:_step(self._undo, self._redo, "before", "niente da annullare") end
-function M:Redo() return self:_step(self._redo, self._undo, "after", "niente da ripetere") end
+function M:Undo() return self:_step(self._undo, self._redo, "before", L["niente da annullare"]) end
+function M:Redo() return self:_step(self._redo, self._undo, "after", L["niente da ripetere"]) end
 
 local function describeEntry(e)
     if #e.keys == 1 then
         local key = e.keys[1]
         local d = Calc.Diff(e.before[key], e.after[key])
-        return title(key) .. ": " .. (d ~= "" and d or "modificato")
+        return title(key) .. ": " .. (d ~= "" and d or L["modificato"])
     end
-    return string.format("%s (%d frame)", e.label or "Modifica", #e.keys)
+    return string.format(L["%s (%d frame)"], e.label or L["Modifica"], #e.keys)
 end
 
 -- Cronologia dal piu' recente al piu' vecchio. `undone` = passo annullato (ripetibile).
@@ -724,13 +725,13 @@ end
 function M:Nudge(frameKey, dx, dy)
     if not self._active then return false, MSG_OFF end
     if frameKey == nil then frameKey = self._selection[1] end
-    if type(frameKey) ~= "string" then return false, "frame non valido" end
+    if type(frameKey) ~= "string" then return false, L["frame non valido"] end
     dx, dy = tonumber(dx), tonumber(dy)
-    if not (isnum(dx) and isnum(dy)) then return false, "spostamento non valido" end
+    if not (isnum(dx) and isnum(dy)) then return false, L["spostamento non valido"] end
     local ok, err = self:_guard(frameKey, "move")
     if not ok then return false, err end
     local x, y = positionOf(frameKey)
-    if not x then return false, "geometria non disponibile" end
+    if not x then return false, L["geometria non disponibile"] end
     return self:_applyPositions({ [frameKey] = { x = x + dx, y = y + dy } }, "Nudge")
 end
 
@@ -738,15 +739,15 @@ end
 function M:NudgeSelection(dx, dy)
     if not self._active then return false, MSG_OFF end
     local keys = Calc.Unique(self._selection)
-    if #keys == 0 then return false, "nessuna selezione" end
+    if #keys == 0 then return false, L["nessuna selezione"] end
     dx, dy = tonumber(dx), tonumber(dy)
-    if not (isnum(dx) and isnum(dy)) then return false, "spostamento non valido" end
+    if not (isnum(dx) and isnum(dy)) then return false, L["spostamento non valido"] end
     local ok, err = guardAll(self, keys, "move")
     if not ok then return false, err end
     local positions = {}
     for _, key in ipairs(keys) do
         local x, y = positionOf(key)
-        if not x then return false, "geometria non disponibile" end
+        if not x then return false, L["geometria non disponibile"] end
         positions[key] = { x = x + dx, y = y + dy }
     end
     return self:_applyPositions(positions, "Nudge")
@@ -754,9 +755,9 @@ end
 
 -- Filtra le chiavi per allinea/distribuisci. Ritorna rects, info oppure nil, errore.
 function M:_collect(keys)
-    if type(keys) ~= "table" then return nil, "elenco frame non valido" end
+    if type(keys) ~= "table" then return nil, L["elenco frame non valido"] end
     local list = Calc.Unique(keys)
-    if #list == 0 then return nil, "elenco frame vuoto" end
+    if #list == 0 then return nil, L["elenco frame vuoto"] end
     local info = { unknown = {}, editMode = {}, noGeometry = {} }
     local valid, editModeCount = {}, 0
     for _, key in ipairs(list) do
@@ -772,7 +773,7 @@ function M:_collect(keys)
     end
     if #valid == 0 then
         if editModeCount > 0 and editModeCount == #list then return nil, editModeMessage() end
-        return nil, "nessun frame valido"
+        return nil, L["nessun frame valido"]
     end
     local ok, err = guardAll(self, valid, "move")
     if not ok then return nil, err end
@@ -785,8 +786,8 @@ function M:_collect(keys)
 end
 
 local ALIGN_LABEL = {
-    left = "Allinea a sinistra", right = "Allinea a destra", top = "Allinea in alto",
-    bottom = "Allinea in basso", hcenter = "Centra orizzontalmente", vcenter = "Centra verticalmente",
+    left = L["Allinea a sinistra"], right = L["Allinea a destra"], top = L["Allinea in alto"],
+    bottom = L["Allinea in basso"], hcenter = L["Centra orizzontalmente"], vcenter = L["Centra verticalmente"],
 }
 
 function M:_arrange(keys, calcFn, arg, label)
@@ -799,20 +800,20 @@ function M:_arrange(keys, calcFn, arg, label)
     if not ok then return false, terr end
     local skipped = #info.unknown + #info.editMode + #info.noGeometry
     if skipped > 0 then
-        notify("Layout: %d frame saltati (inesistenti, Edit Mode o senza geometria)", skipped)
+        notify(L["Layout: %d frame saltati (inesistenti, Edit Mode o senza geometria)"], skipped)
     end
     return true, nil, info
 end
 
 function M:Align(keys, mode)
-    if not ALIGN_MODES[mode] then return false, "modo di allineamento non valido" end
+    if not ALIGN_MODES[mode] then return false, L["modo di allineamento non valido"] end
     return self:_arrange(keys, Calc.Align, mode, ALIGN_LABEL[mode])
 end
 
 function M:Distribute(keys, axis)
-    if axis ~= "h" and axis ~= "v" then return false, "asse non valido (h|v)" end
+    if axis ~= "h" and axis ~= "v" then return false, L["asse non valido (h|v)"] end
     return self:_arrange(keys, Calc.Distribute, axis,
-        axis == "h" and "Distribuisci orizzontalmente" or "Distribuisci verticalmente")
+        axis == "h" and L["Distribuisci orizzontalmente"] or L["Distribuisci verticalmente"])
 end
 
 -------------------------------------------------------------------------------
@@ -820,11 +821,11 @@ end
 -------------------------------------------------------------------------------
 function M:SetGridSize(n)
     n = tonumber(n)
-    if not isnum(n) then return false, "valore non valido" end
+    if not isnum(n) then return false, L["valore non valido"] end
     n = math.floor(n)
     if n < 1 then n = 1 end
     if n > 128 then n = 128 end
-    if not (DB.sv and DB.sv.global) then return false, "database non pronto" end
+    if not (DB.sv and DB.sv.global) then return false, L["database non pronto"] end
     DB.sv.global.gridSize = n
     self:_refreshPage()
     return true, n
@@ -898,7 +899,7 @@ function M:Select(frameKey, add)
         return true
     end
     if type(frameKey) ~= "string" or not FM.registry[frameKey] then
-        return false, "frame sconosciuto: " .. tostring(frameKey)
+        return false, L["frame sconosciuto: "] .. tostring(frameKey)
     end
     if add then
         local found
@@ -1013,7 +1014,7 @@ function M:_hookMovers()
                     local before = M._drag[key]
                     M._drag[key] = nil
                     M:_checkGen()
-                    M:_begin("Sposta", false)
+                    M:_begin(L["Sposta"], false)
                     M:_touch(key, before)
                     pcall(M._smartSnap, M, key)
                     M:_end()
@@ -1030,13 +1031,13 @@ local HISTORY_LINES = 10
 
 local function selectionText()
     local sel = M:GetSelection()
-    if #sel == 0 then return "Selezione: nessuna (clic su un frame sbloccato, shift-clic per piu' frame)" end
+    if #sel == 0 then return L["Selezione: nessuna (clic su un frame sbloccato, shift-clic per piu' frame)"] end
     local names = {}
     for i, k in ipairs(sel) do
         if i > 4 then names[#names + 1] = string.format("+%d", #sel - 4); break end
         names[#names + 1] = title(k)
     end
-    return "Selezione: " .. table.concat(names, ", ")
+    return L["Selezione: "] .. table.concat(names, ", ")
 end
 
 local function report(ok, err)
@@ -1064,7 +1065,7 @@ function M:_refreshPage()
             local line = ui.lines[i]
             if line then
                 local h = hist[i]
-                line:SetText(h and ((h.undone and "(annullato) " or "") .. h.text) or "")
+                line:SetText(h and ((h.undone and L["(annullato) "] or "") .. h.text) or "")
             end
         end
     end)
@@ -1101,45 +1102,45 @@ local function buildPage(parent, ctx)
 
     place("header", { type = "header", label = "Layout Studio" })
     place("range", {
-        type = "range", label = "Dimensione griglia (px)", min = 1, max = 64, step = 1,
+        type = "range", label = L["Dimensione griglia (px)"], min = 1, max = 64, step = 1,
         get = function() return M:GetGridSize() end,
         set = function(v) M:SetGridSize(v) end,
     }, 20, 14)
     y = y + 6
     place("toggle", {
-        type = "toggle", label = "Snap intelligente ai bordi degli altri frame",
+        type = "toggle", label = L["Snap intelligente ai bordi degli altri frame"],
         get = function() return M:Get("snap") end,
         set = function(v) M:Set("snap", v and true or false) end,
     })
 
     y = y + 6
-    button("Sblocca", 16, 90, function() FM:SetUnlocked(true) end)
-    button("Blocca", 112, 90, function() FM:SetUnlocked(false) end)
-    ui.undo = button("Annulla", 220, 90, function() report(M:Undo()) end)
-    ui.redo = button("Ripeti", 316, 90, function() report(M:Redo()) end)
+    button(L["Sblocca"], 16, 90, function() FM:SetUnlocked(true) end)
+    button(L["Blocca"], 112, 90, function() FM:SetUnlocked(false) end)
+    ui.undo = button(L["Annulla"], 220, 90, function() report(M:Undo()) end)
+    ui.redo = button(L["Ripeti"], 316, 90, function() report(M:Redo()) end)
     y = y + 32
 
     ui.selection = label(selectionText())
     y = y + 20
-    button("Seleziona tutti", 16, 120, function() M:SelectAll() end)
-    button("Deseleziona", 142, 120, function() M:Select(nil) end)
+    button(L["Seleziona tutti"], 16, 120, function() M:SelectAll() end)
+    button(L["Deseleziona"], 142, 120, function() M:Select(nil) end)
     y = y + 32
 
-    label("Allinea la selezione", "GameFontNormal")
+    label(L["Allinea la selezione"], "GameFontNormal")
     y = y + 20
     local modes = {
-        { "left", "Sinistra" }, { "right", "Destra" }, { "top", "Alto" },
-        { "bottom", "Basso" }, { "hcenter", "Centro O." }, { "vcenter", "Centro V." },
+        { "left", L["Sinistra"] }, { "right", L["Destra"] }, { "top", L["Alto"] },
+        { "bottom", L["Basso"] }, { "hcenter", L["Centro O."] }, { "vcenter", L["Centro V."] },
     }
     for i, m in ipairs(modes) do
         button(m[2], 16 + (i - 1) * 86, 82, function() report(M:Align(M:GetSelection(), m[1])) end)
     end
     y = y + 28
-    button("Distribuisci orizz.", 16, 130, function() report(M:Distribute(M:GetSelection(), "h")) end)
-    button("Distribuisci vert.", 152, 130, function() report(M:Distribute(M:GetSelection(), "v")) end)
+    button(L["Distribuisci orizz."], 16, 130, function() report(M:Distribute(M:GetSelection(), "h")) end)
+    button(L["Distribuisci vert."], 152, 130, function() report(M:Distribute(M:GetSelection(), "v")) end)
     y = y + 34
 
-    label("Cronologia (ultime modifiche)", "GameFontNormal")
+    label(L["Cronologia (ultime modifiche)"], "GameFontNormal")
     y = y + 20
     for i = 1, HISTORY_LINES do
         ui.lines[i] = label("")
@@ -1154,7 +1155,7 @@ end
 M.page = {
     title = "Layout",
     order = 40,
-    category = "Strumenti",
+    category = L["Strumenti"],
     build = buildPage,
     refresh = function() M:_refreshPage() end,
 }
@@ -1165,7 +1166,7 @@ local function parseArgs(str)
     return t
 end
 
-local COMMAND_HELP = "layout undo | redo | grid <n> | nudge <chiave> <dx> <dy> | snap"
+local COMMAND_HELP = L["layout undo | redo | grid <n> | nudge <chiave> <dx> <dy> | snap"]
 
 M.commands = {
     layout = {
@@ -1179,10 +1180,10 @@ M.commands = {
             elseif sub == "grid" then
                 local n
                 ok, n = M:SetGridSize(t[2])
-                if ok then notify("Layout: griglia %d px", n) else err = n end
+                if ok then notify(L["Layout: griglia %d px"], n) else err = n end
             elseif sub == "nudge" then ok, err = M:Nudge(t[2], t[3], t[4])
             elseif sub == "snap" then
-                notify("Layout: snap intelligente %s", M:ToggleSnap() and "attivo" or "disattivo")
+                notify(L["Layout: snap intelligente %s"], M:ToggleSnap() and L["attivo"] or L["disattivo"])
                 return
             else
                 notify("/badb %s", COMMAND_HELP)

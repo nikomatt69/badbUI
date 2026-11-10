@@ -6,6 +6,7 @@
 --     viene disattivato;
 --   * rimanda le modifiche fuori dal combattimento (molti CVar di nameplate sono protetti).
 local _, ns = ...
+local L = ns.Badb.L
 local Badb = ns.Badb
 local Events, Logger = Badb.Events, Badb.Logger
 
@@ -38,7 +39,7 @@ end
 
 local function setNow(owner, name, value)
     if not CVars:Exists(name) then
-        Logger:Debug("CVar %s non presente su questo client", name)
+        Logger:Debug(L["CVar %s non presente su questo client"], name)
         return
     end
     -- { value = originale, owner = modulo }: persistente, sopravvive a /reload.

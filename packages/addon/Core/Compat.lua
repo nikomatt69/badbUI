@@ -40,11 +40,18 @@ function Compat.SafeValue(v, fallback)
 end
 
 -- Pannello opzioni tramite Settings API (presente su Forever).
-function Compat.RegisterOptionsPanel(panel, title)
+function Compat.RegisterOptionsPanel(panel, title, parentCategory)
     if Compat.hasSettings then
-        local category = Settings.RegisterCanvasLayoutCategory(panel, title)
-        Settings.RegisterAddOnCategory(category)
+        local category
+        if parentCategory then
+            if type(Settings.RegisterCanvasLayoutSubcategory) ~= "function" then return end
+            category = Settings.RegisterCanvasLayoutSubcategory(parentCategory, panel, title)
+        else
+            category = Settings.RegisterCanvasLayoutCategory(panel, title)
+            Settings.RegisterAddOnCategory(category)
+        end
         panel.settingsCategory = category
+        return category
     end
 end
 

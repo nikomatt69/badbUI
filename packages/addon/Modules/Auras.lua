@@ -11,6 +11,7 @@
 --     poi ripiego sui filtri aure del client se il client li offre (sondati, mai presunti), e il
 --     disegno (icona, countdown) lasciato al client.
 local _, ns = ...
+local L = ns.Badb.L
 local Badb = ns.Badb
 local Compat, Events, Logger = Badb.Compat, Badb.Events, Badb.Logger
 local Data = Badb.AuraData
@@ -19,9 +20,9 @@ local IsSecret = Compat.IsSecret
 local MAX_AURAS = 40 -- limite di sicurezza per ogni passata di lettura
 
 local A = Badb.Modules:New("Auras", {
-    title = "Aure curate",
-    category = "Combattimento",
-    description = "Database delle aure importanti condiviso da nameplate, avvisi e frame.",
+    title = L["Aure curate"],
+    category = L["Combattimento"],
+    description = L["Database delle aure importanti condiviso da nameplate, avvisi e frame."],
     defaults = {
         enabled = true,       -- nessun effetto visivo da solo: e' il database usato dagli altri moduli
         matchByName = true,   -- riconosce anche i rank nuovi di Forever tramite nome localizzato
@@ -450,9 +451,9 @@ end
 -- Imposta la categoria di un'aura (ID o nome). category = chiave categoria | "hide" | nil (rimuove).
 function A:SetCustom(key, category)
     local k = self:NormalizeKey(key)
-    if not k then return false, "serve un ID numerico o un nome" end
+    if not k then return false, L["serve un ID numerico o un nome"] end
     if category ~= nil and category ~= "hide" and not self.categories[category] then
-        return false, "categoria sconosciuta: " .. tostring(category)
+        return false, L["categoria sconosciuta: "] .. tostring(category)
     end
     local custom = self:Get("custom")
     if type(custom) ~= "table" then custom = {}; self:Set("custom", custom) end
@@ -492,39 +493,39 @@ end
 local function categoryValues(withHide)
     local v = {}
     for _, key in ipairs(A.categoryOrder) do v[#v + 1] = { value = key, text = A.categories[key].title } end
-    if withHide then v[#v + 1] = { value = "hide", text = "Nascondi sempre" } end
+    if withHide then v[#v + 1] = { value = "hide", text = L["Nascondi sempre"] } end
     return v
 end
 A.CategoryValues = categoryValues
 
 A._form = { key = "", category = "cc" }
 A.options = {
-    { type = "header", label = "Riconoscimento" },
-    { type = "toggle", path = "matchByName", label = "Riconosci anche per nome (rank nuovi di Forever)" },
-    { type = "toggle", path = "clientFilters", label = "In combattimento usa i filtri del client se i dati sono nascosti" },
-    { type = "header", label = "Aure personalizzate" },
-    { type = "text", label = "ID o nome dell'aura", width = 220,
+    { type = "header", label = L["Riconoscimento"] },
+    { type = "toggle", path = "matchByName", label = L["Riconosci anche per nome (rank nuovi di Forever)"] },
+    { type = "toggle", path = "clientFilters", label = L["In combattimento usa i filtri del client se i dati sono nascosti"] },
+    { type = "header", label = L["Aure personalizzate"] },
+    { type = "text", label = L["ID o nome dell'aura"], width = 220,
       get = function() return A._form.key end, set = function(v) A._form.key = v end },
-    { type = "select", label = "Categoria", values = function() return categoryValues(true) end,
+    { type = "select", label = L["Categoria"], values = function() return categoryValues(true) end,
       get = function() return A._form.category end, set = function(v) A._form.category = v end },
-    { type = "execute", label = "Aggiungi", func = function()
+    { type = "execute", label = L["Aggiungi"], func = function()
         local ok, err = A:SetCustom(A._form.key, A._form.category)
-        if not ok then Logger:Warn("Aure: %s", tostring(err)) else A._form.key = "" end
+        if not ok then Logger:Warn(L["Aure: %s"], tostring(err)) else A._form.key = "" end
     end },
-    { type = "list", label = "Elenco personale", height = 160, empty = "Nessuna aura personalizzata.",
+    { type = "list", label = L["Elenco personale"], height = 160, empty = L["Nessuna aura personalizzata."],
       items = function()
         local rows = {}
         for _, e in ipairs(A:ListCustom()) do
             local cat = A.categories[e.category]
-            rows[#rows + 1] = { text = e.label, detail = cat and cat.title or "Nascosta",
-                actions = { { label = "Rimuovi", func = function() A:SetCustom(e.key, nil) end } } }
+            rows[#rows + 1] = { text = e.label, detail = cat and cat.title or L["Nascosta"],
+                actions = { { label = L["Rimuovi"], func = function() A:SetCustom(e.key, nil) end } } }
         end
         return rows
       end },
-    { type = "execute", label = "Svuota elenco", func = function() A:ResetCustom() end },
+    { type = "execute", label = L["Svuota elenco"], func = function() A:ResetCustom() end },
 }
 
-local HELP = "aura status | list | add <id|nome> <categoria|hide> | remove <id|nome> | check <id|nome> | categories | reset"
+local HELP = L["aura status | list | add <id|nome> <categoria|hide> | remove <id|nome> | check <id|nome> | categories | reset"]
 
 -- Stato del motore sul client corrente: utile per verificare in gioco cosa espone Forever.
 function A:Status()
@@ -534,7 +535,7 @@ function A:Status()
     for _ in pairs(self.byName) do names = names + 1 end
     local filters = {}
     for _, f in ipairs(self.clientFilterList or self:ProbeClientFilters()) do filters[#filters + 1] = f.token end
-    local api = (C_UnitAuras and C_UnitAuras.GetAuraDataByIndex) and "C_UnitAuras" or (UnitAura and "UnitAura") or "nessuna"
+    local api = (C_UnitAuras and C_UnitAuras.GetAuraDataByIndex) and "C_UnitAuras" or (UnitAura and "UnitAura") or L["nessuna"]
     return { api = api, ids = ids, names = names, clientFilters = filters,
         durationObject = C_UnitAuras ~= nil and C_UnitAuras.GetAuraDuration ~= nil }
 end
@@ -553,40 +554,40 @@ A.commands = {
             sub = lower(sub or "")
             if sub == "status" then
                 local st = A:Status()
-                Logger:Info("API aure: %s; aure curate: %d ID, %d nomi localizzati", st.api, st.ids, st.names)
-                Logger:Info("Filtri del client per dati nascosti: %s; durate nascoste disegnate dal client: %s",
-                    #st.clientFilters > 0 and table.concat(st.clientFilters, ", ") or "nessuno",
-                    st.durationObject and "si'" or "no")
+                Logger:Info(L["API aure: %s; aure curate: %d ID, %d nomi localizzati"], st.api, st.ids, st.names)
+                Logger:Info(L["Filtri del client per dati nascosti: %s; durate nascoste disegnate dal client: %s"],
+                    #st.clientFilters > 0 and table.concat(st.clientFilters, ", ") or L["nessuno"],
+                    st.durationObject and L["si'"] or "no")
             elseif sub == "list" then
                 local list = A:ListCustom()
-                if #list == 0 then Logger:Info("Nessuna aura personalizzata.") end
+                if #list == 0 then Logger:Info(L["Nessuna aura personalizzata."]) end
                 for _, e in ipairs(list) do Logger:Info("%s -> %s", e.label, e.category) end
             elseif sub == "add" then
                 -- l'ultima parola e' la categoria; il resto e' ID o nome (anche con spazi)
                 local key, word = rest:match("^(.-)%s+(%S+)$")
                 local cat = catByWord(word)
                 if not key or not cat then
-                    Logger:Info("Uso: /badb aura add <id|nome> <categoria|hide>. Categorie: %s",
+                    Logger:Info(L["Uso: /badb aura add <id|nome> <categoria|hide>. Categorie: %s"],
                         table.concat(A.categoryOrder, ", "))
                     return
                 end
                 local ok, err = A:SetCustom(key, cat)
-                Logger:Info(ok and "Aura aggiornata." or ("Errore: " .. tostring(err)))
+                Logger:Info(ok and L["Aura aggiornata."] or (L["Errore: "] .. tostring(err)))
             elseif sub == "remove" then
                 local ok, err = A:SetCustom(rest, nil)
-                Logger:Info(ok and "Aura rimossa dall'elenco personale." or ("Errore: " .. tostring(err)))
+                Logger:Info(ok and L["Aura rimossa dall'elenco personale."] or (L["Errore: "] .. tostring(err)))
             elseif sub == "check" then
                 local cat, via, name = A:Explain(rest)
-                if not name then Logger:Info("Uso: /badb aura check <id|nome>") return end
-                Logger:Info("%s: %s%s", tostring(name), cat and A.categories[cat].title or "non curata",
+                if not name then Logger:Info(L["Uso: /badb aura check <id|nome>"]) return end
+                Logger:Info("%s: %s%s", tostring(name), cat and A.categories[cat].title or L["non curata"],
                     via and (" (" .. via .. ")") or "")
             elseif sub == "categories" then
                 for _, key in ipairs(A.categoryOrder) do
-                    Logger:Info("%s - %s (priorita' %d)", key, A.categories[key].title, A:GetPriority(key))
+                    Logger:Info(L["%s - %s (priorita' %d)"], key, A.categories[key].title, A:GetPriority(key))
                 end
             elseif sub == "reset" then
                 A:ResetCustom()
-                Logger:Info("Elenco personale svuotato.")
+                Logger:Info(L["Elenco personale svuotato."])
             else
                 Logger:Info("/badb " .. HELP)
             end

@@ -1,0 +1,21 @@
+{
+  "name": "@badb/companion",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun src/index.ts watch",
+    "start": "bun src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@badb/core": "workspace:*",
+    "@badb/sdk": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/bun": "catalog:",
+    "typescript": "catalog:",
+    "@badb/server": "workspace:*"
+  }
+}

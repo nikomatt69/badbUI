@@ -9,6 +9,7 @@
 -- sui frame Edit Mode, quindi nessun taint e tutto funziona anche in combattimento.
 -- Disattivando il modulo ogni alpha viene riportato al valore originale.
 local _, ns = ...
+local L = ns.Badb.L
 local Badb = ns.Badb
 local Events, Logger, FM, Modules = Badb.Events, Badb.Logger, Badb.FrameManager, Badb.Modules
 
@@ -69,7 +70,7 @@ local function latencyKey(ms)
 end
 
 local DATATEXTS = {
-    fpsms = { label = "FPS e latenza", text = function()
+    fpsms = { label = L["FPS e latenza"], text = function()
         local fps = GetFramerate and GetFramerate() or 0
         local _, _, home, world = GetNetStats()
         local ms = world or home or 0
@@ -79,17 +80,17 @@ local DATATEXTS = {
     fps = { label = "FPS", text = function()
         return wrap(floor((GetFramerate and GetFramerate() or 0) + 0.5), "accent") .. wrap(" fps", "textDim")
     end },
-    latency = { label = "Latenza", text = function()
+    latency = { label = L["Latenza"], text = function()
         local _, _, home, world = GetNetStats()
         local ms = world or home or 0
         return wrap(floor(ms), latencyKey(ms)) .. wrap(" ms", "textDim")
     end },
-    gold = { label = "Oro", text = function()
+    gold = { label = L["Oro"], text = function()
         local c = GetMoney and GetMoney() or 0
         local g, s, cu = floor(c / 10000), floor(c / 100) % 100, c % 100
         return groupDigits(g) .. "|cffffd700g|r " .. s .. "|cffc0c0c0s|r " .. cu .. "|cffb87333c|r"
     end },
-    durability = { label = "Durabilita'", text = function()
+    durability = { label = L["Durabilita'"], text = function()
         local lowest, any = 100, false
         if GetInventoryItemDurability then
             for slot = 1, 19 do
@@ -100,15 +101,15 @@ local DATATEXTS = {
                 end
             end
         end
-        if not any then return wrap("Durabilita' -", "textDim") end
+        if not any then return wrap(L["Durabilita' -"], "textDim") end
         local key = lowest < 25 and "danger" or (lowest < 50 and "warning" or "success")
-        return wrap("Durabilita' ", "textDim") .. wrap(floor(lowest + 0.5) .. "%", key)
+        return wrap(L["Durabilita' "], "textDim") .. wrap(floor(lowest + 0.5) .. "%", key)
     end },
-    bags = { label = "Borse", text = function()
+    bags = { label = L["Borse"], text = function()
         local C = C_Container
         local getSlots = (C and C.GetContainerNumSlots) or GetContainerNumSlots
         local getFree = (C and C.GetContainerNumFreeSlots) or GetContainerNumFreeSlots
-        if not (getSlots and getFree) then return wrap("Borse -", "textDim") end
+        if not (getSlots and getFree) then return wrap(L["Borse -"], "textDim") end
         local free, total = 0, 0
         for bag = 0, (NUM_BAG_SLOTS or 4) do
             local n = getSlots(bag) or 0
@@ -119,16 +120,16 @@ local DATATEXTS = {
         end
         local ratio = total > 0 and free / total or 1
         local key = ratio < 0.1 and "danger" or (ratio < 0.25 and "warning" or "accent")
-        return wrap("Borse ", "textDim") .. wrap((total - free) .. "/" .. total, key)
+        return wrap(L["Borse "], "textDim") .. wrap((total - free) .. "/" .. total, key)
     end },
-    time = { label = "Orologio", text = function()
+    time = { label = L["Orologio"], text = function()
         return wrap(date("%H:%M"), "accent")
     end },
-    zone = { label = "Zona", text = function()
+    zone = { label = L["Zona"], text = function()
         local z = GetMinimapZoneText and GetMinimapZoneText() or ""
         return wrap(z, "textDim")
     end },
-    none = { label = "Vuoto", text = function() return "" end },
+    none = { label = L["Vuoto"], text = function() return "" end },
 }
 local DATATEXT_ORDER = { "fpsms", "durability", "bags", "gold", "time", "zone", "fps", "latency", "none" }
 local DATATEXT_CHOICES = {}
@@ -138,7 +139,7 @@ for _, k in ipairs(DATATEXT_ORDER) do DATATEXT_CHOICES[#DATATEXT_CHOICES + 1] = 
 -- Sinistra: (versione) / Durabilita' / ...  Destra: Sistema (fps+ms) / Ora / Oro.
 local SLOTS = 3
 local SIDES = { "left", "right" }
-local SIDE_TITLE = { left = "Pannello sinistro", right = "Pannello destro" }
+local SIDE_TITLE = { left = L["Pannello sinistro"], right = L["Pannello destro"] }
 local SIDE_POINT = { left = { "BOTTOMLEFT", 4, 4 }, right = { "BOTTOMRIGHT", -4, 4 } }
 local BARS = { "MainActionBar", "MultiBarBottomLeft", "MultiBarBottomRight", "MultiBarRight", "MultiBarLeft",
                "MultiBar5", "MultiBar6", "MultiBar7", "StanceBar", "PetActionBar" }
@@ -148,13 +149,13 @@ local BARS = { "MainActionBar", "MultiBarBottomLeft", "MultiBarBottomRight", "Mu
 ---------------------------------------------------------------------------
 
 local function slotOpt(side, i)
-    return { type = "select", path = side .. i, label = SIDE_TITLE[side] .. ": casella " .. i, values = DATATEXT_CHOICES }
+    return { type = "select", path = side .. i, label = SIDE_TITLE[side] .. L[": casella "] .. i, values = DATATEXT_CHOICES }
 end
 
 local M = Modules:New("ElvLook", {
-    title = "Stile ElvUI",
-    category = "Interfaccia",
-    description = "Barra datatext, minimappa quadrata, sfondi per chat e barre azioni: il look piatto e visibile di ElvUI.",
+    title = L["Stile ElvUI"],
+    category = L["Interfaccia"],
+    description = L["Barra datatext, minimappa quadrata, sfondi per chat e barre azioni: il look piatto e visibile di ElvUI."],
     defaults = {
         enabled = true,
         datatexts = true, panelWidth = 412, panelHeight = 22, fontSize = 12,
@@ -165,30 +166,30 @@ local M = Modules:New("ElvLook", {
         barBackdrops = true, barAlpha = 1, hideBarArt = true,
     },
     options = {
-        { type = "execute", label = "Applica lo stile ElvUI a tutta l'interfaccia", func = function() M:ApplyElvStyle() end,
-          tooltip = "Tema ElvUI, unit frame, barre azioni e cooldown. Crea prima un backup (annullabile da Backup)." },
-        { type = "header", label = "Pannelli datatext (si spostano con /badb unlock)" },
-        { type = "toggle", path = "datatexts", label = "Mostra i due pannelli in basso" },
-        { type = "range", path = "panelWidth", label = "Larghezza di ogni pannello", min = 150, max = 800, step = 2 },
-        { type = "range", path = "panelHeight", label = "Altezza", min = 16, max = 40, step = 1 },
-        { type = "range", path = "fontSize", label = "Dimensione testo", min = 8, max = 18, step = 1 },
+        { type = "execute", label = L["Applica lo stile ElvUI a tutta l'interfaccia"], func = function() M:ApplyElvStyle() end,
+          tooltip = L["Tema ElvUI, unit frame, barre azioni e cooldown. Crea prima un backup (annullabile da Backup)."] },
+        { type = "header", label = L["Pannelli datatext (si spostano con /badb unlock)"] },
+        { type = "toggle", path = "datatexts", label = L["Mostra i due pannelli in basso"] },
+        { type = "range", path = "panelWidth", label = L["Larghezza di ogni pannello"], min = 150, max = 800, step = 2 },
+        { type = "range", path = "panelHeight", label = L["Altezza"], min = 16, max = 40, step = 1 },
+        { type = "range", path = "fontSize", label = L["Dimensione testo"], min = 8, max = 18, step = 1 },
         slotOpt("left", 1), slotOpt("left", 2), slotOpt("left", 3),
         slotOpt("right", 1), slotOpt("right", 2), slotOpt("right", 3),
-        { type = "header", label = "Minimappa" },
-        { type = "toggle", path = "minimap", label = "Minimappa quadrata con cornice piatta",
-          tooltip = "Disattivando serve /reload per riavere la forma Blizzard originale." },
+        { type = "header", label = L["Minimappa"] },
+        { type = "toggle", path = "minimap", label = L["Minimappa quadrata con cornice piatta"],
+          tooltip = L["Disattivando serve /reload per riavere la forma Blizzard originale."] },
         { type = "header", label = "Chat" },
-        { type = "toggle", path = "chat", label = "Sfondo scuro dietro la chat" },
-        { type = "range", path = "chatAlpha", label = "Opacita' sfondo", min = 0.2, max = 1, step = 0.05 },
-        { type = "header", label = "Barre azioni" },
-        { type = "toggle", path = "barBackdrops", label = "Fondo piatto dietro le barre" },
-        { type = "range", path = "barAlpha", label = "Opacita' fondo", min = 0.2, max = 1, step = 0.05 },
-        { type = "toggle", path = "hideBarArt", label = "Nascondi le decorazioni Blizzard della barra principale" },
+        { type = "toggle", path = "chat", label = L["Sfondo scuro dietro la chat"] },
+        { type = "range", path = "chatAlpha", label = L["Opacita' sfondo"], min = 0.2, max = 1, step = 0.05 },
+        { type = "header", label = L["Barre azioni"] },
+        { type = "toggle", path = "barBackdrops", label = L["Fondo piatto dietro le barre"] },
+        { type = "range", path = "barAlpha", label = L["Opacita' fondo"], min = 0.2, max = 1, step = 0.05 },
+        { type = "toggle", path = "hideBarArt", label = L["Nascondi le decorazioni Blizzard della barra principale"] },
     },
-    page = { title = "Stile ElvUI", order = 5, category = "Interfaccia",
-             keywords = { "elvui", "datatext", "minimappa", "chat", "pannelli", "stile", "look" } },
+    page = { title = L["Stile ElvUI"], order = 5, category = L["Interfaccia"],
+             keywords = { "elvui", "datatext", L["minimappa"], "chat", L["pannelli"], L["stile"], "look" } },
     commands = {
-        elv = { help = "elv - applica lo stile ElvUI (tema, unit frame, barre, datatext)", fn = function() M:ApplyElvStyle() end },
+        elv = { help = L["elv - applica lo stile ElvUI (tema, unit frame, barre, datatext)"], fn = function() M:ApplyElvStyle() end },
     },
 })
 Badb.ElvLook = M
@@ -231,7 +232,7 @@ function M:BuildPanel(side)
     end)
     self.panels[side] = panel
     FM:Register("ElvDatatext_" .. side, { frame = panel, title = "Datatext: " .. SIDE_TITLE[side]:lower(),
-                                           category = "Interfaccia", hideable = false })
+                                           category = L["Interfaccia"], hideable = false })
     return panel
 end
 
@@ -323,7 +324,7 @@ function M:RestoreMinimap()
     for _, o in ipairs(pieces) do
         if faded[o] ~= nil then o:SetAlpha(faded[o]); faded[o] = nil end
     end
-    Logger:Info("Minimappa: /reload per ripristinare del tutto la forma Blizzard")
+    Logger:Info(L["Minimappa: /reload per ripristinare del tutto la forma Blizzard"])
 end
 
 ---------------------------------------------------------------------------
@@ -468,7 +469,7 @@ function M:OnEnable()
         local sv = Badb.DB.sv
         if sv and sv.global and not sv.global.elvStyleHinted and (isLogin or isReload) then
             sv.global.elvStyleHinted = true
-            Logger:Info("Stile ElvUI: /badb elv applica tema, unit frame e barre in un click (con backup).")
+            Logger:Info(L["Stile ElvUI: /badb elv applica tema, unit frame e barre in un click (con backup)."])
         end
     end)
 end
@@ -507,7 +508,7 @@ local ELV_MODULES = { "ElvLook", "DataBars", "Tooltip", "UnitFrames", "ActionBar
 function M:ApplyElvStyle(silent)
     local other = self:OtherUI()
     if other and not silent then
-        Logger:Warn("Rilevato %s: puo' sovrapporsi allo stile ElvUI di BadbUI (unit frame, barre, nameplate).", other)
+        Logger:Warn(L["Rilevato %s: puo' sovrapporsi allo stile ElvUI di BadbUI (unit frame, barre, nameplate)."], other)
     end
     local Backups = Badb.Backups
     if Backups and Backups.Create then pcall(Backups.Create, Backups, "pre-elvui") end
@@ -516,5 +517,5 @@ function M:ApplyElvStyle(silent)
     for _, name in ipairs(ELV_MODULES) do
         if Modules.list[name] then Modules:SetEnabled(name, true) end
     end
-    if not silent then Logger:Info("Stile ElvUI applicato. /badb unlock per spostare i frame, /badb elv per riapplicarlo.") end
+    if not silent then Logger:Info(L["Stile ElvUI applicato. /badb unlock per spostare i frame, /badb elv per riapplicarlo."]) end
 end

@@ -1,10 +1,12 @@
 // Contesto del server: database, configurazione, bus eventi. Ogni dominio riceve un Ctx.
-import type { Database } from "bun:sqlite"
+import type { Storage, Passwords } from "./storage"
 import type { Schema } from "@badb/core"
 import type { z } from "zod"
 
 export type Config = {
   db: string
+  setupKey?: string
+  requireSetup?: boolean
   tz: string
   origins: string[]
   /** Segreto condiviso con il bot Discord. Vuoto = accesso bot disattivato. */
@@ -16,6 +18,8 @@ export type Config = {
 
 export function config(env: Record<string, string | undefined> = process.env): Config {
   return {
+    setupKey: env.BADB_SETUP_KEY ?? "",
+    requireSetup: env.BADB_REQUIRE_SETUP === "1",
     db: env.BADB_DB ?? "./data/badb.sqlite",
     tz: env.BADB_TZ ?? "Europe/Rome",
     origins: (env.BADB_ORIGINS ?? "")
@@ -46,8 +50,9 @@ export class Bus {
 }
 
 export type Ctx = {
-  db: Database
+  db: Storage
   config: Config
+  passwords?: Passwords
   bus: Bus
   now: () => number
   /** Annunci verso Discord: sostituibile nei test. */
@@ -57,7 +62,7 @@ export type Ctx = {
 /** Errore con stato HTTP: il messaggio arriva al client cosi' com'e'. */
 export class Fail extends Error {
   constructor(
-    readonly status: 400 | 401 | 403 | 404 | 409 | 429,
+    readonly status: 400 | 401 | 403 | 404 | 409 | 429 | 503,
     message: string,
   ) {
     super(message)

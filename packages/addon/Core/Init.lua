@@ -9,8 +9,8 @@ _G.BadbUI = Badb -- API pubblica per altri addon/WeakAuras
 Badb.name = ADDON_NAME
 Badb.version = C_AddOns.GetAddOnMetadata(ADDON_NAME, "Version") or "dev"
 
--- Localizzazione: L["chiave"] restituisce la chiave stessa se manca la traduzione.
-Badb.L = setmetatable({}, { __index = function(t, k) rawset(t, k, k); return k end })
+-- Localization installs the lookup behavior before any other addon file loads.
+Badb.L = {}
 
 -- Utilita' comuni
 function Badb.CopyTable(src, dst)

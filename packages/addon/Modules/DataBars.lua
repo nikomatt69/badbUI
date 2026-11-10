@@ -3,6 +3,7 @@
 -- Solo API non protette e non secret (UnitXP, reputazione): nessun taint, funziona in combattimento.
 -- Nasconde la barra Blizzard (StatusTrackingBarManager) con alpha, e ripristina il valore originale al disable.
 local _, ns = ...
+local L = ns.Badb.L
 local Badb = ns.Badb
 local Events, Logger, FM, Modules = Badb.Events, Badb.Logger, Badb.FrameManager, Badb.Modules
 
@@ -30,24 +31,24 @@ local function grouped(n)
 end
 
 local M = Modules:New("DataBars", {
-    title = "Barre esperienza e reputazione",
-    category = "Interfaccia",
-    description = "Barre piatte sotto le barre azioni, come in ElvUI: esperienza (con riposo) e reputazione seguita.",
+    title = L["Barre esperienza e reputazione"],
+    category = L["Interfaccia"],
+    description = L["Barre piatte sotto le barre azioni, come in ElvUI: esperienza (con riposo) e reputazione seguita."],
     defaults = { enabled = true, xp = true, rep = true, width = 360, height = 14, textMode = "both",
                  fontSize = 11, hideBlizzard = true },
     options = {
-        { type = "toggle", path = "xp", label = "Barra esperienza (nascosta al livello massimo)" },
-        { type = "toggle", path = "rep", label = "Barra reputazione (fazione seguita)" },
-        { type = "range", path = "width", label = "Larghezza", min = 150, max = 800, step = 2 },
-        { type = "range", path = "height", label = "Altezza", min = 6, max = 30, step = 1 },
-        { type = "range", path = "fontSize", label = "Dimensione testo", min = 8, max = 16, step = 1 },
-        { type = "select", path = "textMode", label = "Testo", values = {
-            { value = "both", label = "Valore e percentuale" }, { value = "value", label = "Solo valore" },
-            { value = "percent", label = "Solo percentuale" }, { value = "none", label = "Nessuno" } } },
-        { type = "toggle", path = "hideBlizzard", label = "Nascondi la barra Blizzard" },
+        { type = "toggle", path = "xp", label = L["Barra esperienza (nascosta al livello massimo)"] },
+        { type = "toggle", path = "rep", label = L["Barra reputazione (fazione seguita)"] },
+        { type = "range", path = "width", label = L["Larghezza"], min = 150, max = 800, step = 2 },
+        { type = "range", path = "height", label = L["Altezza"], min = 6, max = 30, step = 1 },
+        { type = "range", path = "fontSize", label = L["Dimensione testo"], min = 8, max = 16, step = 1 },
+        { type = "select", path = "textMode", label = L["Testo"], values = {
+            { value = "both", label = L["Valore e percentuale"] }, { value = "value", label = L["Solo valore"] },
+            { value = "percent", label = L["Solo percentuale"] }, { value = "none", label = L["Nessuno"] } } },
+        { type = "toggle", path = "hideBlizzard", label = L["Nascondi la barra Blizzard"] },
     },
-    page = { title = "Barre XP e reputazione", order = 6, category = "Interfaccia",
-             keywords = { "esperienza", "xp", "reputazione", "fazione", "barra", "databar" } },
+    page = { title = L["Barre XP e reputazione"], order = 6, category = L["Interfaccia"],
+             keywords = { L["esperienza"], "xp", L["reputazione"], L["fazione"], L["barra"], "databar" } },
 })
 Badb.DataBars = M
 
@@ -139,8 +140,8 @@ local function build(key, name, point)
         end
     end)
     bar:SetScript("OnLeave", function() if GameTooltip and GameTooltip.Hide then GameTooltip:Hide() end end)
-    FM:Register(key, { frame = bar, title = name == "BadbElvXPBar" and "Barra esperienza" or "Barra reputazione",
-                       category = "Interfaccia", hideable = false })
+    FM:Register(key, { frame = bar, title = name == "BadbElvXPBar" and L["Barra esperienza"] or L["Barra reputazione"],
+                       category = L["Interfaccia"], hideable = false })
     return bar
 end
 
@@ -174,9 +175,9 @@ function M:Update()
         xpBar.rested:SetMinMaxValues(0, xp.max); xpBar.rested:SetValue(min(xp.max, xp.cur + xp.rested))
         xpBar.rested:SetStatusBarColor(RESTED_COLOR[1], RESTED_COLOR[2], RESTED_COLOR[3], RESTED_COLOR[4])
         xpBar.rested:SetShown(xp.rested > 0)
-        xpBar.text:SetText(formatText(mode, xp.cur, xp.max, xp.rested > 0 and ("riposo " .. grouped(xp.rested)) or nil))
-        xpBar.tip = { "Esperienza", string.format("Livello %d", xp.level), string.format("Mancano %s XP", grouped(xp.max - xp.cur)),
-                      xp.rested > 0 and string.format("Riposo: %s", grouped(xp.rested)) or "Nessun riposo" }
+        xpBar.text:SetText(formatText(mode, xp.cur, xp.max, xp.rested > 0 and (L["riposo "] .. grouped(xp.rested)) or nil))
+        xpBar.tip = { L["Esperienza"], string.format(L["Livello %d"], xp.level), string.format(L["Mancano %s XP"], grouped(xp.max - xp.cur)),
+                      xp.rested > 0 and string.format(L["Riposo: %s"], grouped(xp.rested)) or L["Nessun riposo"] }
         xpBar:Show()
     else
         xpBar:Hide()

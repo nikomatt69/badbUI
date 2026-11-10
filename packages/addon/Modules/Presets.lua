@@ -11,6 +11,7 @@
 -- I dati per moduli non ancora caricati (es. UnitFrames, ActionBars sviluppati a parte)
 -- restano nel profilo e vengono letti quando quei moduli si registrano.
 local _, ns = ...
+local L = ns.Badb.L
 local Badb = ns.Badb
 local DB, Logger, Events = Badb.DB, Badb.Logger, Badb.Events
 
@@ -52,7 +53,7 @@ end
 ------------------------------------------------------------------------------
 Presets:RegisterContent("leveling", {
     title = "Leveling",
-    description = "Pulito e leggero per quest e mondo aperto: nameplate solo nemiche, interfaccia ordinata.",
+    description = L["Pulito e leggero per quest e mondo aperto: nameplate solo nemiche, interfaccia ordinata."],
     icon = "Interface\\Icons\\INV_Misc_Map_01",
     modules = {
         Nameplates = { enabled = true, showEnemies = true, showFriends = false, showAlways = false,
@@ -66,7 +67,7 @@ Presets:RegisterContent("leveling", {
 
 Presets:RegisterContent("dungeon", {
     title = "Dungeon",
-    description = "Gruppi da 5: nameplate impilate e sempre visibili, party in stile raid ben leggibili.",
+    description = L["Gruppi da 5: nameplate impilate e sempre visibili, party in stile raid ben leggibili."],
     icon = "Interface\\Icons\\INV_Misc_Key_13",
     modules = {
         Nameplates = { enabled = true, showEnemies = true, showAlways = true, showMinions = true,
@@ -80,7 +81,7 @@ Presets:RegisterContent("dungeon", {
 
 Presets:RegisterContent("raid", {
     title = "Raid",
-    description = "Molte unita' a schermo: frame raid compatti, solo debuff utili, nameplate essenziali.",
+    description = L["Molte unita' a schermo: frame raid compatti, solo debuff utili, nameplate essenziali."],
     icon = "Interface\\Icons\\INV_Misc_Head_Dragon_01",
     modules = {
         Nameplates = { enabled = true, showEnemies = true, showAlways = true, showMinions = false,
@@ -95,7 +96,7 @@ Presets:RegisterContent("raid", {
 
 Presets:RegisterContent("pvp", {
     title = "PvP",
-    description = "Battleground e duelli: nameplate grandi con colore di classe, pet e totem nemici visibili.",
+    description = L["Battleground e duelli: nameplate grandi con colore di classe, pet e totem nemici visibili."],
     icon = "Interface\\Icons\\Achievement_BG_winWSG",
     modules = {
         Nameplates = { enabled = true, showEnemies = true, showFriends = true, showAlways = true,
@@ -115,7 +116,7 @@ Presets:RegisterContent("pvp", {
 ------------------------------------------------------------------------------
 Presets:RegisterRole("tank", {
     title = "Tank",
-    description = "Vedi tutto quello che hai addosso: nameplate piu' grandi e aggro evidente.",
+    description = L["Vedi tutto quello che hai addosso: nameplate piu' grandi e aggro evidente."],
     icon = "Interface\\Icons\\Ability_Warrior_DefensiveStance",
     modules = {
         Nameplates = { showMinions = true, globalScale = 1.1, minAlpha = 0.75 },
@@ -125,7 +126,7 @@ Presets:RegisterRole("tank", {
 
 Presets:RegisterRole("healer", {
     title = "Healer",
-    description = "Frame di gruppo piu' grandi, barre risorse, cure in arrivo e debuff dissipabili.",
+    description = L["Frame di gruppo piu' grandi, barre risorse, cure in arrivo e debuff dissipabili."],
     icon = "Interface\\Icons\\Spell_Holy_FlashHeal",
     modules = {
         Nameplates = { globalScale = 0.9, minAlpha = 0.45 },
@@ -137,7 +138,7 @@ Presets:RegisterRole("healer", {
 
 Presets:RegisterRole("dps", {
     title = "DPS",
-    description = "Focus sul bersaglio: scala bersaglio maggiore e unita' secondarie attenuate.",
+    description = L["Focus sul bersaglio: scala bersaglio maggiore e unita' secondarie attenuate."],
     icon = "Interface\\Icons\\Ability_DualWield",
     modules = {
         Nameplates = { selectedScale = 1.3, minAlpha = 0.5, targetBorder = true },
@@ -154,13 +155,13 @@ local MAX_DEPTH, MAX_NODES = 12, 5000
 local function deepCopy(v, depth, seen, budget)
     if type(v) ~= "table" then return v end
     depth, seen, budget = depth or 0, seen or {}, budget or { n = 0 }
-    if depth > MAX_DEPTH then error("struttura troppo profonda") end
-    if seen[v] then error("struttura ciclica") end
+    if depth > MAX_DEPTH then error(L["struttura troppo profonda"]) end
+    if seen[v] then error(L["struttura ciclica"]) end
     seen[v] = true
     local out = {}
     for k, val in pairs(v) do
         budget.n = budget.n + 1
-        if budget.n > MAX_NODES then error("struttura troppo grande") end
+        if budget.n > MAX_NODES then error(L["struttura troppo grande"]) end
         local tk, tv = type(k), type(val)
         if (tk == "string" or tk == "number") and (tv == "string" or tv == "number" or tv == "boolean" or tv == "table") then
             out[k] = deepCopy(val, depth + 1, seen, budget)
@@ -268,45 +269,45 @@ end
 function Layout.Validate(spec, where)
     where = where or "editMode"
     if type(spec) == "string" then
-        if #spec > 20000 then return false, where .. ": stringa layout troppo lunga" end
+        if #spec > 20000 then return false, where .. L[": stringa layout troppo lunga"] end
         return true
     end
-    if type(spec) ~= "table" then return false, where .. ": deve essere una stringa o una tabella" end
+    if type(spec) ~= "table" then return false, where .. L[": deve essere una stringa o una tabella"] end
     if spec.base ~= nil and spec.base ~= "modern" and spec.base ~= "classic" and spec.base ~= "active" then
-        return false, where .. ".base non valido (modern|classic|active)"
+        return false, where .. L[".base non valido (modern|classic|active)"]
     end
-    if type(spec.systems) ~= "table" then return false, where .. ".systems mancante" end
+    if type(spec.systems) ~= "table" then return false, where .. L[".systems mancante"] end
     local n = 0
     for i, s in pairs(spec.systems) do
         n = n + 1
-        if n > 64 then return false, where .. ": troppi sistemi (max 64)" end
+        if n > 64 then return false, where .. L[": troppi sistemi (max 64)"] end
         local w = where .. ".systems[" .. tostring(i) .. "]"
-        if type(i) ~= "number" or type(s) ~= "table" then return false, w .. " non valido" end
+        if type(i) ~= "number" or type(s) ~= "table" then return false, w .. L[" non valido"] end
         if type(s.system) ~= "string" or not s.system:match("^%a+$") or #s.system > 40 then
-            return false, w .. ".system non valido"
+            return false, w .. L[".system non valido"]
         end
         if s.index ~= nil and not ((type(s.index) == "string" and s.index:match("^%w+$") and #s.index <= 40)
             or (isFiniteNumber(s.index) and s.index >= 0 and s.index <= 100)) then
-            return false, w .. ".index non valido"
+            return false, w .. L[".index non valido"]
         end
         if s.anchor ~= nil then
             local a = s.anchor
             if type(a) ~= "table" or not POINTS[a[1]] or not POINTS[a[2]] or not isFiniteNumber(a[3]) or not isFiniteNumber(a[4])
                 or math.abs(a[3]) > 4000 or math.abs(a[4]) > 4000 then
-                return false, w .. ".anchor deve essere { punto, puntoRelativo, x, y }"
+                return false, w .. L[".anchor deve essere { punto, puntoRelativo, x, y }"]
             end
         end
         if s.settings ~= nil then
-            if type(s.settings) ~= "table" then return false, w .. ".settings non valido" end
+            if type(s.settings) ~= "table" then return false, w .. L[".settings non valido"] end
             local c = 0
             for k, v in pairs(s.settings) do
                 c = c + 1
-                if c > 32 then return false, w .. ": troppe impostazioni" end
-                if type(k) ~= "string" or not k:match("^%a+$") or #k > 40 then return false, w .. ": nome impostazione non valido" end
+                if c > 32 then return false, w .. L[": troppe impostazioni"] end
+                if type(k) ~= "string" or not k:match("^%a+$") or #k > 40 then return false, w .. L[": nome impostazione non valido"] end
                 local tv = type(v)
                 local okv = tv == "boolean" or isFiniteNumber(v) or (tv == "string" and v:match("^%a+$") and #v <= 40)
                     or (tv == "table" and isFiniteNumber(v.raw))
-                if not okv then return false, w .. ".settings." .. k .. " valore non valido" end
+                if not okv then return false, w .. ".settings." .. k .. L[" valore non valido"] end
             end
         end
     end
@@ -340,7 +341,7 @@ local function rawSettingValue(name, v, sysId, setId)
     if type(v) == "string" then
         local enumName = VALUE_ENUMS[name]
         local raw = enumName and enumValue(enumName, v)
-        if raw == nil then return nil, "valore '" .. v .. "' sconosciuto al client" end
+        if raw == nil then return nil, L["valore '"] .. v .. L["' sconosciuto al client"] end
         return raw
     end
     local fromClient = clientSlider(sysId, setId, v)
@@ -384,7 +385,7 @@ function Layout.GetBase(baseName)
             if okc then return copy end
         end
     end
-    return nil, "nessun layout Edit Mode di partenza disponibile"
+    return nil, L["nessun layout Edit Mode di partenza disponibile"]
 end
 
 local function findSystem(info, sysId, index)
@@ -396,12 +397,12 @@ end
 -- Costruisce un layoutInfo Blizzard dalla specifica. -> info, report | nil, err
 -- report = { applied = n, skipped = { "motivo", ... } }
 function Layout.Build(spec)
-    if not Layout.Available() then return nil, "Edit Mode non disponibile su questo client" end
+    if not Layout.Available() then return nil, L["Edit Mode non disponibile su questo client"] end
     local okv, err = Layout.Validate(spec)
     if not okv then return nil, err end
     if type(spec) == "string" then
         local ok, info = pcall(C_EditMode.ConvertStringToLayoutInfo, spec)
-        if not ok or type(info) ~= "table" then return nil, "stringa layout Edit Mode non valida" end
+        if not ok or type(info) ~= "table" then return nil, L["stringa layout Edit Mode non valida"] end
         return info, { applied = 0, skipped = {} }
     end
     local info, berr = Layout.GetBase(spec.base or "modern")
@@ -412,17 +413,17 @@ function Layout.Build(spec)
         local sysId = enumValue("EditModeSystem", s.system)
         local index
         if sysId == nil then
-            skip("sistema %s assente", s.system)
+            skip(L["sistema %s assente"], s.system)
         else
             if type(s.index) == "string" then
                 index = enumValue("EditMode" .. s.system .. "SystemIndices", s.index)
-                if index == nil then skip("%s %s assente", s.system, s.index) end
+                if index == nil then skip(L["%s %s assente"], s.system, s.index) end
             elseif type(s.index) == "number" then
                 index = s.index
             end
             local target = (s.index == nil or index ~= nil) and findSystem(info, sysId, index) or nil
             if (s.index == nil or index ~= nil) and not target then
-                skip("%s %s non presente nel layout base", s.system, tostring(s.index or ""))
+                skip(L["%s %s non presente nel layout base"], s.system, tostring(s.index or ""))
             end
             if target then
                 if s.anchor then
@@ -438,13 +439,13 @@ function Layout.Build(spec)
                     for _, name in ipairs(names) do
                         local setId = enumValue("EditMode" .. s.system .. "Setting", name)
                         if setId == nil then
-                            skip("%s: impostazione %s assente", s.system, name)
+                            skip(L["%s: impostazione %s assente"], s.system, name)
                         else
                             local raw, why = rawSettingValue(name, s.settings[name], sysId, setId)
                             local entry
                             for _, e in ipairs(target.settings) do if e.setting == setId then entry = e end end
                             if raw == nil then skip("%s.%s: %s", s.system, name, why or "?")
-                            elseif not entry then skip("%s.%s non presente nel layout base", s.system, name)
+                            elseif not entry then skip(L["%s.%s non presente nel layout base"], s.system, name)
                             else entry.value = raw end
                         end
                     end
@@ -468,7 +469,7 @@ end
 -- Installa (o sostituisce per nome) un layout tra quelli dell'account. -> record per Uninstall | nil, err
 function Layout.Install(info, name)
     local layouts = C_EditMode.GetLayouts()
-    if type(layouts) ~= "table" or type(layouts.layouts) ~= "table" then return nil, "layout Edit Mode non leggibili" end
+    if type(layouts) ~= "table" or type(layouts.layouts) ~= "table" then return nil, L["layout Edit Mode non leggibili"] end
     local record = { name = name, prevActive = layouts.activeLayout }
     info.layoutName = name
     local idx
@@ -481,7 +482,7 @@ function Layout.Install(info, name)
         local count, acct = 0, accountType()
         for _, l in ipairs(layouts.layouts) do if l.layoutType == acct then count = count + 1 end end
         if count >= maxLayouts() then
-            return nil, string.format("limite di %d layout Edit Mode dell'account raggiunto: eliminane uno dall'Edit Mode", maxLayouts())
+            return nil, string.format(L["limite di %d layout Edit Mode dell'account raggiunto: eliminane uno dall'Edit Mode"], maxLayouts())
         end
         info.layoutType = acct
         layouts.layouts[#layouts.layouts + 1] = info
@@ -564,19 +565,19 @@ end
 -- strict=false: invece di fallire scarta la voce e la annota (import di preset utente).
 local function checkOptions(opts, defaults, where, errs, strict, depth)
     local clean = {}
-    if depth > 6 then errs[#errs + 1] = where .. ": troppo annidato"; return clean end
+    if depth > 6 then errs[#errs + 1] = where .. L[": troppo annidato"]; return clean end
     for k, v in pairs(opts) do
         local w = where .. "." .. tostring(k)
         local d
         if type(k) == "string" then d = defaults[k] end
         local bad
-        if d == nil then bad = "non e' un'opzione del modulo"
+        if d == nil then bad = L["non e' un'opzione del modulo"]
         elseif type(d) == "table" then
-            if type(v) ~= "table" then bad = "deve essere una tabella"
+            if type(v) ~= "table" then bad = L["deve essere una tabella"]
             else clean[k] = checkOptions(v, d, w, errs, strict, depth + 1) end
-        elseif type(v) ~= type(d) then bad = "tipo " .. type(v) .. ", atteso " .. type(d)
-        elseif type(v) == "number" and not isFiniteNumber(v) then bad = "numero non valido"
-        elseif type(v) == "string" and #v > 64 then bad = "stringa troppo lunga"
+        elseif type(v) ~= type(d) then bad = L["tipo "] .. type(v) .. L[", atteso "] .. type(d)
+        elseif type(v) == "number" and not isFiniteNumber(v) then bad = L["numero non valido"]
+        elseif type(v) == "string" and #v > 64 then bad = L["stringa troppo lunga"]
         else clean[k] = v end
         if bad then errs[#errs + 1] = w .. ": " .. bad end
     end
@@ -586,13 +587,13 @@ end
 local function checkModules(mods, where, errs, strict)
     local clean = {}
     if mods == nil then return clean end
-    if type(mods) ~= "table" then errs[#errs + 1] = where .. ".modules deve essere una tabella"; return clean end
+    if type(mods) ~= "table" then errs[#errs + 1] = where .. L[".modules deve essere una tabella"]; return clean end
     for name, opts in pairs(mods) do
         local w = where .. ".modules." .. tostring(name)
         local m = type(name) == "string" and Badb.Modules:Get(name) or nil
-        if name == "EditModeBridge" then errs[#errs + 1] = w .. ": usa il campo editMode per il layout"
-        elseif not m then errs[#errs + 1] = w .. ": modulo sconosciuto"
-        elseif type(opts) ~= "table" then errs[#errs + 1] = w .. " deve essere una tabella"
+        if name == "EditModeBridge" then errs[#errs + 1] = w .. L[": usa il campo editMode per il layout"]
+        elseif not m then errs[#errs + 1] = w .. L[": modulo sconosciuto"]
+        elseif type(opts) ~= "table" then errs[#errs + 1] = w .. L[" deve essere una tabella"]
         else clean[name] = checkOptions(opts, m.defaults or {}, w, errs, strict, 0) end
     end
     return clean
@@ -602,16 +603,16 @@ local FRAME_FIELDS = { hidden = "boolean", alpha = "number", scale = "number" }
 local function checkFrames(frames, where, errs)
     local clean = {}
     if frames == nil then return clean end
-    if type(frames) ~= "table" then errs[#errs + 1] = where .. ".frames deve essere una tabella"; return clean end
+    if type(frames) ~= "table" then errs[#errs + 1] = where .. L[".frames deve essere una tabella"]; return clean end
     for key, f in pairs(frames) do
         local w = where .. ".frames." .. tostring(key)
         if type(key) ~= "string" or not key:match("^[%w_]+$") or #key > 64 or type(f) ~= "table" then
-            errs[#errs + 1] = w .. " non valido"
+            errs[#errs + 1] = w .. L[" non valido"]
         else
             clean[key] = {}
             for field, v in pairs(f) do
                 if FRAME_FIELDS[field] ~= type(v) or (type(v) == "number" and (not isFiniteNumber(v) or v < 0 or v > 3)) then
-                    errs[#errs + 1] = w .. "." .. tostring(field) .. " non valido"
+                    errs[#errs + 1] = w .. "." .. tostring(field) .. L[" non valido"]
                 else clean[key][field] = v end
             end
         end
@@ -621,32 +622,32 @@ end
 
 -- Controlla un blocco { modules, frames, editMode, byRole?, variants? }.
 local function checkBlock(b, where, errs, strict, def, allowNested)
-    if type(b) ~= "table" then errs[#errs + 1] = where .. " deve essere una tabella"; return {} end
+    if type(b) ~= "table" then errs[#errs + 1] = where .. L[" deve essere una tabella"]; return {} end
     local out = { modules = checkModules(b.modules, where, errs, strict), frames = checkFrames(b.frames, where, errs) }
     if b.editMode ~= nil then
         local ok, err = Layout.Validate(b.editMode, where .. ".editMode")
         if ok then out.editMode = b.editMode else errs[#errs + 1] = err end
     end
     if b.byRole ~= nil then
-        if type(b.byRole) ~= "table" then errs[#errs + 1] = where .. ".byRole deve essere una tabella"
+        if type(b.byRole) ~= "table" then errs[#errs + 1] = where .. L[".byRole deve essere una tabella"]
         else
             out.byRole = {}
             for role, rb in pairs(b.byRole) do
-                if not VALID_ROLES[role] then errs[#errs + 1] = where .. ".byRole." .. tostring(role) .. ": ruolo sconosciuto"
+                if not VALID_ROLES[role] then errs[#errs + 1] = where .. ".byRole." .. tostring(role) .. L[": ruolo sconosciuto"]
                 elseif not classAllowsRole(def.class, role) then
-                    errs[#errs + 1] = where .. ".byRole." .. role .. ": ruolo non disponibile per " .. tostring(def.class)
+                    errs[#errs + 1] = where .. ".byRole." .. role .. L[": ruolo non disponibile per "] .. tostring(def.class)
                 else out.byRole[role] = checkBlock(rb, where .. ".byRole." .. role, errs, strict, def, false) end
             end
         end
     end
     if b.variants ~= nil then
-        if not allowNested then errs[#errs + 1] = where .. ".variants non ammesso qui"
-        elseif def.scenario ~= "raid" then errs[#errs + 1] = where .. ".variants ammesso solo per lo scenario raid"
-        elseif type(b.variants) ~= "table" then errs[#errs + 1] = where .. ".variants deve essere una tabella"
+        if not allowNested then errs[#errs + 1] = where .. L[".variants non ammesso qui"]
+        elseif def.scenario ~= "raid" then errs[#errs + 1] = where .. L[".variants ammesso solo per lo scenario raid"]
+        elseif type(b.variants) ~= "table" then errs[#errs + 1] = where .. L[".variants deve essere una tabella"]
         else
             out.variants = {}
             for v, vb in pairs(b.variants) do
-                if not VARIANT_OK[v] then errs[#errs + 1] = where .. ".variants." .. tostring(v) .. ": usa 10, 20 o 40"
+                if not VARIANT_OK[v] then errs[#errs + 1] = where .. ".variants." .. tostring(v) .. L[": usa 10, 20 o 40"]
                 else out.variants[v] = checkBlock(vb, where .. ".variants." .. v, errs, strict, def, false) end
             end
         end
@@ -657,41 +658,41 @@ end
 -- -> def normalizzato, errori (lista). def normalizzato e' nil se ci sono errori in modalita' strict.
 local function normalize(def, strict)
     local errs = {}
-    if type(def) ~= "table" then return nil, { "il preset deve essere una tabella" } end
+    if type(def) ~= "table" then return nil, { L["il preset deve essere una tabella"] } end
     local ok, copy = pcall(deepCopy, def)
-    if not ok then return nil, { "preset non valido: " .. tostring(copy) } end
+    if not ok then return nil, { L["preset non valido: "] .. tostring(copy) } end
     def = copy
     local where = "preset"
     if type(def.key) ~= "string" or not def.key:match("^[%w%-_]+$") or #def.key > 64 then
-        errs[#errs + 1] = "key mancante o non valida (lettere, numeri, - e _; max 64)"
+        errs[#errs + 1] = L["key mancante o non valida (lettere, numeri, - e _; max 64)"]
     else where = def.key end
     local out = { key = def.key, version = isFiniteNumber(def.version) and def.version or 1, custom = def.custom == true }
     out.title = cleanText(def.title, 64)
-    if not out.title then errs[#errs + 1] = where .. ": title mancante" end
+    if not out.title then errs[#errs + 1] = where .. L[": title mancante"] end
     out.description = cleanText(def.description, 300)
     out.rationale = cleanText(def.rationale, 400)
     out.author = cleanText(def.author, 48)
     out.icon = type(def.icon) == "string" and #def.icon <= 200 and def.icon or nil
     if def.class ~= nil then
-        if type(def.class) ~= "string" or not def.class:match("^%u+$") then errs[#errs + 1] = where .. ": class non valida"
-        elseif Badb.Player and not classInfo(def.class) then errs[#errs + 1] = where .. ": classe sconosciuta " .. def.class
+        if type(def.class) ~= "string" or not def.class:match("^%u+$") then errs[#errs + 1] = where .. L[": class non valida"]
+        elseif Badb.Player and not classInfo(def.class) then errs[#errs + 1] = where .. L[": classe sconosciuta "] .. def.class
         else out.class = def.class end
     end
-    if def.mode ~= nil and not Presets.MODES[def.mode] then errs[#errs + 1] = where .. ": mode deve essere pve o pvp"
+    if def.mode ~= nil and not Presets.MODES[def.mode] then errs[#errs + 1] = where .. L[": mode deve essere pve o pvp"]
     else out.mode = def.mode end
     if def.scenario ~= nil then
-        if not SCENARIO_MODE[def.scenario] then errs[#errs + 1] = where .. ": scenario sconosciuto " .. tostring(def.scenario)
-        elseif def.mode and SCENARIO_MODE[def.scenario] ~= def.mode then errs[#errs + 1] = where .. ": scenario incoerente con mode"
+        if not SCENARIO_MODE[def.scenario] then errs[#errs + 1] = where .. L[": scenario sconosciuto "] .. tostring(def.scenario)
+        elseif def.mode and SCENARIO_MODE[def.scenario] ~= def.mode then errs[#errs + 1] = where .. L[": scenario incoerente con mode"]
         else out.scenario = def.scenario end
     end
     if def.role ~= nil then
-        if def.role ~= "any" and not VALID_ROLES[def.role] then errs[#errs + 1] = where .. ": ruolo sconosciuto"
+        if def.role ~= "any" and not VALID_ROLES[def.role] then errs[#errs + 1] = where .. L[": ruolo sconosciuto"]
         elseif VALID_ROLES[def.role] and not classAllowsRole(def.class or out.class, def.role) then
-            errs[#errs + 1] = where .. ": ruolo non disponibile per la classe"
+            errs[#errs + 1] = where .. L[": ruolo non disponibile per la classe"]
         else out.role = def.role end
     end
     if def.defaultVariant ~= nil then
-        if not VARIANT_OK[def.defaultVariant] then errs[#errs + 1] = where .. ": defaultVariant non valido"
+        if not VARIANT_OK[def.defaultVariant] then errs[#errs + 1] = where .. L[": defaultVariant non valido"]
         else out.defaultVariant = def.defaultVariant end
     end
     out.tags, out.facts = {}, {}
@@ -721,7 +722,7 @@ function Presets:Register(def)
     local ok, out, errs = pcall(normalize, def, true)
     if not ok then return nil, tostring(out) end
     if not out then
-        Logger:Warn("Preset non valido: %s", errs[1] or "?")
+        Logger:Warn(L["Preset non valido: %s"], errs[1] or "?")
         return nil, table.concat(errs, "; ")
     end
     if not self.templates[out.key] then self.templateOrder[#self.templateOrder + 1] = out.key end
@@ -804,7 +805,7 @@ end
 -- opts = { role=, variant= }. -> resolved | nil, err
 function Presets:Resolve(key, opts)
     local def = self:Get(key)
-    if not def then return nil, "preset sconosciuto: " .. tostring(key) end
+    if not def then return nil, L["preset sconosciuto: "] .. tostring(key) end
     opts = type(opts) == "table" and opts or {}
     local role = VALID_ROLES[opts.role] and opts.role or nil
     if role and not classAllowsRole(def.class, role) then role = nil end
@@ -877,7 +878,7 @@ function Presets:Diff(key, opts)
             local bridge = profile.modules and profile.modules.EditModeBridge or {}
             local n = type(r.editMode) == "table" and #r.editMode.systems or 0
             out[#out + 1] = { module = "EditMode", path = "layout", from = bridge.layoutName,
-                to = string.format("Badb - %s (%s)", r.title, n > 0 and (n .. " elementi posizionati") or "stringa") }
+                to = string.format("Badb - %s (%s)", r.title, n > 0 and (n .. L[" elementi posizionati"]) or L["stringa"]) }
         end
         return out
     end)
@@ -891,10 +892,10 @@ function Presets:FormatDiff(diff, max)
     max = max or 200
     local lines = {}
     for i, d in ipairs(diff) do
-        if i > max then lines[#lines + 1] = string.format("... e altre %d modifiche", #diff - max); break end
+        if i > max then lines[#lines + 1] = string.format(L["... e altre %d modifiche"], #diff - max); break end
         lines[#lines + 1] = string.format("%s.%s: %s -> %s", tostring(d.module), tostring(d.path), tostring(d.from), tostring(d.to))
     end
-    if #lines == 0 then lines[1] = "Nessuna modifica: il profilo e' gia' allineato al preset." end
+    if #lines == 0 then lines[1] = L["Nessuna modifica: il profilo e' gia' allineato al preset."] end
     return table.concat(lines, "\n")
 end
 
@@ -921,14 +922,14 @@ end
 -- -> nomeProfilo, report | nil, err. Annulla ogni modifica se un passo fallisce.
 local function applyResolved(self, r, opts)
     opts = opts or {}
-    if inCombat() then return nil, "impossibile applicare un preset in combattimento" end
-    if editModeOpen() then return nil, "chiudi l'Edit Mode prima di applicare un preset" end
+    if inCombat() then return nil, L["impossibile applicare un preset in combattimento"] end
+    if editModeOpen() then return nil, L["chiudi l'Edit Mode prima di applicare un preset"] end
     local mode = opts.mode or "new-profile"
-    if not APPLY_MODES[mode] then return nil, "modalita' non valida: " .. tostring(mode) end
+    if not APPLY_MODES[mode] then return nil, L["modalita' non valida: "] .. tostring(mode) end
     local only = toSet(opts.only)
     local report = { warnings = {}, layout = nil, backup = nil }
 
-    report.backup = backup("Prima del preset " .. tostring(r.title))
+    report.backup = backup(L["Prima del preset "] .. tostring(r.title))
     local previous = DB:GetProfileName()
     local target, created, snapshot, layoutRecord
     local ok, err = pcall(function()
@@ -972,13 +973,13 @@ local function applyResolved(self, r, opts)
                 local info, rep = Layout.Build(r.editMode)
                 if not info then
                     if not layoutString then
-                        report.warnings[#report.warnings + 1] = "Layout Edit Mode saltato: " .. tostring(rep)
+                        report.warnings[#report.warnings + 1] = L["Layout Edit Mode saltato: "] .. tostring(rep)
                     end
                 else
                     report.layout = rep
                     local rec, ierr = Layout.Install(info, layoutName)
                     if not rec then
-                        report.warnings[#report.warnings + 1] = "Layout Edit Mode non installato: " .. tostring(ierr)
+                        report.warnings[#report.warnings + 1] = L["Layout Edit Mode non installato: "] .. tostring(ierr)
                     else
                         layoutRecord = rec
                         if type(r.editMode) == "string" then layoutString = r.editMode
@@ -1014,12 +1015,12 @@ local function applyResolved(self, r, opts)
             DB.sv.global.presetUndo = nil
             if DB:GetProfileName() ~= previous or snapshot then DB:SetProfile(previous) end
         end)
-        Logger:Error("Preset '%s' non applicato: %s", tostring(r.title), tostring(err))
+        Logger:Error(L["Preset '%s' non applicato: %s"], tostring(r.title), tostring(err))
         return nil, tostring(err)
     end
     for _, w in ipairs(report.warnings) do Logger:Warn("%s", w) end
     if report.layout and #report.layout.skipped > 0 then
-        Logger:Debug("Layout: %d elementi saltati (%s)", #report.layout.skipped, table.concat(report.layout.skipped, ", "))
+        Logger:Debug(L["Layout: %d elementi saltati (%s)"], #report.layout.skipped, table.concat(report.layout.skipped, ", "))
     end
     return target, report
 end
@@ -1069,29 +1070,29 @@ function Presets:Describe(spec)
     local mods = spec.modules or {}
     local np, gf, sc = mods.Nameplates, mods.GroupFrames, mods.Scaling
     if np then
-        add("Nameplate %s, %s, scala %.0f%%", np.stacking == "overlap" and "sovrapposte" or "impilate",
-            np.showFriends and "nemici + alleati" or "solo nemici", (np.globalScale or 1) * 100)
-        if np.showMinions then add("Pet, totem e guardiani nemici visibili") end
+        add(L["Nameplate %s, %s, scala %.0f%%"], np.stacking == "overlap" and L["sovrapposte"] or L["impilate"],
+            np.showFriends and L["nemici + alleati"] or L["solo nemici"], (np.globalScale or 1) * 100)
+        if np.showMinions then add(L["Pet, totem e guardiani nemici visibili"]) end
     end
     if gf then
         add("Party %dx%d, raid %dx%d (layout Edit Mode)", gf.partyWidth or 120, gf.partyHeight or 60,
             gf.raidWidth or 90, gf.raidHeight or 45)
-        if gf.powerBars then add("Barre risorse sui frame di gruppo") end
-        if gf.onlyDispellable then add("Solo debuff dissipabili") end
+        if gf.powerBars then add(L["Barre risorse sui frame di gruppo"]) end
+        if gf.onlyDispellable then add(L["Solo debuff dissipabili"]) end
     end
     local na, al = spec.modules.NameplateAuras, spec.modules.Alerts
     if na and na.enabled then
-        add("Aure curate sulle nameplate: CC grande, difensivi nemici, i tuoi debuff %s",
-            na.ownDebuffs == "all" and "(tutti)" or "curati per classe")
+        add(L["Aure curate sulle nameplate: CC grande, difensivi nemici, i tuoi debuff %s"],
+            na.ownDebuffs == "all" and "(tutti)" or L["curati per classe"])
     end
-    if al and al.enabled and al.healerCC then add("Avviso quando l'healer del gruppo finisce in CC") end
-    if sc and sc.enabled then add(sc.pixelPerfect and "Scala UI pixel perfect" or "Scala UI manuale") end
+    if al and al.enabled and al.healerCC then add(L["Avviso quando l'healer del gruppo finisce in CC"]) end
+    if sc and sc.enabled then add(sc.pixelPerfect and L["Scala UI pixel perfect"] or L["Scala UI manuale"]) end
     if spec.editMode then
         local n = type(spec.editMode) == "table" and spec.editMode.systems and #spec.editMode.systems or 0
-        if n > 0 then add("Layout Edit Mode dedicato: %d elementi posizionati (barre, unit frame, cast bar)", n)
-        else add("Layout Edit Mode dedicato (posizioni di barre e frame)") end
+        if n > 0 then add(L["Layout Edit Mode dedicato: %d elementi posizionati (barre, unit frame, cast bar)"], n)
+        else add(L["Layout Edit Mode dedicato (posizioni di barre e frame)"]) end
     end
-    if spec.hideClutter then add("Nasconde micro menu, barra borse e barra esperienza") end
+    if spec.hideClutter then add(L["Nasconde micro menu, barra borse e barra esperienza"]) end
     return lines
 end
 
@@ -1110,7 +1111,7 @@ function Presets:Apply(keyOrSpec, opts)
         local okc, name, report = pcall(applyResolved, self, r, { mode = "new-profile" })
         if not okc then Logger:Error("Preset: %s", tostring(name)); return nil, tostring(name) end
         if not name then Logger:Warn("Preset: %s", tostring(report)); return nil, report end
-        Logger:Info("Preset applicato: profilo '%s' (annulla con /badb undo)", name)
+        Logger:Info(L["Preset applicato: profilo '%s' (annulla con /badb undo)"], name)
         Events:Fire("BADB_PRESET_APPLIED", name, spec)
         return name, report
     end
@@ -1121,7 +1122,7 @@ function Presets:Apply(keyOrSpec, opts)
     if not okc then Logger:Error("Preset: %s", tostring(name)); return nil, tostring(name) end
     if not name then Logger:Warn("Preset: %s", tostring(report)); return nil, report end
     local mode = type(opts) == "table" and opts.mode or "new-profile"
-    Logger:Info("Preset '%s' (%s) applicato al profilo '%s' (annulla con /badb undo)", r.title, r.role, name)
+    Logger:Info(L["Preset '%s' (%s) applicato al profilo '%s' (annulla con /badb undo)"], r.title, r.role, name)
     Events:Fire("BADB_PRESET_APPLIED", r.key, mode, name)
     return name, report
 end
@@ -1135,13 +1136,13 @@ end
 
 -- Ripristina lo stato precedente all'ultimo Apply: profilo attivo, opzioni (modi merge/replace) e layout Edit Mode.
 function Presets:Undo()
-    if not self:CanUndo() then Logger:Info("Nessun preset da annullare"); return nil, "nessun preset da annullare" end
-    if inCombat() then return nil, "impossibile annullare in combattimento" end
+    if not self:CanUndo() then Logger:Info(L["Nessun preset da annullare"]); return nil, L["nessun preset da annullare"] end
+    if inCombat() then return nil, L["impossibile annullare in combattimento"] end
     local u = DB.sv.global.presetUndo
     DB.sv.global.presetUndo = nil
     if type(u) == "string" then
         DB:SetProfile(u)
-        Logger:Info("Tornato al profilo '%s'", u)
+        Logger:Info(L["Tornato al profilo '%s'"], u)
         Events:Fire("BADB_PRESET_UNDONE", nil)
         return true
     end
@@ -1150,8 +1151,8 @@ function Presets:Undo()
         if u.layout then Layout.Uninstall(u.layout) end
         DB:SetProfile(u.profile)
     end)
-    if not ok then Logger:Error("Annulla preset: %s", tostring(err)); return nil, tostring(err) end
-    Logger:Info("Tornato al profilo '%s'", u.profile)
+    if not ok then Logger:Error(L["Annulla preset: %s"], tostring(err)); return nil, tostring(err) end
+    Logger:Info(L["Tornato al profilo '%s'"], u.profile)
     Events:Fire("BADB_PRESET_UNDONE", u.key)
     return true
 end
@@ -1188,7 +1189,7 @@ end
 function Presets:RecommendTemplate()
     local P = Badb.Player
     local class = type(P) == "table" and type(P.GetClass) == "function" and probe(P.GetClass, P) or nil
-    if type(class) ~= "string" then return nil, "classe del personaggio non disponibile" end
+    if type(class) ~= "string" then return nil, L["classe del personaggio non disponibile"] end
     local ctx
     local C = Badb.Contexts
     if type(C) == "table" and type(C.GetCurrent) == "function" then
@@ -1204,9 +1205,9 @@ function Presets:RecommendTemplate()
     if instance == "pvp" or instance == "arena" then
         local _, _, _, _, maxPlayers = probe(GetInstanceInfo)
         if isFiniteNumber(maxPlayers) and not Badb.Compat.IsSecret(maxPlayers) and maxPlayers >= 40 then
-            scenario, why = "av", "campo di battaglia da 40 (Alterac Valley)"
+            scenario, why = "av", L["campo di battaglia da 40 (Alterac Valley)"]
         else
-            scenario, why = "bg", "campo di battaglia"
+            scenario, why = "bg", L["campo di battaglia"]
         end
     elseif instance == "raid" then
         local _, _, _, _, maxPlayers = probe(GetInstanceInfo)
@@ -1214,20 +1215,20 @@ function Presets:RecommendTemplate()
             variant = maxPlayers <= 10 and "10" or (maxPlayers <= 20 and "20" or "40")
         end
         variant = variant or raidSizeVariant()
-        scenario, why = "raid", "istanza raid"
+        scenario, why = "raid", L["istanza raid"]
     elseif instance == "party" or instance == "scenario" then
         scenario, why = "dungeon", "dungeon"
     else
         local flagged = probe(UnitIsPVP, "player")
         local resting = probe(IsResting)
         local grouped = (ctx and ctx.group and ctx.group ~= "solo") or probe(IsInGroup)
-        if flagged == true and not resting then scenario, why = "world", "flag PvP attivo nel mondo"
-        elseif grouped then scenario, why = "dungeon", "in gruppo"
-        else scenario, why = "solo", "da solo" end
+        if flagged == true and not resting then scenario, why = "world", L["flag PvP attivo nel mondo"]
+        elseif grouped then scenario, why = "dungeon", L["in gruppo"]
+        else scenario, why = "solo", L["da solo"] end
     end
     local mode = SCENARIO_MODE[scenario]
     local key = class:lower() .. "-" .. mode .. "-" .. scenario
-    if not self.templates[key] then return nil, "nessun template per " .. key end
+    if not self.templates[key] then return nil, L["nessun template per "] .. key end
     return key, { role = playerRole(), variant = variant }, why
 end
 
@@ -1249,7 +1250,7 @@ end
 -- Cattura lo stato attuale come definizione di preset (solo opzioni note dei moduli, layout Edit Mode come stringa).
 local function captureCurrent(name, desc, role)
     local profile = DB.profile or {}
-    local def = { title = cleanText(name, 48) or "Preset personale", description = cleanText(desc, 300),
+    local def = { title = cleanText(name, 48) or L["Preset personale"], description = cleanText(desc, 300),
         role = VALID_ROLES[role] and role or "any", modules = {}, frames = {}, version = 1, custom = true,
         author = UnitName and probe(UnitName, "player") or nil }
     local errs = {}
@@ -1274,7 +1275,7 @@ local function storeCustom(self, def)
     while self.templates[key] and not (store[key] and store[key].title == def.title) do
         key = base .. "-" .. n; n = n + 1
     end
-    if not store[key] and countCustom() >= MAX_CUSTOM then return nil, "troppi preset personali (max " .. MAX_CUSTOM .. ")" end
+    if not store[key] and countCustom() >= MAX_CUSTOM then return nil, L["troppi preset personali (max "] .. MAX_CUSTOM .. ")" end
     def.key, def.custom = key, true
     local ok, err = self:Register(def)
     if not ok then return nil, err end
@@ -1303,7 +1304,7 @@ end
 -- Esporta un template registrato (bundled o personale) cosi' com'e'.
 function Presets:Export(key)
     local def = self:Get(key)
-    if not def then return nil, "preset sconosciuto" end
+    if not def then return nil, L["preset sconosciuto"] end
     local ok, str = pcall(Badb.Serializer.Export, Badb.Serializer, "preset", def)
     if not ok then return nil, tostring(str) end
     return str
@@ -1311,26 +1312,26 @@ end
 
 -- Importa un preset condiviso: opzioni sconosciute scartate (report), mai codice eseguito. -> key, scartati | nil, err
 function Presets:ImportCustom(str)
-    if type(str) ~= "string" or str == "" then return nil, "stringa vuota" end
-    if #str > 200000 then return nil, "stringa troppo lunga" end
+    if type(str) ~= "string" or str == "" then return nil, L["stringa vuota"] end
+    if #str > 200000 then return nil, L["stringa troppo lunga"] end
     local okI, data, err = pcall(Badb.Serializer.Import, Badb.Serializer, str, "preset")
     if not okI then return nil, tostring(data) end
-    if type(data) ~= "table" then return nil, err or "stringa non valida" end
+    if type(data) ~= "table" then return nil, err or L["stringa non valida"] end
     local ok, def, dropped = pcall(normalize, data, false)
     if not ok then return nil, tostring(def) end
-    if not def then return nil, (dropped and dropped[1]) or "preset non valido" end
-    if not def.title then def.title = "Preset importato" end
+    if not def then return nil, (dropped and dropped[1]) or L["preset non valido"] end
+    if not def.title then def.title = L["Preset importato"] end
     -- Un preset importato non porta byRole/varianti di ruoli che la classe non ha: normalize li ha gia' scartati.
     local okS, key, serr = pcall(storeCustom, self, def)
     if not okS then return nil, tostring(key) end
     if not key then return nil, serr end
-    if dropped and #dropped > 0 then Logger:Warn("Import preset: %d voci scartate (%s)", #dropped, dropped[1]) end
+    if dropped and #dropped > 0 then Logger:Warn(L["Import preset: %d voci scartate (%s)"], #dropped, dropped[1]) end
     return key, dropped or {}
 end
 
 function Presets:DeleteCustom(key)
     local store = customStore()
-    if type(key) ~= "string" or not store[key] then return nil, "preset personale sconosciuto" end
+    if type(key) ~= "string" or not store[key] then return nil, L["preset personale sconosciuto"] end
     store[key] = nil
     self:Unregister(key)
     return true
@@ -1361,17 +1362,17 @@ end
 -- Modulo: opzioni, pagina della configurazione, comandi
 ------------------------------------------------------------------------------
 local M = Badb.Modules:New("Presets", {
-    title = "Preset e configurazione guidata",
+    title = L["Preset e configurazione guidata"],
     category = "Layout",
     defaults = { enabled = true },
     options = {
-        { type = "execute", label = "Apri configurazione guidata", func = function()
+        { type = "execute", label = L["Apri configurazione guidata"], func = function()
             if Badb.Wizard then Badb.Wizard:Open() end
         end },
-        { type = "execute", label = "Applica layout consigliato", func = function()
+        { type = "execute", label = L["Applica layout consigliato"], func = function()
             Presets:Apply(Presets:Build(Presets:Recommend()))
         end },
-        { type = "execute", label = "Annulla ultimo preset", func = function() Presets:Undo() end },
+        { type = "execute", label = L["Annulla ultimo preset"], func = function() Presets:Undo() end },
     },
 })
 Presets.module = M
@@ -1380,8 +1381,8 @@ function M:OnInitialize() Presets:LoadCustom() end
 function M:OnEnable() end
 function M:OnDisable() end
 
-local CLASS_NAMES = { WARRIOR = "Guerriero", PALADIN = "Paladino", HUNTER = "Cacciatore", ROGUE = "Ladro",
-    PRIEST = "Sacerdote", SHAMAN = "Sciamano", MAGE = "Mago", WARLOCK = "Stregone", DRUID = "Druido" }
+local CLASS_NAMES = { WARRIOR = L["Guerriero"], PALADIN = L["Paladino"], HUNTER = L["Cacciatore"], ROGUE = L["Ladro"],
+    PRIEST = L["Sacerdote"], SHAMAN = L["Sciamano"], MAGE = L["Mago"], WARLOCK = L["Stregone"], DRUID = L["Druido"] }
 Presets.CLASS_NAMES = CLASS_NAMES
 local ROLE_NAMES = { tank = "Tank", healer = "Healer", dps = "DPS" }
 Presets.ROLE_NAMES = ROLE_NAMES
@@ -1395,10 +1396,10 @@ end
 local function previewText(key, opts)
     local r = Presets:Resolve(key, opts)
     local diff, err = Presets:Diff(key, opts)
-    if not r or not diff then return "Anteprima non disponibile: " .. tostring(err) end
+    if not r or not diff then return L["Anteprima non disponibile: "] .. tostring(err) end
     local def = Presets:Get(key)
-    local head = string.format("%s  (ruolo %s%s)\n%s\n\n%d modifiche:\n", r.title, ROLE_NAMES[r.role] or r.role,
-        r.variant and (", raid da " .. r.variant) or "", def.rationale or def.description or "", #diff)
+    local head = string.format(L["%s  (ruolo %s%s)\n%s\n\n%d modifiche:\n"], r.title, ROLE_NAMES[r.role] or r.role,
+        r.variant and (L[", raid da "] .. r.variant) or "", def.rationale or def.description or "", #diff)
     return head .. Presets:FormatDiff(diff)
 end
 
@@ -1414,7 +1415,7 @@ end
 
 M.commands = {
     preset = {
-        help = "preset list [pve|pvp] | apply <chiave> [ruolo] [10|20|40] | diff <chiave> | recommend | undo | save <nome> | export [chiave] | import | delete <chiave>",
+        help = L["preset list [pve|pvp] | apply <chiave> [ruolo] [10|20|40] | diff <chiave> | recommend | undo | save <nome> | export [chiave] | import | delete <chiave>"],
         fn = function(args)
             local sub, rest = (args or ""):match("^(%S*)%s*(.-)$")
             sub, rest = (sub or ""):lower(), rest or ""
@@ -1422,37 +1423,37 @@ M.commands = {
                 local class = Badb.Player and probe(Badb.Player.GetClass, Badb.Player)
                 local list = Presets:List({ class = class, mode = Presets.MODES[rest] and rest or nil })
                 for _, d in ipairs(list) do say("%s  |cff888888%s|r", d.key, d.title) end
-                if #list == 0 then say("Nessun preset") end
+                if #list == 0 then say(L["Nessun preset"]) end
             elseif sub == "apply" then
                 local key, opts = parseApplyArgs(rest)
-                if not key then say("Uso: /badb preset apply <chiave> [ruolo] [10|20|40]"); return end
+                if not key then say(L["Uso: /badb preset apply <chiave> [ruolo] [10|20|40]"]); return end
                 local name, err = Presets:Apply(key, opts)
-                if not name then say("Preset non applicato: %s", tostring(err)) end
+                if not name then say(L["Preset non applicato: %s"], tostring(err)) end
             elseif sub == "diff" or sub == "preview" then
                 local key, opts = parseApplyArgs(rest)
-                textBox("Anteprima preset", previewText(key or "", opts))
+                textBox(L["Anteprima preset"], previewText(key or "", opts))
             elseif sub == "recommend" then
                 local key, opts, why = Presets:RecommendTemplate()
-                if key then say("Consigliato: %s (%s, ruolo %s)", key, why, tostring(opts.role or "?"))
-                else say("Nessuna raccomandazione: %s", tostring(opts)) end
+                if key then say(L["Consigliato: %s (%s, ruolo %s)"], key, why, tostring(opts.role or "?"))
+                else say(L["Nessuna raccomandazione: %s"], tostring(opts)) end
             elseif sub == "undo" then
                 Presets:Undo()
             elseif sub == "save" then
                 local key, err = Presets:SaveCustom(rest ~= "" and rest or nil)
-                say(key and "Preset personale salvato: %s" or "Salvataggio fallito: %s", tostring(key or err))
+                say(key and L["Preset personale salvato: %s"] or L["Salvataggio fallito: %s"], tostring(key or err))
             elseif sub == "export" then
                 local str, err
                 if rest ~= "" and Presets:Get(rest) then str, err = Presets:Export(rest)
                 else str, err = Presets:ExportCustom(rest ~= "" and rest or nil) end
-                if str then textBox("Esporta preset", str) else say("Export fallito: %s", tostring(err)) end
+                if str then textBox(L["Esporta preset"], str) else say(L["Export fallito: %s"], tostring(err)) end
             elseif sub == "import" then
-                textBox("Incolla la stringa del preset", "", function(s)
+                textBox(L["Incolla la stringa del preset"], "", function(s)
                     local key, err = Presets:ImportCustom(s)
-                    say(key and "Preset importato: %s" or "Import fallito: %s", tostring(key or err))
+                    say(key and L["Preset importato: %s"] or L["Import fallito: %s"], tostring(key or err))
                 end)
             elseif sub == "delete" then
                 local ok, err = Presets:DeleteCustom(rest)
-                say(ok and "Preset eliminato" or "Eliminazione fallita: %s", tostring(err))
+                say(ok and L["Preset eliminato"] or L["Eliminazione fallita: %s"], tostring(err))
             else
                 say("%s", M.commands.preset.help)
             end
@@ -1500,9 +1501,9 @@ end
 local function renderPage()
     local class = pageClass()
     if page.header then
-        page.header:SetText(string.format("Classe: |cff3fa7ff%s|r   ·   Modalita': |cff3fa7ff%s|r   ·   Ruolo: |cff3fa7ff%s|r",
+        page.header:SetText(string.format(L["Classe: |cff3fa7ff%s|r   ·   Modalita': |cff3fa7ff%s|r   ·   Ruolo: |cff3fa7ff%s|r"],
             CLASS_NAMES[class] or class, page.mode == "pvp" and "PvP" or "PvE",
-            page.role and ROLE_NAMES[page.role] or "automatico"))
+            page.role and ROLE_NAMES[page.role] or L["automatico"]))
     end
     local list = Presets:List({ class = class, mode = page.mode, strictClass = true, custom = false })
     for i, row in ipairs(page.rows) do
@@ -1520,8 +1521,8 @@ local function renderPage()
         local customs = Presets:List({ custom = true })
         local names = {}
         for i, d in ipairs(customs) do if i <= 6 then names[#names + 1] = d.key end end
-        page.customInfo:SetText(#customs == 0 and "Nessun preset personale salvato."
-            or ("Preset personali: " .. table.concat(names, ", ") .. (#customs > 6 and " ..." or "")))
+        page.customInfo:SetText(#customs == 0 and L["Nessun preset personale salvato."]
+            or (L["Preset personali: "] .. table.concat(names, ", ") .. (#customs > 6 and " ..." or "")))
     end
 end
 
@@ -1529,21 +1530,21 @@ local function buildPage(parent)
     local y = 8
     local intro = newText(parent, "GameFontHighlightSmall")
     intro:SetPoint("TOPLEFT", 16, -y); intro:SetWidth(540)
-    intro:SetText("Interfacce complete in un click: layout Edit Mode (barre, unit frame, cast bar) piu' le opzioni di BadbUI, "
-        .. "su misura per classe, ruolo e contenuto di Forever. Ogni preset mostra l'anteprima, crea un nuovo profilo "
-        .. "con backup e si annulla con /badb undo.")
+    intro:SetText(L["Interfacce complete in un click: layout Edit Mode (barre, unit frame, cast bar) piu' le opzioni di BadbUI, "]
+        .. L["su misura per classe, ruolo e contenuto di Forever. Ogni preset mostra l'anteprima, crea un nuovo profilo "]
+        .. L["con backup e si annulla con /badb undo."])
     y = y + 48
     page.header = newText(parent, "GameFontNormal")
     page.header:SetPoint("TOPLEFT", 16, -y)
     y = y + 24
     local function ctl(text, x, fn) local b = newButton(parent, text, 128, function() fn(); renderPage() end); b:SetPoint("TOPLEFT", x, -y); return b end
-    ctl("Classe", 16, function()
+    ctl(L["Classe"], 16, function()
         local tokens = {}
         for _, c in ipairs(Badb.Player and Badb.Player.CLASSES or {}) do tokens[#tokens + 1] = c.token end
         page.class = cycle(tokens, pageClass()); page.role = nil
     end)
     ctl("PvE / PvP", 152, function() page.mode = page.mode == "pve" and "pvp" or "pve" end)
-    ctl("Ruolo", 288, function()
+    ctl(L["Ruolo"], 288, function()
         local roles = { "auto" }
         for _, r in ipairs(classRoles(pageClass())) do roles[#roles + 1] = r end
         local nextRole = cycle(roles, page.role or "auto")
@@ -1557,29 +1558,29 @@ local function buildPage(parent)
         row.frame:SetPoint("TOPLEFT", 16, -y); row.frame:SetSize(540, 70)
         row.title = newText(row.frame, "GameFontNormal"); row.title:SetPoint("TOPLEFT", 0, 0)
         row.desc = newText(row.frame, "GameFontHighlightSmall"); row.desc:SetPoint("TOPLEFT", 0, -18); row.desc:SetWidth(390)
-        local preview = newButton(row.frame, "Anteprima", 100, function()
-            if row.key then textBox("Anteprima preset", previewText(row.key, { role = page.role, variant = page.variant })) end
+        local preview = newButton(row.frame, L["Anteprima"], 100, function()
+            if row.key then textBox(L["Anteprima preset"], previewText(row.key, { role = page.role, variant = page.variant })) end
         end)
         preview:SetPoint("TOPRIGHT", 0, -14)
-        local apply = newButton(row.frame, "Applica", 100, function()
+        local apply = newButton(row.frame, L["Applica"], 100, function()
             if not row.key then return end
             local key, opts = row.key, { role = page.role, variant = page.variant }
             local function go()
                 local name, err = Presets:Apply(key, opts)
                 local UI = Badb.ConfigUI
-                if UI and UI.Toast then UI.Toast(name and ("Preset applicato: " .. name) or ("Preset non applicato: " .. tostring(err)), name and "info" or "error") end
+                if UI and UI.Toast then UI.Toast(name and (L["Preset applicato: "] .. name) or (L["Preset non applicato: "] .. tostring(err)), name and "info" or "error") end
                 renderPage()
             end
             local UI = Badb.ConfigUI
-            if UI and UI.Confirm then UI.Confirm("Applicare il preset? Verra' creato un nuovo profilo (annullabile).", go) else go() end
+            if UI and UI.Confirm then UI.Confirm(L["Applicare il preset? Verra' creato un nuovo profilo (annullabile)."], go) else go() end
         end)
         apply:SetPoint("TOPRIGHT", 0, -40)
         page.rows[i] = row
         y = y + 78
     end
-    page.undo = newButton(parent, "Annulla ultimo preset", 180, function() Presets:Undo(); renderPage() end)
+    page.undo = newButton(parent, L["Annulla ultimo preset"], 180, function() Presets:Undo(); renderPage() end)
     page.undo:SetPoint("TOPLEFT", 16, -y)
-    local rec = newButton(parent, "Consigliato per me", 180, function()
+    local rec = newButton(parent, L["Consigliato per me"], 180, function()
         local key, opts = Presets:RecommendTemplate()
         if key then
             local d = Presets:Get(key)
@@ -1589,25 +1590,25 @@ local function buildPage(parent)
     rec:SetPoint("TOPLEFT", 204, -y)
     rec:HookScript("OnClick", renderPage)
     y = y + 40
-    local h = newText(parent, "GameFontNormalLarge"); h:SetPoint("TOPLEFT", 16, -y); h:SetText("Preset personali")
+    local h = newText(parent, "GameFontNormalLarge"); h:SetPoint("TOPLEFT", 16, -y); h:SetText(L["Preset personali"])
     y = y + 28
     page.customInfo = newText(parent, "GameFontHighlightSmall"); page.customInfo:SetPoint("TOPLEFT", 16, -y); page.customInfo:SetWidth(540)
     y = y + 22
     local function cbtn(text, x, fn) local b = newButton(parent, text, 128, fn); b:SetPoint("TOPLEFT", x, -y); return b end
-    cbtn("Salva attuale", 16, function()
-        textBox("Nome del preset personale", "", function(name)
+    cbtn(L["Salva attuale"], 16, function()
+        textBox(L["Nome del preset personale"], "", function(name)
             local key, err = Presets:SaveCustom(name)
-            say(key and "Preset personale salvato: %s" or "Salvataggio fallito: %s", tostring(key or err)); renderPage()
+            say(key and L["Preset personale salvato: %s"] or L["Salvataggio fallito: %s"], tostring(key or err)); renderPage()
         end)
     end)
-    cbtn("Esporta attuale", 152, function()
+    cbtn(L["Esporta attuale"], 152, function()
         local str, err = Presets:ExportCustom(DB:GetProfileName())
-        textBox("Esporta preset", str or ("Errore: " .. tostring(err)))
+        textBox(L["Esporta preset"], str or (L["Errore: "] .. tostring(err)))
     end)
-    cbtn("Importa", 288, function()
-        textBox("Incolla la stringa del preset", "", function(s)
+    cbtn(L["Importa"], 288, function()
+        textBox(L["Incolla la stringa del preset"], "", function(s)
             local key, err = Presets:ImportCustom(s)
-            say(key and "Preset importato: %s (applicalo con /badb preset apply %s)" or "Import fallito: %s", tostring(key or err), tostring(key))
+            say(key and L["Preset importato: %s (applicalo con /badb preset apply %s)"] or L["Import fallito: %s"], tostring(key or err), tostring(key))
             renderPage()
         end)
     end)
@@ -1617,7 +1618,7 @@ local function buildPage(parent)
 end
 
 M.page = {
-    title = "Preset", order = 20, category = "Gestione",
+    title = "Preset", order = 20, category = L["Gestione"],
     build = function(parent) return buildPage(parent) end,
     refresh = function() if page.header then renderPage() end end,
 }

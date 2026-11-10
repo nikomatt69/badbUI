@@ -13,6 +13,7 @@
 --   Theme:Skin(frame, opts)            Theme:SetScheme(name)  Theme:SetAccent(r, g, b)
 -- Ogni cambio di tema spara il messaggio "BADB_THEME_CHANGED" sul bus eventi.
 local _, ns = ...
+local L = ns.Badb.L
 local Badb = ns.Badb
 local Events = Badb.Events
 
@@ -70,7 +71,7 @@ Theme.SCHEMES = {
         shadow = { 0, 0, 0, 0.35 },
     },
     night = {
-        label = "Notte",
+        label = L["Notte"],
         bg       = { 0.035, 0.047, 0.082, 0.96 },
         panel    = { 0.050, 0.064, 0.108, 0.98 },
         panelAlt = { 0.078, 0.096, 0.152, 1 },
@@ -84,7 +85,7 @@ Theme.SCHEMES = {
         shadow = { 0, 0, 0.02, 0.6 },
     },
     dusk = {
-        label = "Crepuscolo",
+        label = L["Crepuscolo"],
         bg       = { 0.092, 0.112, 0.176, 0.96 },
         panel    = { 0.108, 0.130, 0.200, 0.98 },
         panelAlt = { 0.136, 0.162, 0.246, 1 },
@@ -98,7 +99,7 @@ Theme.SCHEMES = {
         shadow = { 0, 0, 0.02, 0.6 },
     },
     graphite = {
-        label = "Grafite",
+        label = L["Grafite"],
         bg       = { 0.128, 0.134, 0.144, 0.96 },
         panel    = { 0.148, 0.154, 0.164, 0.98 },
         panelAlt = { 0.180, 0.188, 0.200, 1 },

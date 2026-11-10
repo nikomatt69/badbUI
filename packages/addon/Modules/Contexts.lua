@@ -15,6 +15,7 @@
 --  * Un cambio profilo causato dal motore non rilancia mai una valutazione (flag di origine).
 --  * Un cambio profilo manuale sospende l'auto-switch fino al prossimo cambio di contesto reale.
 local _, ns = ...
+local L = ns.Badb.L
 local Badb = ns.Badb
 local Events, Logger = Badb.Events, Badb.Logger
 
@@ -25,8 +26,8 @@ local MAX_PROFILE = 64
 local DEBOUNCE = 0.5
 
 local M = Badb.Modules:New("Contexts", {
-    title = "Contesti",
-    category = "Gestione",
+    title = L["Contesti"],
+    category = L["Gestione"],
     defaults = {
         enabled = true,
         autoSwitch = true,      -- il motore puo' cambiare profilo
@@ -35,9 +36,9 @@ local M = Badb.Modules:New("Contexts", {
         fallbackProfile = "",   -- profilo se nessuna regola corrisponde ("" = lascia l'attuale)
     },
     options = {
-        { type = "toggle", path = "autoSwitch", label = "Cambio profilo automatico per contesto" },
-        { type = "toggle", path = "respectManual", label = "Rispetta il cambio manuale (sospende fino al prossimo cambio di contesto)" },
-        { type = "range", path = "switchCooldown", label = "Pausa minima tra due cambi (s)", min = 0, max = 30, step = 1 },
+        { type = "toggle", path = "autoSwitch", label = L["Cambio profilo automatico per contesto"] },
+        { type = "toggle", path = "respectManual", label = L["Rispetta il cambio manuale (sospende fino al prossimo cambio di contesto)"] },
+        { type = "range", path = "switchCooldown", label = L["Pausa minima tra due cambi (s)"], min = 0, max = 30, step = 1 },
     },
 })
 Badb.Contexts = M
@@ -66,10 +67,10 @@ end
 local INSTANCE_SET, ROLE_SET, GROUP_SET = toSet(INSTANCES), toSet(ROLES), toSet(GROUPS)
 
 local LABELS = {
-    instance = { none = "Mondo aperto", party = "Dungeon", raid = "Istanza raid", pvp = "Campo di battaglia",
+    instance = { none = L["Mondo aperto"], party = "Dungeon", raid = L["Istanza raid"], pvp = L["Campo di battaglia"],
         arena = "Arena", scenario = "Scenario" },
-    role = { tank = "Tank", healer = "Guaritore", dps = "DPS", none = "Nessun ruolo" },
-    group = { solo = "Solo", party = "Gruppo", raid = "Raid" },
+    role = { tank = "Tank", healer = L["Guaritore"], dps = "DPS", none = L["Nessun ruolo"] },
+    group = { solo = "Solo", party = L["Gruppo"], raid = "Raid" },
 }
 local WHEN_ORDER = { "instance", "pvpKind", "group", "role", "spec", "class", "resting", "pvpFlag" }
 
@@ -80,13 +81,13 @@ local function describeWhen(when)
         if v ~= nil then
             if key == "spec" then parts[#parts + 1] = "spec " .. v
             elseif key == "class" then parts[#parts + 1] = v
-            elseif key == "resting" then parts[#parts + 1] = v and "a riposo" or "non a riposo"
-            elseif key == "pvpKind" then parts[#parts + 1] = v == "av" and "Alterac Valley" or "campo di battaglia 10-15"
-            elseif key == "pvpFlag" then parts[#parts + 1] = v and "flag PvP" or "senza flag PvP"
+            elseif key == "resting" then parts[#parts + 1] = v and L["a riposo"] or L["non a riposo"]
+            elseif key == "pvpKind" then parts[#parts + 1] = v == "av" and "Alterac Valley" or L["campo di battaglia 10-15"]
+            elseif key == "pvpFlag" then parts[#parts + 1] = v and L["flag PvP"] or L["senza flag PvP"]
             else parts[#parts + 1] = (LABELS[key] and LABELS[key][v]) or tostring(v) end
         end
     end
-    if #parts == 0 then return "sempre" end
+    if #parts == 0 then return L["sempre"] end
     return table.concat(parts, " + ")
 end
 
@@ -251,15 +252,15 @@ local CONDITIONS = {
 -- Ritorna (when pulito, errore|nil). Le chiavi non valide sono scartate e segnalate.
 local function normalizeWhen(when)
     if when == nil then return {} end
-    if type(when) ~= "table" then return {}, "condizioni non valide" end
+    if type(when) ~= "table" then return {}, L["condizioni non valide"] end
     local out, err = {}, nil
     for k, v in pairs(when) do
         local check = type(k) == "string" and CONDITIONS[k] or nil
         if not check then
-            err = err or ("condizione sconosciuta: " .. tostring(k))
+            err = err or (L["condizione sconosciuta: "] .. tostring(k))
         else
             local nv = check(v)
-            if nv == nil then err = err or ("valore non valido per " .. k) else out[k] = nv end
+            if nv == nil then err = err or (L["valore non valido per "] .. k) else out[k] = nv end
         end
     end
     return out, err
@@ -344,7 +345,7 @@ end
 
 local function brokenReason(rule)
     if rule.invalid then return rule.invalid end
-    if not profileExists(rule.profile) then return "profilo inesistente" end
+    if not profileExists(rule.profile) then return L["profilo inesistente"] end
     return nil
 end
 
@@ -371,7 +372,7 @@ end
 
 -- Valida i campi di una regola (completa per AddRule, parziale per UpdateRule).
 local function validateFields(src, partial)
-    if type(src) ~= "table" then return nil, "regola non valida" end
+    if type(src) ~= "table" then return nil, L["regola non valida"] end
     local out = {}
     if src.when ~= nil or not partial then
         local when, err = normalizeWhen(src.when)
@@ -380,20 +381,20 @@ local function validateFields(src, partial)
     end
     if src.profile ~= nil or not partial then
         if type(src.profile) ~= "string" or src.profile == "" or #src.profile > MAX_PROFILE then
-            return nil, "profilo mancante o non valido"
+            return nil, L["profilo mancante o non valido"]
         end
         out.profile = src.profile
     end
     if src.priority ~= nil then
-        if not isNumber(src.priority) then return nil, "priorita' non valida" end
+        if not isNumber(src.priority) then return nil, L["priorita' non valida"] end
         out.priority = cleanPriority(src.priority)
     elseif not partial then out.priority = 0 end
     if src.enabled ~= nil then
-        if type(src.enabled) ~= "boolean" then return nil, "enabled deve essere booleano" end
+        if type(src.enabled) ~= "boolean" then return nil, L["enabled deve essere booleano"] end
         out.enabled = src.enabled
     elseif not partial then out.enabled = true end
     if src.name ~= nil then
-        if type(src.name) ~= "string" then return nil, "nome non valido" end
+        if type(src.name) ~= "string" then return nil, L["nome non valido"] end
         out.name = src.name:sub(1, MAX_NAME)
     end
     return out
@@ -431,16 +432,16 @@ end
 
 function M:AddRule(rule)
     local store = getStore()
-    if not store then return nil, "database non pronto" end
+    if not store then return nil, L["database non pronto"] end
     local f, err = validateFields(rule, false)
     if not f then return nil, err end
-    if #store.rules >= MAX_RULES then return nil, "limite di regole raggiunto" end
+    if #store.rules >= MAX_RULES then return nil, L["limite di regole raggiunto"] end
     local used = {}
     for _, r in ipairs(store.rules) do used[r.id] = true end
     local id = rule.id
     if id ~= nil then
-        if type(id) ~= "string" or id == "" or #id > 40 then return nil, "id non valido" end
-        if used[id] then return nil, "id duplicato" end
+        if type(id) ~= "string" or id == "" or #id > 40 then return nil, L["id non valido"] end
+        if used[id] then return nil, L["id duplicato"] end
     else
         id = nextId(store, used)
     end
@@ -453,9 +454,9 @@ end
 
 function M:UpdateRule(id, patch)
     local store = getStore()
-    if not store then return false, "database non pronto" end
+    if not store then return false, L["database non pronto"] end
     local i = indexOf(store, id)
-    if not i then return false, "regola inesistente" end
+    if not i then return false, L["regola inesistente"] end
     local f, err = validateFields(patch, true)
     if not f then return false, err end
     local r = store.rules[i]
@@ -466,15 +467,15 @@ function M:UpdateRule(id, patch)
 end
 
 function M:SetEnabled(id, value)
-    if type(value) ~= "boolean" then return false, "valore non booleano" end
+    if type(value) ~= "boolean" then return false, L["valore non booleano"] end
     return self:UpdateRule(id, { enabled = value })
 end
 
 function M:RemoveRule(id)
     local store = getStore()
-    if not store then return false, "database non pronto" end
+    if not store then return false, L["database non pronto"] end
     local i = indexOf(store, id)
-    if not i then return false, "regola inesistente" end
+    if not i then return false, L["regola inesistente"] end
     table.remove(store.rules, i)
     self:Touch()
     return true
@@ -482,10 +483,10 @@ end
 
 function M:MoveRule(id, delta)
     local store = getStore()
-    if not store then return false, "database non pronto" end
+    if not store then return false, L["database non pronto"] end
     local i = indexOf(store, id)
-    if not i then return false, "regola inesistente" end
-    if not isNumber(delta) then return false, "spostamento non valido" end
+    if not i then return false, L["regola inesistente"] end
+    if not isNumber(delta) then return false, L["spostamento non valido"] end
     local n = #store.rules
     local j = math.max(1, math.min(n, i + math.floor(delta)))
     if j ~= i then
@@ -527,7 +528,7 @@ end
 -- Schema: kind, condizioni, priorita', chiave template Presets "<classe>-<mode>-<scenario>"
 local CLASS_RULE_KINDS = {
     { kind = "av", when = { instance = "pvp", pvpKind = "av" }, priority = 30, preset = "pvp-av", label = "Alterac Valley" },
-    { kind = "pvp", when = { instance = "pvp" }, priority = 20, preset = "pvp-bg", label = "Campo di battaglia" },
+    { kind = "pvp", when = { instance = "pvp" }, priority = 20, preset = "pvp-bg", label = L["Campo di battaglia"] },
     { kind = "raid", when = { instance = "raid" }, priority = 20, preset = "pve-raid", label = "Raid" },
     { kind = "party", when = { instance = "party" }, priority = 10, preset = "pve-dungeon", label = "Dungeon" },
     { kind = "solo", when = { instance = "none", group = "solo" }, priority = 0, preset = "pve-solo", label = "Solo" },
@@ -539,15 +540,15 @@ local CLASS_RULE_KINDS = {
 -- sono saltati. Alterac (kind "av", condizione pvpKind=av, priorita' maggiore) ha un profilo a parte; senza `profiles.av` vale la regola "pvp" anche li'. Il rilevamento di Alterac non e' verificato in gioco.
 -- Ritorna { ids = {...}, skipped = {...} } oppure nil, err.
 function M:AddRulesForClass(classToken, profiles)
-    if type(classToken) ~= "string" then return nil, "classe non valida" end
+    if type(classToken) ~= "string" then return nil, L["classe non valida"] end
     classToken = classToken:upper()
-    if not classToken:match("^%u+$") or #classToken > 20 then return nil, "classe non valida" end
+    if not classToken:match("^%u+$") or #classToken > 20 then return nil, L["classe non valida"] end
     local P = Badb.Player
     if type(P) == "table" and type(P.GetClassInfo) == "function" then
         local ok, info = pcall(P.GetClassInfo, P, classToken)
-        if ok and not info then return nil, "classe sconosciuta: " .. classToken end
+        if ok and not info then return nil, L["classe sconosciuta: "] .. classToken end
     end
-    if type(profiles) ~= "table" then return nil, "profili mancanti" end
+    if type(profiles) ~= "table" then return nil, L["profili mancanti"] end
     local result = { ids = {}, skipped = {} }
     for _, def in ipairs(CLASS_RULE_KINDS) do
         local profile = profiles[def.kind]
@@ -658,13 +659,13 @@ function M:_switchTo(profile, ruleId)
     local ok, err = pcall(DB.SetProfile, DB, profile)
     self._applying = false
     if not ok then
-        Logger:Error("Contexts: cambio profilo fallito - %s", tostring(err))
+        Logger:Error(L["Contexts: cambio profilo fallito - %s"], tostring(err))
         return false
     end
     self._lastSwitch = clock()
     self._manual = false
     self.stats.switches = self.stats.switches + 1
-    Logger:Debug("Contesto: profilo '%s'%s", profile, ruleId and (" (regola " .. ruleId .. ")") or " (profilo base)")
+    Logger:Debug(L["Contesto: profilo '%s'%s"], profile, ruleId and (L[" (regola "] .. ruleId .. ")") or L[" (profilo base)"])
     if ruleId then Events:Fire("BADB_RULE_MATCHED", ruleId, profile) end
     return true
 end
@@ -730,7 +731,7 @@ end
 
 -- Valutazione immediata (ignora debounce, isteresi, override manuale e opzione auto-switch).
 function M:Apply()
-    if not self._active then return false, "modulo disattivo" end
+    if not self._active then return false, L["modulo disattivo"] end
     local gen = self._gen
     Events:RunOutOfCombat("contextEval", function() M:_run(gen, true) end)
     return true
@@ -794,17 +795,17 @@ end
 -- Comandi: /badb context status | list | eval [apply]
 ---------------------------------------------------------------------------
 local function ctxText(ctx)
-    return string.format("istanza=%s gruppo=%s ruolo=%s%s spec=%s classe=%s riposo=%s flagPvP=%s",
+    return string.format(L["istanza=%s gruppo=%s ruolo=%s%s spec=%s classe=%s riposo=%s flagPvP=%s"],
         ctx.instance, ctx.group, ctx.role, ctx.roleConfidence ~= "high" and ("(" .. tostring(ctx.roleConfidence) .. ")") or "",
-        tostring(ctx.spec), ctx.class ~= "" and ctx.class or "?", ctx.resting and "si" or "no",
-        ctx.pvpFlag and "si" or "no")
+        tostring(ctx.spec), ctx.class ~= "" and ctx.class or "?", ctx.resting and L["si"] or "no",
+        ctx.pvpFlag and L["si"] or "no")
 end
 
 function M:StatusText()
     local ctx = self:GetCurrent()
     local profile, ruleId = self:Evaluate(ctx)
     local rule = ruleId and self:GetRule(ruleId)
-    local win = rule and string.format("%s -> %s", rule.name, rule.profile) or "nessuna"
+    local win = rule and string.format("%s -> %s", rule.name, rule.profile) or L["nessuna"]
     return ctxText(ctx), win, profile
 end
 
@@ -817,26 +818,26 @@ M.commands = {
             if sub == "" or sub == "status" then
                 local c, win = M:StatusText()
                 local DB = Badb.DB
-                Logger:Info("Contesti: auto-switch %s%s", M:Option("autoSwitch", true) == true and "attivo" or "spento",
-                    M._manual and " (sospeso: cambio manuale)" or "")
-                Logger:Info("Contesto: %s", c)
-                Logger:Info("Regola vincente: %s (profilo attivo: %s)", win, DB and DB:GetProfileName() or "?")
+                Logger:Info(L["Contesti: auto-switch %s%s"], M:Option("autoSwitch", true) == true and L["attivo"] or L["spento"],
+                    M._manual and L[" (sospeso: cambio manuale)"] or "")
+                Logger:Info(L["Contesto: %s"], c)
+                Logger:Info(L["Regola vincente: %s (profilo attivo: %s)"], win, DB and DB:GetProfileName() or "?")
             elseif sub == "list" then
                 local rules = M:ListRules()
-                if #rules == 0 then Logger:Info("Nessuna regola. Creala dalla pagina Contesti.") end
+                if #rules == 0 then Logger:Info(L["Nessuna regola. Creala dalla pagina Contesti."]) end
                 for i, r in ipairs(rules) do
-                    Logger:Info("%d. [%s] %s: %s -> %s (priorita' %d)%s%s", i, r.id, r.name, describeWhen(r.when),
-                        r.profile ~= "" and r.profile or "?", r.priority, r.enabled and "" or " [disattivata]",
-                        r.broken and (" [ROTTA: " .. tostring(r.brokenReason) .. "]") or "")
+                    Logger:Info(L["%d. [%s] %s: %s -> %s (priorita' %d)%s%s"], i, r.id, r.name, describeWhen(r.when),
+                        r.profile ~= "" and r.profile or "?", r.priority, r.enabled and "" or L[" [disattivata]"],
+                        r.broken and (L[" [ROTTA: "] .. tostring(r.brokenReason) .. "]") or "")
                 end
             elseif sub == "eval" then
                 if rest:lower() == "apply" then
                     local ok, err = M:Apply()
-                    Logger:Info(ok and "Valutazione eseguita." or ("Valutazione non eseguita: " .. tostring(err)))
+                    Logger:Info(ok and L["Valutazione eseguita."] or (L["Valutazione non eseguita: "] .. tostring(err)))
                 else
                     local c, win, profile = M:StatusText()
-                    Logger:Info("Contesto: %s", c)
-                    Logger:Info("Valutazione: %s (profilo %s). Usa 'eval apply' per applicarlo.", win, profile or "-")
+                    Logger:Info(L["Contesto: %s"], c)
+                    Logger:Info(L["Valutazione: %s (profilo %s). Usa 'eval apply' per applicarlo."], win, profile or "-")
                 end
             else
                 Logger:Info("/badb context status | list | eval [apply]")
@@ -873,7 +874,7 @@ local function cycle(parent, x, y, w, label, values, get, set, fmt, nilText)
     local b
     local function show()
         local v = get()
-        b:SetText(label .. ": " .. (v == nil and (nilText or "qualsiasi") or fmt(v)))
+        b:SetText(label .. ": " .. (v == nil and (nilText or L["qualsiasi"]) or fmt(v)))
     end
     b = button(parent, x, y, w, label, function()
         local list = values()
@@ -891,8 +892,8 @@ function M:RefreshPage()
     if not page then return end
     pcall(function()
         local c, win = self:StatusText()
-        page.ctxLine:SetText("Contesto: " .. c)
-        page.winLine:SetText("Regola vincente: " .. win)
+        page.ctxLine:SetText(L["Contesto: "] .. c)
+        page.winLine:SetText(L["Regola vincente: "] .. win)
         local rules = self:ListRules()
         for i, row in ipairs(page.rows) do
             local r = rules[i]
@@ -902,7 +903,7 @@ function M:RefreshPage()
                 local label = string.format("%s  |  %s -> %s  (prio %d)", r.name, describeWhen(r.when),
                     r.profile ~= "" and r.profile or "?", r.priority)
                 if r.broken then
-                    label = label .. "  [ROTTA: " .. tostring(r.brokenReason) .. "]"
+                    label = label .. L["  [ROTTA: "] .. tostring(r.brokenReason) .. "]"
                     row.label:SetTextColor(1, 0.3, 0.3)
                 else
                     row.label:SetTextColor(r.enabled and 1 or 0.55, r.enabled and 1 or 0.55, r.enabled and 1 or 0.55)
@@ -929,7 +930,7 @@ local function buildPage(parent)
     page.winLine = text(parent, 0, y, 560); y = y + 28
 
     local header = text(parent, 0, y, 560, "GameFontNormal")
-    header:SetText("Nuova regola (le condizioni scelte valgono tutte insieme)")
+    header:SetText(L["Nuova regola (le condizioni scelte valgono tutte insieme)"])
     y = y + 24
 
     local function profiles()
@@ -941,12 +942,12 @@ local function buildPage(parent)
     end
     local function labelFor(kind) return function(v) return LABELS[kind][v] or tostring(v) end end
 
-    add(0, y, "Istanza", function() return GENERATED_INSTANCES end, "instance", labelFor("instance"))
-    add(190, y, "Gruppo", function() return GROUPS end, "group", labelFor("group"))
-    add(380, y, "Ruolo", function() return ROLES end, "role", labelFor("role"))
+    add(0, y, L["Istanza"], function() return GENERATED_INSTANCES end, "instance", labelFor("instance"))
+    add(190, y, L["Gruppo"], function() return GROUPS end, "group", labelFor("group"))
+    add(380, y, L["Ruolo"], function() return ROLES end, "role", labelFor("role"))
     y = y + 26
     add(0, y, "Spec", function() return { 1, 2, 3, 4 } end, "spec")
-    add(190, y, "Classe", function()
+    add(190, y, L["Classe"], function()
         local P = Badb.Player
         if type(P) == "table" and type(P.ListClasses) == "function" then
             local ok, list = pcall(P.ListClasses, P, true)
@@ -958,43 +959,43 @@ local function buildPage(parent)
         end
         return CLASSES
     end, "class")
-    add(380, y, "Riposo", function() return { true, false } end, "resting", function(v) return v and "si" or "no" end)
+    add(380, y, L["Riposo"], function() return { true, false } end, "resting", function(v) return v and L["si"] or "no" end)
     y = y + 26
     -- Il profilo non e' mai "qualsiasi": il ciclo riparte dal primo.
     local profileBtn
-    profileBtn = cycle(parent, 0, y, 180, "Profilo", profiles,
+    profileBtn = cycle(parent, 0, y, 180, L["Profilo"], profiles,
         function() return form.profile or (DB and DB:GetProfileName()) end,
         function(v) form.profile = v or profiles()[1] end, tostring)
     page.cycles[#page.cycles + 1] = profileBtn
-    page.cycles[#page.cycles + 1] = cycle(parent, 190, y, 180, "Priorita'",
+    page.cycles[#page.cycles + 1] = cycle(parent, 190, y, 180, L["Priorita'"],
         function() return { 0, 10, 20, 30, 40, 50, -10 } end,
         function() return form.priority end, function(v) form.priority = v or 0 end, tostring)
-    add(380, y, "Flag PvP", function() return { true, false } end, "pvpFlag", function(v) return v and "si" or "no" end)
+    add(380, y, L["Flag PvP"], function() return { true, false } end, "pvpFlag", function(v) return v and L["si"] or "no" end)
     y = y + 26
     page.feedback = text(parent, 190, y + 4, 370)
-    page.createBtn = button(parent, 0, y, 180, "Crea regola", function()
+    page.createBtn = button(parent, 0, y, 180, L["Crea regola"], function()
         local when = { instance = form.instance, group = form.group, role = form.role,
             spec = form.spec, class = form.class, resting = form.resting, pvpFlag = form.pvpFlag }
         local id, err = M:AddRule({ when = when, profile = form.profile or (DB and DB:GetProfileName()),
             priority = form.priority })
-        page.feedback:SetText(id and "Regola creata." or ("Errore: " .. tostring(err)))
+        page.feedback:SetText(id and L["Regola creata."] or (L["Errore: "] .. tostring(err)))
         M:RefreshPage()
     end)
     y = y + 32
 
     local fallback = text(parent, 0, y + 4, 180)
-    fallback:SetText("Se nessuna regola corrisponde:")
-    page.cycles[#page.cycles + 1] = cycle(parent, 190, y, 250, "Profilo base",
+    fallback:SetText(L["Se nessuna regola corrisponde:"])
+    page.cycles[#page.cycles + 1] = cycle(parent, 190, y, 250, L["Profilo base"],
         profiles,
         function()
             local v = M:Option("fallbackProfile", "")
             return v ~= "" and v or nil
         end,
-        function(v) M:Set("fallbackProfile", v or "") end, tostring, "nessuno (lascia l'attuale)")
+        function(v) M:Set("fallbackProfile", v or "") end, tostring, L["nessuno (lascia l'attuale)"])
     y = y + 34
 
     local rulesHeader = text(parent, 0, y, 560, "GameFontNormal")
-    rulesHeader:SetText("Regole (a parita' di priorita' vince la prima)")
+    rulesHeader:SetText(L["Regole (a parita' di priorita' vince la prima)"])
     y = y + 24
 
     for i = 1, MAX_RULES do
@@ -1010,8 +1011,8 @@ local function buildPage(parent)
         end)
         row.check = check
         row.label = text(frame, 28, 6, 368)
-        row.up = button(frame, 400, 0, 40, "Su", function() if row.rule then M:MoveRule(row.rule, -1) end; M:RefreshPage() end)
-        row.down = button(frame, 444, 0, 40, "Giu", function() if row.rule then M:MoveRule(row.rule, 1) end; M:RefreshPage() end)
+        row.up = button(frame, 400, 0, 40, L["Su"], function() if row.rule then M:MoveRule(row.rule, -1) end; M:RefreshPage() end)
+        row.down = button(frame, 444, 0, 40, L["Giu"], function() if row.rule then M:MoveRule(row.rule, 1) end; M:RefreshPage() end)
         row.del = button(frame, 488, 0, 28, "X", function() if row.rule then M:RemoveRule(row.rule) end; M:RefreshPage() end)
         frame:Hide()
         page.rows[i] = row
@@ -1023,9 +1024,9 @@ local function buildPage(parent)
 end
 
 M.page = {
-    title = "Contesti",
+    title = L["Contesti"],
     order = 30,
-    category = "Gestione",
+    category = L["Gestione"],
     build = function(parent) return buildPage(parent) end,
     refresh = function() M:RefreshPage() end,
 }

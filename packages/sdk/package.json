@@ -11,7 +11,8 @@
     "test": "bun test"
   },
   "dependencies": {
-    "@badb/core": "workspace:*"
+    "@badb/core": "workspace:*",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@badb/server": "workspace:*",

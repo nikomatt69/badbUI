@@ -5,6 +5,9 @@ import type { z } from "zod"
 
 type In<T extends z.ZodType> = z.input<T>
 
+/** Server centrale pubblicato. I client possono sostituirlo per sviluppo o installazioni proprie. */
+export const DEFAULT_SERVER_URL = "https://badb-guild.nikoemme-work.workers.dev"
+
 export class ApiError extends Error {
   constructor(
     readonly status: number,
@@ -22,12 +25,18 @@ export type Options = {
   /** Solo per il bot Discord: segreto condiviso con il server. */
   bot?: string
   fetch?: typeof fetch
+  timeout?: number
 }
 
 export type Session = { token: string; user: Schema.User }
 export type Link = { code: string; expires: number }
 export type Ok = { ok: true }
-export type Said = { entry: Schema.Availability; week: string; changed: { day: number; start: number; end: number }[]; removed: boolean }
+export type Said = {
+  entry: Schema.Availability
+  week: string
+  changed: { day: number; start: number; end: number }[]
+  removed: boolean
+}
 
 export function createClient(options: Options) {
   const base = options.url.replace(/\/+$/, "")
@@ -46,8 +55,11 @@ export function createClient(options: Options) {
       method,
       headers: { ...headers(discord), ...(body === undefined ? {} : { "content-type": "application/json" }) },
       body: body === undefined ? undefined : JSON.stringify(body),
+      signal: AbortSignal.timeout(options.timeout ?? 15_000),
     })
-    const data = (await response.json().catch(() => ({ error: `Risposta non valida (${response.status})` }))) as unknown
+    const data: unknown = await response.json().catch(() => {
+      throw new ApiError(response.status || 502, `Risposta JSON non valida (${response.status})`)
+    })
     if (!response.ok) {
       const failure = data as Schema.ApiError
       throw new ApiError(response.status, failure.error ?? `Errore ${response.status}`, failure.issues ?? [])
@@ -67,6 +79,7 @@ export function createClient(options: Options) {
         set: (input: In<typeof Schema.GuildInput>) => call<Schema.Guild>("PUT", "/guild", input),
       },
       auth: {
+        setup: () => get<{ required: boolean }>("/auth/setup"),
         register: (input: In<typeof Schema.Credentials>) => call<Session>("POST", "/auth/register", input),
         login: (input: { name: string; password: string }) => call<Session>("POST", "/auth/login", input),
         logout: () => call<Ok>("POST", "/auth/logout"),
@@ -81,10 +94,13 @@ export function createClient(options: Options) {
         rank: (user: string, rank: Game.Rank) => call<Schema.User>("PATCH", `/member/${id(user)}`, { rank }),
       },
       character: {
+        owner: (character: string, userId: string | null) =>
+          call<Schema.Character>("PUT", `/character/${id(character)}/owner`, { userId }),
         list: () => get<Schema.Character[]>("/character"),
         get: (name: string) => get<Schema.Character>(`/character/${id(name)}`),
         save: (input: In<typeof Schema.CharacterInput>) => call<Schema.Character>("POST", "/character", input),
-        patch: (character: string, input: In<typeof Schema.CharacterPatch>) => call<Schema.Character>("PATCH", `/character/${id(character)}`, input),
+        patch: (character: string, input: In<typeof Schema.CharacterPatch>) =>
+          call<Schema.Character>("PATCH", `/character/${id(character)}`, input),
         remove: (character: string) => request<Ok>("DELETE", `/character/${id(character)}`, undefined, discord),
       },
       application: {
@@ -101,12 +117,15 @@ export function createClient(options: Options) {
       group: {
         list: () => get<Schema.Group[]>("/group"),
         create: (input: In<typeof Schema.GroupInput>) => call<Schema.Group>("POST", "/group", input),
-        update: (group: string, input: In<typeof Schema.GroupInput>) => call<Schema.Group>("PUT", `/group/${id(group)}`, input),
+        update: (group: string, input: In<typeof Schema.GroupInput>) =>
+          call<Schema.Group>("PUT", `/group/${id(group)}`, input),
         remove: (group: string) => request<Ok>("DELETE", `/group/${id(group)}`, undefined, discord),
-        setMember: (group: string, input: In<typeof Schema.MemberInput>) => call<Schema.Group>("PUT", `/group/${id(group)}/member`, input),
+        setMember: (group: string, input: In<typeof Schema.MemberInput>) =>
+          call<Schema.Group>("PUT", `/group/${id(group)}/member`, input),
         removeMember: (group: string, character: string) =>
           request<Schema.Group>("DELETE", `/group/${id(group)}/member/${id(character)}`, undefined, discord),
-        schedule: (group: string, week: string) => call<Schema.RaidEvent[]>("POST", `/group/${id(group)}/schedule`, { week }),
+        schedule: (group: string, week: string) =>
+          call<Schema.RaidEvent[]>("POST", `/group/${id(group)}/schedule`, { week }),
       },
       event: {
         list: (range?: { from?: number; to?: number }) => {
@@ -119,31 +138,39 @@ export function createClient(options: Options) {
         get: (event: string) => get<Schema.RaidEvent>(`/raid/event/${id(event)}`),
         analysis: (event: string) => get<Schema.EventAnalysis>(`/raid/event/${id(event)}/analysis`),
         create: (input: In<typeof Schema.EventInput>) => call<Schema.RaidEvent>("POST", "/raid/event", input),
-        update: (event: string, input: In<typeof Schema.EventPatch>) => call<Schema.RaidEvent>("PATCH", `/raid/event/${id(event)}`, input),
+        update: (event: string, input: In<typeof Schema.EventPatch>) =>
+          call<Schema.RaidEvent>("PATCH", `/raid/event/${id(event)}`, input),
         remove: (event: string) => request<Ok>("DELETE", `/raid/event/${id(event)}`, undefined, discord),
-        signup: (event: string, input: In<typeof Schema.SignupInput>) => call<Schema.RaidEvent>("PUT", `/raid/event/${id(event)}/signup`, input),
-        pick: (event: string, input: In<typeof Schema.PickInput>) => call<Schema.RaidEvent>("PUT", `/raid/event/${id(event)}/pick`, input),
+        signup: (event: string, input: In<typeof Schema.SignupInput>) =>
+          call<Schema.RaidEvent>("PUT", `/raid/event/${id(event)}/signup`, input),
+        pick: (event: string, input: In<typeof Schema.PickInput>) =>
+          call<Schema.RaidEvent>("PUT", `/raid/event/${id(event)}/pick`, input),
       },
       boss: {
         list: (raid?: string) => get<Schema.Boss[]>(`/boss${raid ? `?raid=${id(raid)}` : ""}`),
         get: (boss: string) => get<Schema.BossDetail>(`/boss/${id(boss)}`),
         create: (input: In<typeof Schema.BossInput>) => call<Schema.BossDetail>("POST", "/boss", input),
-        update: (boss: string, input: In<typeof Schema.BossInput>) => call<Schema.BossDetail>("PUT", `/boss/${id(boss)}`, input),
+        update: (boss: string, input: In<typeof Schema.BossInput>) =>
+          call<Schema.BossDetail>("PUT", `/boss/${id(boss)}`, input),
         remove: (boss: string) => request<Ok>("DELETE", `/boss/${id(boss)}`, undefined, discord),
       },
       tactics: {
         get: () => get<Schema.Capabilities>("/tactics"),
         set: (patch: In<typeof Schema.MatrixPatch>) => call<Schema.Capabilities>("PUT", "/tactics", patch),
-        rank: (weights: Tactics.Weights) => call<Record<Game.Role, Tactics.Fit[]>>("POST", "/tactics/rank", { weights }),
+        rank: (weights: Tactics.Weights) =>
+          call<Record<Game.Role, Tactics.Fit[]>>("POST", "/tactics/rank", { weights }),
       },
       post: {
         list: (kind?: "blog" | "guide") => get<Schema.PostSummary[]>(`/post${kind ? `?kind=${kind}` : ""}`),
         get: (kind: "blog" | "guide", slug: string) => get<Schema.Post>(`/post/${kind}/${id(slug)}`),
         create: (input: In<typeof Schema.PostInput>) => call<Schema.Post>("POST", "/post", input),
-        update: (post: string, input: In<typeof Schema.PostInput>) => call<Schema.Post>("PUT", `/post/${id(post)}`, input),
+        update: (post: string, input: In<typeof Schema.PostInput>) =>
+          call<Schema.Post>("PUT", `/post/${id(post)}`, input),
         remove: (post: string) => request<Ok>("DELETE", `/post/${id(post)}`, undefined, discord),
       },
       addon: {
+        status: () => get<Schema.AddonConnection | null>("/addon/status"),
+        connections: () => get<Schema.AddonConnection[]>("/addon/connections"),
         sync: (input: In<typeof Schema.AddonSync>) => call<Schema.SyncResult>("POST", "/addon/sync", input),
         bundle: () => get<Schema.SyncResult>("/addon/bundle"),
       },
@@ -158,11 +185,20 @@ export function createClient(options: Options) {
     const controller = new AbortController()
     const wait = (ms: number) =>
       new Promise<void>((resolve) => {
-        const timer = setTimeout(resolve, ms)
-        controller.signal.addEventListener("abort", () => (clearTimeout(timer), resolve()), { once: true })
+        const done = () => {
+          clearTimeout(timer)
+          controller.signal.removeEventListener("abort", done)
+          resolve()
+        }
+        const timer = setTimeout(done, ms)
+        controller.signal.addEventListener("abort", done, { once: true })
+        if (controller.signal.aborted) done()
       })
     const read = async () => {
-      const response = await send(`${base}/event`, { headers: { accept: "text/event-stream" }, signal: controller.signal })
+      const response = await send(`${base}/event`, {
+        headers: { accept: "text/event-stream" },
+        signal: controller.signal,
+      })
       if (!response.ok || !response.body) throw new ApiError(response.status, "Flusso eventi non disponibile")
       onState?.(true)
       const reader = response.body.getReader()

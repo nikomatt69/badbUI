@@ -8,14 +8,15 @@
 -- nameplate "forbidden" (amiche in istanza): C_NamePlate.GetNamePlateForUnit(unit, issecure())
 -- le esclude da solo.
 local _, ns = ...
+local L = ns.Badb.L
 local Badb = ns.Badb
 local CVars, Compat = Badb.CVars, Badb.Compat
 
-local STACK_MODES = { { value = "stack", text = "Impilate (consigliato)" }, { value = "overlap", text = "Sovrapposte" } }
+local STACK_MODES = { { value = "stack", text = L["Impilate (consigliato)"] }, { value = "overlap", text = L["Sovrapposte"] } }
 local TEXTURES = {
     { value = "blizzard", text = "Blizzard" },
-    { value = "flat", text = "Piatta (Badb)" },
-    { value = "smooth", text = "Morbida" },
+    { value = "flat", text = L["Piatta (Badb)"] },
+    { value = "smooth", text = L["Morbida"] },
 }
 local TEXTURE_PATHS = {
     flat = "Interface\\Buttons\\WHITE8X8",
@@ -24,8 +25,8 @@ local TEXTURE_PATHS = {
 
 local M = Badb.Modules:New("Nameplates", {
     title = "Nameplate",
-    category = "Combattimento",
-    description = "Visibilita', impilamento e stile delle barre sopra le unita'.",
+    category = L["Combattimento"],
+    description = L["Visibilita', impilamento e stile delle barre sopra le unita'."],
     defaults = {
         enabled = false,
         showEnemies = true,
@@ -50,26 +51,26 @@ local M = Badb.Modules:New("Nameplates", {
 })
 
 M.options = {
-    { type = "header", label = "Visibilita'" },
-    { type = "toggle", path = "showEnemies", label = "Nemici" },
-    { type = "toggle", path = "showFriends", label = "Alleati" },
-    { type = "toggle", path = "showAlways", label = "Sempre visibili (anche fuori combattimento)" },
-    { type = "toggle", path = "showMinions", label = "Pet, totem e guardiani nemici" },
-    { type = "toggle", path = "personalBar", label = "Barra personale (risorse sotto il personaggio)" },
-    { type = "range", path = "maxDistance", label = "Distanza massima (yard)", min = 20, max = 60, step = 1 },
-    { type = "header", label = "Disposizione" },
-    { type = "select", path = "stacking", label = "Impilamento", values = STACK_MODES },
-    { type = "range", path = "overlapV", label = "Spaziatura verticale", min = 0.5, max = 2, step = 0.05 },
-    { type = "range", path = "globalScale", label = "Scala", min = 0.6, max = 1.6, step = 0.05 },
-    { type = "range", path = "selectedScale", label = "Scala bersaglio", min = 1, max = 1.6, step = 0.05 },
-    { type = "range", path = "minAlpha", label = "Trasparenza non bersagliati", min = 0.2, max = 1, step = 0.05 },
-    { type = "range", path = "occludedAlpha", label = "Trasparenza dietro ostacoli", min = 0.1, max = 1, step = 0.05 },
-    { type = "header", label = "Stile" },
-    { type = "toggle", path = "classColorEnemies", label = "Colore di classe (nemici)" },
-    { type = "toggle", path = "classColorFriends", label = "Colore di classe (alleati)" },
-    { type = "select", path = "texture", label = "Texture barra", values = TEXTURES },
-    { type = "range", path = "nameSize", label = "Dimensione nome", min = 7, max = 16, step = 1 },
-    { type = "toggle", path = "targetBorder", label = "Bordo evidenziato sul bersaglio" },
+    { type = "header", label = L["Visibilita'"] },
+    { type = "toggle", path = "showEnemies", label = L["Nemici"] },
+    { type = "toggle", path = "showFriends", label = L["Alleati"] },
+    { type = "toggle", path = "showAlways", label = L["Sempre visibili (anche fuori combattimento)"] },
+    { type = "toggle", path = "showMinions", label = L["Pet, totem e guardiani nemici"] },
+    { type = "toggle", path = "personalBar", label = L["Barra personale (risorse sotto il personaggio)"] },
+    { type = "range", path = "maxDistance", label = L["Distanza massima (yard)"], min = 20, max = 60, step = 1 },
+    { type = "header", label = L["Disposizione"] },
+    { type = "select", path = "stacking", label = L["Impilamento"], values = STACK_MODES },
+    { type = "range", path = "overlapV", label = L["Spaziatura verticale"], min = 0.5, max = 2, step = 0.05 },
+    { type = "range", path = "globalScale", label = L["Scala"], min = 0.6, max = 1.6, step = 0.05 },
+    { type = "range", path = "selectedScale", label = L["Scala bersaglio"], min = 1, max = 1.6, step = 0.05 },
+    { type = "range", path = "minAlpha", label = L["Trasparenza non bersagliati"], min = 0.2, max = 1, step = 0.05 },
+    { type = "range", path = "occludedAlpha", label = L["Trasparenza dietro ostacoli"], min = 0.1, max = 1, step = 0.05 },
+    { type = "header", label = L["Stile"] },
+    { type = "toggle", path = "classColorEnemies", label = L["Colore di classe (nemici)"] },
+    { type = "toggle", path = "classColorFriends", label = L["Colore di classe (alleati)"] },
+    { type = "select", path = "texture", label = L["Texture barra"], values = TEXTURES },
+    { type = "range", path = "nameSize", label = L["Dimensione nome"], min = 7, max = 16, step = 1 },
+    { type = "toggle", path = "targetBorder", label = L["Bordo evidenziato sul bersaglio"] },
 }
 
 -- Tabella di traduzione opzione -> CVar

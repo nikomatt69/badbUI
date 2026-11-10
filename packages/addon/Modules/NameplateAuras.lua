@@ -7,18 +7,19 @@
 -- Le nameplate "forbidden" (amiche in istanza) non si toccano: GetNamePlateForUnit(unit, issecure())
 -- le esclude. Disattivando il modulo si ripristinano le aure Blizzard.
 local _, ns = ...
+local L = ns.Badb.L
 local Badb = ns.Badb
 local Compat, Auras = Badb.Compat, Badb.Auras
 
 local OWN_MODES = {
-    { value = "curated", text = "Curati per la mia classe" },
-    { value = "all", text = "Tutti i miei debuff" },
-    { value = "off", text = "Nessuno" },
+    { value = "curated", text = L["Curati per la mia classe"] },
+    { value = "all", text = L["Tutti i miei debuff"] },
+    { value = "off", text = L["Nessuno"] },
 }
 local FRIEND_MODES = {
-    { value = "cc", text = "Solo controllo (CC)" },
-    { value = "all", text = "CC e difensivi" },
-    { value = "off", text = "Niente" },
+    { value = "cc", text = L["Solo controllo (CC)"] },
+    { value = "all", text = L["CC e difensivi"] },
+    { value = "off", text = L["Niente"] },
 }
 
 -- Dove finisce ogni categoria sulla nameplate.
@@ -29,9 +30,9 @@ local SLOT_OF = {
 }
 
 local M = Badb.Modules:New("NameplateAuras", {
-    title = "Aure sulle nameplate",
-    category = "Combattimento",
-    description = "CC grande a destra, difensivi e offensivi nemici a sinistra, i tuoi debuff sopra.",
+    title = L["Aure sulle nameplate"],
+    category = L["Combattimento"],
+    description = L["CC grande a destra, difensivi e offensivi nemici a sinistra, i tuoi debuff sopra."],
     dependencies = { "Auras" },
     defaults = {
         enabled = false,
@@ -55,28 +56,28 @@ local M = Badb.Modules:New("NameplateAuras", {
 })
 
 M.options = {
-    { type = "header", label = "Cosa mostrare" },
-    { type = "select", path = "ownDebuffs", label = "I miei debuff (sopra la barra)", values = OWN_MODES },
-    { type = "select", path = "friendly", label = "Nameplate alleate", values = FRIEND_MODES },
-    { type = "toggle", path = "categories.cc", label = "Controllo: stun, fear, polymorph, sleep" },
-    { type = "toggle", path = "categories.silence", label = "Silence e disarm" },
+    { type = "header", label = L["Cosa mostrare"] },
+    { type = "select", path = "ownDebuffs", label = L["I miei debuff (sopra la barra)"], values = OWN_MODES },
+    { type = "select", path = "friendly", label = L["Nameplate alleate"], values = FRIEND_MODES },
+    { type = "toggle", path = "categories.cc", label = L["Controllo: stun, fear, polymorph, sleep"] },
+    { type = "toggle", path = "categories.silence", label = L["Silence e disarm"] },
     { type = "toggle", path = "categories.root", label = "Root" },
-    { type = "toggle", path = "categories.immunity", label = "Immunita' (bolle, Ice Block)" },
-    { type = "toggle", path = "categories.defensive", label = "Difensivi nemici" },
-    { type = "toggle", path = "categories.offensive", label = "Offensivi nemici" },
-    { type = "toggle", path = "categories.drink", label = "Sta bevendo" },
-    { type = "toggle", path = "categories.utility", label = "Utilita' (Freedom, Fear Ward, Innervate)" },
-    { type = "toggle", path = "categories.snare", label = "Rallentamenti messi da altri" },
-    { type = "header", label = "Dimensioni" },
-    { type = "range", path = "ccSize", label = "Icona CC", min = 16, max = 48, step = 1 },
-    { type = "range", path = "buffSize", label = "Icone difensivi/offensivi", min = 12, max = 40, step = 1 },
-    { type = "range", path = "ownSize", label = "Icone dei miei debuff", min = 12, max = 36, step = 1 },
-    { type = "range", path = "maxBuffs", label = "Max difensivi/offensivi", min = 0, max = 6, step = 1 },
-    { type = "range", path = "maxOwn", label = "Max miei debuff", min = 0, max = 10, step = 1 },
-    { type = "range", path = "ownOffsetY", label = "Distanza dei miei debuff dalla barra", min = 0, max = 40, step = 1 },
-    { type = "range", path = "spacing", label = "Spaziatura", min = 0, max = 8, step = 1 },
-    { type = "toggle", path = "numbers", label = "Numeri del countdown" },
-    { type = "toggle", path = "hideBlizzard", label = "Nascondi le aure Blizzard sulle nameplate" },
+    { type = "toggle", path = "categories.immunity", label = L["Immunita' (bolle, Ice Block)"] },
+    { type = "toggle", path = "categories.defensive", label = L["Difensivi nemici"] },
+    { type = "toggle", path = "categories.offensive", label = L["Offensivi nemici"] },
+    { type = "toggle", path = "categories.drink", label = L["Sta bevendo"] },
+    { type = "toggle", path = "categories.utility", label = L["Utilita' (Freedom, Fear Ward, Innervate)"] },
+    { type = "toggle", path = "categories.snare", label = L["Rallentamenti messi da altri"] },
+    { type = "header", label = L["Dimensioni"] },
+    { type = "range", path = "ccSize", label = L["Icona CC"], min = 16, max = 48, step = 1 },
+    { type = "range", path = "buffSize", label = L["Icone difensivi/offensivi"], min = 12, max = 40, step = 1 },
+    { type = "range", path = "ownSize", label = L["Icone dei miei debuff"], min = 12, max = 36, step = 1 },
+    { type = "range", path = "maxBuffs", label = L["Max difensivi/offensivi"], min = 0, max = 6, step = 1 },
+    { type = "range", path = "maxOwn", label = L["Max miei debuff"], min = 0, max = 10, step = 1 },
+    { type = "range", path = "ownOffsetY", label = L["Distanza dei miei debuff dalla barra"], min = 0, max = 40, step = 1 },
+    { type = "range", path = "spacing", label = L["Spaziatura"], min = 0, max = 8, step = 1 },
+    { type = "toggle", path = "numbers", label = L["Numeri del countdown"] },
+    { type = "toggle", path = "hideBlizzard", label = L["Nascondi le aure Blizzard sulle nameplate"] },
 }
 
 ------------------------------------------------------------------------------
@@ -316,7 +317,7 @@ end
 function M:OnEnable()
     self.running = true
     if not Auras:HasAuraAPI() then
-        Badb.Logger:Warn("Aure sulle nameplate: il client non espone le API aure, modulo inattivo.")
+        Badb.Logger:Warn(L["Aure sulle nameplate: il client non espone le API aure, modulo inattivo."])
     end
     self:On("NAME_PLATE_UNIT_ADDED", function(_, unit) self:UpdateUnit(unit) end)
     self:On("NAME_PLATE_UNIT_REMOVED", function(_, unit)

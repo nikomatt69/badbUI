@@ -1,8 +1,7 @@
-// Contenuto iniziale: i tre gruppi raid, un boss d'esempio e le pagine di benvenuto.
+// Contenuto iniziale: i tre gruppi raid, una scheda raid ufficiale e le pagine di benvenuto.
 // Si applica una sola volta (su database vuoto, all'avvio) oppure a mano con `bun run seed`.
 import { Game, Tactics } from "@badb/core"
-import { config, id, type Ctx } from "./ctx"
-import { context } from "./server"
+import { id, type Ctx } from "./ctx"
 
 const groups = [
   { name: "Gruppo Mattina", slot: "mattina", start: 10 * 60, days: [5, 6] },
@@ -10,20 +9,9 @@ const groups = [
   { name: "Gruppo Sera", slot: "sera", start: 21 * 60, days: [2, 3, 6] },
 ] as const
 
-// Unico boss precompilato: l'incontro e' quello storico e Forever puo' averlo rivisto (confidenza B).
+// Unica scheda precompilata: dati descrittivi ufficiali di Onyxia, senza requisiti tattici inventati.
 // Gli altri raid del primo tier non hanno boss qui: li aggiungono gli ufficiali dal sito, con le tattiche reali.
-const onyxia: Tactics.Weights = {
-  "tank-single": 2,
-  threat: 3,
-  "add-tank": 2,
-  aoe: 2,
-  ranged: 2,
-  mobility: 2,
-  fear: 3,
-  "raid-heal": 2,
-  "tank-heal": 2,
-  st: 2,
-}
+const onyxia: Tactics.Weights = {} // Nessun punteggio inventato: gli ufficiali configurano i requisiti verificati.
 
 const welcome = `Benvenuto sul sito della gilda.
 
@@ -48,11 +36,11 @@ dati che l'addon carica al prossimo \`/reload\`.
 ## Collegamento
 
 1. Sul sito apri **Profilo → Collega addon** e copia il codice.
-2. Nella cartella del progetto: \`bun run --cwd packages/companion start login <codice> --wow "<cartella di WoW>"\`.
+2. Nella cartella del progetto: \`bun run --cwd packages/companion start login <codice> --wow "<cartella client Forever>" --account "<account WTF>"\`.
 3. Lascia attivo \`bun run --cwd packages/companion start watch\` mentre giochi.
 4. In gioco: \`/badb gilda\`. Dopo una prenotazione fai \`/reload\`: il companion la invia e aggiorna i dati.
 
-Chi non usa il companion riceve comunque i dati in gioco dai compagni di gilda che lo usano.`
+Ogni giocatore collega il proprio companion. I dati ricevuti sono uno snapshot, non un collegamento di rete in gioco.`
 
 export function seed(ctx: Ctx) {
   ctx.db.transaction(() => {
@@ -63,26 +51,33 @@ export function seed(ctx: Ctx) {
         [id(), group.name, group.slot, raid.id, JSON.stringify(group.days), group.start, JSON.stringify(raid.comp)],
       )
     }
-    ctx.db.run("INSERT INTO boss (id, raid, name, position, weights, notes, confidence) VALUES (?, 'onyxia', 'Onyxia', 0, ?, ?, 'B')", [
-      id(),
-      JSON.stringify(onyxia),
-      "Pesi basati sull'incontro storico: fase a terra, fase in volo con cuccioli, fase finale con paura. Da verificare su Forever e correggere qui.",
-    ])
-    const post = (kind: string, slug: string, title: string, excerpt: string, body: string) =>
-      ctx.db.run("INSERT INTO post (id, kind, slug, title, excerpt, body, category, published, created, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
+    ctx.db.run(
+      "INSERT INTO boss (id, raid, name, position, weights, notes, confidence) VALUES (?, 'onyxia', 'Onyxia', 0, ?, ?, 'B')",
+      [
         id(),
-        kind,
-        slug,
-        title,
-        excerpt,
-        body,
-        kind === "guide" ? "Addon" : "Gilda",
-        ctx.now(),
-        ctx.now(),
-        ctx.now(),
-      ])
-    post("blog", "benvenuti", "Benvenuti sul sito della gilda", "Armory, disponibilità, raid e tattiche in un posto solo.", welcome)
-    post("guide", "collegare-addon", "Collegare l'addon al sito", "Come funziona il companion e come collegarlo in due minuti.", addon)
+        JSON.stringify(onyxia),
+        "Raid Forever da 40 giocatori, livello 60, accesso con Drakefire Amulet. Fonte Blizzard: https://news.blizzard.com/en-us/article/24303009/world-of-warcraft-forever-raid-overviewlocations-raid-sizes-and-attunement — Gli ufficiali devono ancora configurare i requisiti della tattica; nessuna classifica di prestazioni reali disponibile.",
+      ],
+    )
+    const post = (kind: string, slug: string, title: string, excerpt: string, body: string) =>
+      ctx.db.run(
+        "INSERT INTO post (id, kind, slug, title, excerpt, body, category, published, created, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        [id(), kind, slug, title, excerpt, body, kind === "guide" ? "Addon" : "Gilda", ctx.now(), ctx.now(), ctx.now()],
+      )
+    post(
+      "blog",
+      "benvenuti",
+      "Benvenuti sul sito della gilda",
+      "Armory, disponibilità, raid e tattiche in un posto solo.",
+      welcome,
+    )
+    post(
+      "guide",
+      "collegare-addon",
+      "Collegare l'addon al sito",
+      "Come funziona il companion e come collegarlo in due minuti.",
+      addon,
+    )
     ctx.db.run("INSERT INTO setting (key, value) VALUES ('seeded', '1') ON CONFLICT(key) DO NOTHING")
   })()
 }
@@ -92,10 +87,4 @@ export function ensure(ctx: Ctx) {
   if (ctx.db.query("SELECT 1 FROM setting WHERE key = 'seeded'").get()) return false
   seed(ctx)
   return true
-}
-
-if (import.meta.main) {
-  const ctx = context(config())
-  console.log(ensure(ctx) ? "Contenuto iniziale creato" : "Database già inizializzato: nessuna modifica")
-  ctx.db.close()
 }

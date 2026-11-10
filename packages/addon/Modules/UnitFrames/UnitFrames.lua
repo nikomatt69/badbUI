@@ -12,6 +12,7 @@
 --   * I frame Blizzard vengono nascosti riparentandoli a un frame nascosto (mai SetPoint sui frame
 --     Edit Mode) e ripristinati al disable.
 local _, ns = ...
+local L = ns.Badb.L
 local Badb = ns.Badb
 local Events, Logger, Compat, FM = Badb.Events, Badb.Logger, Badb.Compat, Badb.FrameManager
 
@@ -39,15 +40,15 @@ local function with(over)
 end
 
 local UNITS = {
-    { key = "player", unit = "player", title = "Giocatore",
+    { key = "player", unit = "player", title = L["Giocatore"],
       defaults = with({ width = 270, height = 54, powerHeight = 10, showPowerText = true, showCastbar = true,
                         castbarHeight = 18, showLeader = true, showCombat = true, reactionColor = false }),
       point = { "BOTTOM", -395, 139 } },   -- ElvUI usa -342, ma con barre Blizzard da ~500 px si sovrapporrebbe
-    { key = "target", unit = "target", title = "Bersaglio",
+    { key = "target", unit = "target", title = L["Bersaglio"],
       defaults = with({ width = 270, height = 54, powerHeight = 10, showLevel = true, showCastbar = true,
                         castbarHeight = 18, showAuras = true, auraMax = 12, showCombat = true, showBigAura = true }),
       point = { "BOTTOM", 395, 139 } },
-    { key = "targettarget", unit = "targettarget", title = "Bersaglio del bersaglio",
+    { key = "targettarget", unit = "targettarget", title = L["Bersaglio del bersaglio"],
       defaults = with({ width = 130, height = 36, powerHeight = 0, showPower = false, showHealthValue = false,
                         fontSize = 10 }),
       point = { "BOTTOM", 395, 101 } },
@@ -55,7 +56,7 @@ local UNITS = {
       defaults = with({ width = 190, height = 36, powerHeight = 5, showCastbar = true, showAuras = true,
                         auraMax = 6, auraOnlyMine = true, auraSize = 18, showCombat = true, showBigAura = true }),
       point = { "BOTTOM", 395, 60 } },
-    { key = "party", unit = "party", title = "Gruppo",
+    { key = "party", unit = "party", title = L["Gruppo"],
       defaults = with({ width = 184, height = 54, powerHeight = 5, showHealthValue = false, showLeader = true,
                         highlightTarget = true, spacing = 10, vertical = true, showInRaid = false,
                         rangeFade = true, rangeAlpha = 0.45, showBigAura = true }),
@@ -106,45 +107,45 @@ end
 local WITH_AURAS = { "target", "focus", "party" }
 local WITH_CAST = { "player", "target", "focus", "party" }
 local options = {
-    { type = "execute", label = "Anteprima on/off", func = function() M:TogglePreview() end,
-      tooltip = "Mostra tutti i frame con dati finti, anche gruppo e focus, per configurarli da soli." },
-    { type = "execute", label = "Sposta i frame", func = function() Badb.FrameManager:SetUnlocked(not Badb.FrameManager.unlocked) end,
-      tooltip = "Come /badb unlock: trascina le maniglie, tasto destro ripristina la posizione." },
-    { type = "select", path = "editUnit", label = "Unita' da modificare", values = UNIT_CHOICES },
-    { type = "header", label = "Generale" },
-    unitOpt({ type = "toggle", field = "enabled", label = "Attivo" }),
-    unitOpt({ type = "toggle", field = "hideBlizzard", label = "Nascondi il frame Blizzard" }),
-    unitOpt({ type = "range", field = "width", label = "Larghezza", min = 60, max = 400, step = 1 }),
-    unitOpt({ type = "range", field = "height", label = "Altezza", min = 14, max = 90, step = 1 }),
-    unitOpt({ type = "range", field = "powerHeight", label = "Barra risorsa (0 = nascosta)", min = 0, max = 20, step = 1 }),
-    unitOpt({ type = "range", field = "fontSize", label = "Dimensione testo", min = 8, max = 18, step = 1 }),
-    { type = "header", label = "Testi e colori" },
-    unitOpt({ type = "toggle", field = "showName", label = "Nome" }),
-    unitOpt({ type = "toggle", field = "showLevel", label = "Livello" }, { "target", "focus" }),
-    unitOpt({ type = "toggle", field = "showHealthValue", label = "Vita: valore" }),
-    unitOpt({ type = "toggle", field = "showHealthPercent", label = "Vita: percentuale" }),
-    unitOpt({ type = "toggle", field = "showPowerText", label = "Valore risorsa" }),
-    unitOpt({ type = "toggle", field = "classColor", label = "Colore di classe" }),
-    unitOpt({ type = "toggle", field = "reactionColor", label = "Colore per reazione (PNG)" }),
-    unitOpt({ type = "toggle", field = "showClassIcon", label = "Icona di classe (giocatori)" }),
-    unitOpt({ type = "toggle", field = "showCombat", label = "Icona di combattimento" }, { "player", "target", "focus" }),
-    unitOpt({ type = "toggle", field = "showLeader", label = "Icona capogruppo" }, { "player", "party" }),
-    { type = "header", label = "Barra di lancio", hidden = function() return editKey() == "targettarget" end },
-    unitOpt({ type = "toggle", field = "showCastbar", label = "Barra di lancio" }, WITH_CAST),
-    unitOpt({ type = "range", field = "castbarHeight", label = "Altezza barra di lancio", min = 8, max = 32, step = 1 }, WITH_CAST),
-    { type = "header", label = "Aure", hidden = function() return editKey() ~= "target" and editKey() ~= "focus" and editKey() ~= "party" end },
-    unitOpt({ type = "toggle", field = "showAuras", label = "Aure" }, WITH_AURAS),
-    unitOpt({ type = "range", field = "auraSize", label = "Dimensione aure", min = 12, max = 40, step = 1 }, WITH_AURAS),
-    unitOpt({ type = "range", field = "auraMax", label = "Numero massimo aure", min = 1, max = 24, step = 1 }, WITH_AURAS),
-    unitOpt({ type = "toggle", field = "auraOnlyMine", label = "Solo i miei debuff" }, WITH_AURAS),
-    unitOpt({ type = "toggle", field = "showBigAura", label = "Aura grande al centro (CC, immunita', difensivi)" }, WITH_AURAS),
-    { type = "header", label = "Gruppo", hidden = function() return editKey() ~= "party" end },
-    unitOpt({ type = "toggle", field = "vertical", label = "Disposizione verticale" }, { "party" }),
-    unitOpt({ type = "range", field = "spacing", label = "Spaziatura", min = 0, max = 40, step = 1 }, { "party" }),
-    unitOpt({ type = "toggle", field = "showInRaid", label = "Mostra anche in incursione" }, { "party" }),
-    unitOpt({ type = "toggle", field = "highlightTarget", label = "Evidenzia il mio bersaglio" }, { "party" }),
-    unitOpt({ type = "toggle", field = "rangeFade", label = "Sfuma fuori portata" }, { "party" }),
-    unitOpt({ type = "range", field = "rangeAlpha", label = "Trasparenza fuori portata", min = 0.1, max = 1, step = 0.05 }, { "party" }),
+    { type = "execute", label = L["Anteprima on/off"], func = function() M:TogglePreview() end,
+      tooltip = L["Mostra tutti i frame con dati finti, anche gruppo e focus, per configurarli da soli."] },
+    { type = "execute", label = L["Sposta i frame"], func = function() Badb.FrameManager:SetUnlocked(not Badb.FrameManager.unlocked) end,
+      tooltip = L["Come /badb unlock: trascina le maniglie, tasto destro ripristina la posizione."] },
+    { type = "select", path = "editUnit", label = L["Unita' da modificare"], values = UNIT_CHOICES },
+    { type = "header", label = L["Generale"] },
+    unitOpt({ type = "toggle", field = "enabled", label = L["Attivo"] }),
+    unitOpt({ type = "toggle", field = "hideBlizzard", label = L["Nascondi il frame Blizzard"] }),
+    unitOpt({ type = "range", field = "width", label = L["Larghezza"], min = 60, max = 400, step = 1 }),
+    unitOpt({ type = "range", field = "height", label = L["Altezza"], min = 14, max = 90, step = 1 }),
+    unitOpt({ type = "range", field = "powerHeight", label = L["Barra risorsa (0 = nascosta)"], min = 0, max = 20, step = 1 }),
+    unitOpt({ type = "range", field = "fontSize", label = L["Dimensione testo"], min = 8, max = 18, step = 1 }),
+    { type = "header", label = L["Testi e colori"] },
+    unitOpt({ type = "toggle", field = "showName", label = L["Nome"] }),
+    unitOpt({ type = "toggle", field = "showLevel", label = L["Livello"] }, { "target", "focus" }),
+    unitOpt({ type = "toggle", field = "showHealthValue", label = L["Vita: valore"] }),
+    unitOpt({ type = "toggle", field = "showHealthPercent", label = L["Vita: percentuale"] }),
+    unitOpt({ type = "toggle", field = "showPowerText", label = L["Valore risorsa"] }),
+    unitOpt({ type = "toggle", field = "classColor", label = L["Colore di classe"] }),
+    unitOpt({ type = "toggle", field = "reactionColor", label = L["Colore per reazione (PNG)"] }),
+    unitOpt({ type = "toggle", field = "showClassIcon", label = L["Icona di classe (giocatori)"] }),
+    unitOpt({ type = "toggle", field = "showCombat", label = L["Icona di combattimento"] }, { "player", "target", "focus" }),
+    unitOpt({ type = "toggle", field = "showLeader", label = L["Icona capogruppo"] }, { "player", "party" }),
+    { type = "header", label = L["Barra di lancio"], hidden = function() return editKey() == "targettarget" end },
+    unitOpt({ type = "toggle", field = "showCastbar", label = L["Barra di lancio"] }, WITH_CAST),
+    unitOpt({ type = "range", field = "castbarHeight", label = L["Altezza barra di lancio"], min = 8, max = 32, step = 1 }, WITH_CAST),
+    { type = "header", label = L["Aure"], hidden = function() return editKey() ~= "target" and editKey() ~= "focus" and editKey() ~= "party" end },
+    unitOpt({ type = "toggle", field = "showAuras", label = L["Aure"] }, WITH_AURAS),
+    unitOpt({ type = "range", field = "auraSize", label = L["Dimensione aure"], min = 12, max = 40, step = 1 }, WITH_AURAS),
+    unitOpt({ type = "range", field = "auraMax", label = L["Numero massimo aure"], min = 1, max = 24, step = 1 }, WITH_AURAS),
+    unitOpt({ type = "toggle", field = "auraOnlyMine", label = L["Solo i miei debuff"] }, WITH_AURAS),
+    unitOpt({ type = "toggle", field = "showBigAura", label = L["Aura grande al centro (CC, immunita', difensivi)"] }, WITH_AURAS),
+    { type = "header", label = L["Gruppo"], hidden = function() return editKey() ~= "party" end },
+    unitOpt({ type = "toggle", field = "vertical", label = L["Disposizione verticale"] }, { "party" }),
+    unitOpt({ type = "range", field = "spacing", label = L["Spaziatura"], min = 0, max = 40, step = 1 }, { "party" }),
+    unitOpt({ type = "toggle", field = "showInRaid", label = L["Mostra anche in incursione"] }, { "party" }),
+    unitOpt({ type = "toggle", field = "highlightTarget", label = L["Evidenzia il mio bersaglio"] }, { "party" }),
+    unitOpt({ type = "toggle", field = "rangeFade", label = L["Sfuma fuori portata"] }, { "party" }),
+    unitOpt({ type = "range", field = "rangeAlpha", label = L["Trasparenza fuori portata"], min = 0.1, max = 1, step = 0.05 }, { "party" }),
 }
 
 -- Disattivato di default come gli altri moduli che sostituiscono frame Blizzard:
@@ -153,15 +154,15 @@ local defaults = { enabled = false, editUnit = "player", units = {} }
 for _, u in ipairs(UNITS) do defaults.units[u.key] = u.defaults end
 
 M = Badb.Modules:New("UnitFrames", {
-    title = "Unit frame",
+    title = L["Unit frame"],
     category = "Unit Frames",
-    description = "Frame propri per giocatore, bersaglio, focus e gruppo: secure, combat-safe, compatibili con i secret values.",
+    description = L["Frame propri per giocatore, bersaglio, focus e gruppo: secure, combat-safe, compatibili con i secret values."],
     defaults = defaults,
     options = options,
-    page = { title = "Unit frame", order = 30, category = "Interfaccia",
-             keywords = { "player", "target", "focus", "party", "castbar", "aure", "giocatore", "bersaglio", "gruppo" } },
+    page = { title = L["Unit frame"], order = 30, category = L["Interfaccia"],
+             keywords = { "player", "target", "focus", "party", "castbar", L["aure"], L["giocatore"], L["bersaglio"], L["gruppo"] } },
     commands = {
-        uf = { help = "uf preview | unlock | reset <unita'>", fn = function(args) M:Command(args) end },
+        uf = { help = L["uf preview | unlock | reset <unita'>"], fn = function(args) M:Command(args) end },
     },
 })
 Badb.UnitFrames = M -- API pubblica: M.frames[unitToken] -> frame
@@ -298,7 +299,7 @@ local function ensureFrames()
             for i = 1, 4 do
                 local f = spawn("BadbUF_Party" .. i, "party" .. i, header, c)
                 f.isParty = true
-                f.previewName = "Compagno " .. i
+                f.previewName = L["Compagno "] .. i
                 f.previewSeed = i + 1
                 M.party[i] = f
                 M.frames["party" .. i] = f
@@ -311,7 +312,7 @@ local function ensureFrames()
         end
         local anchor = u.key == "party" and M.partyHeader or M.frames[u.unit]
         anchor:SetPoint(unpack(u.point))
-        FM:Register("UF_" .. u.key, { frame = anchor, title = "Unit frame: " .. u.title, category = "Unit Frames" })
+        FM:Register("UF_" .. u.key, { frame = anchor, title = L["Unit frame: "] .. u.title, category = "Unit Frames" })
     end
     M.spawned = true
 end
@@ -444,9 +445,9 @@ local function allFrames()
 end
 
 function M:SetPreview(state)
-    if InCombatLockdown() then Logger:Warn("Anteprima non disponibile in combattimento"); return end
+    if InCombatLockdown() then Logger:Warn(L["Anteprima non disponibile in combattimento"]); return end
     if not self.active or not self.spawned then
-        if state then Logger:Warn("Attiva prima il modulo Unit frame") end
+        if state then Logger:Warn(L["Attiva prima il modulo Unit frame"]) end
         return
     end
     M.previewing = state
@@ -520,7 +521,7 @@ end
 ---------------------------------------------------------------------------
 function M:ResetUnit(key)
     local u = UNIT_BY_KEY[key]
-    if not u then return false, "unita' sconosciuta" end
+    if not u then return false, L["unita' sconosciuta"] end
     M:Get("units")[key] = Badb.CopyTable(u.defaults)
     if FM.registry["UF_" .. key] then FM:Restore("UF_" .. key) end
     self:Apply()
@@ -536,7 +537,7 @@ function M:Command(args)
         FM:SetUnlocked(not FM.unlocked)
     elseif cmd == "reset" then
         local ok, err = self:ResetUnit(rest ~= "" and rest or "")
-        if ok then Logger:Info("Unit frame '%s' ripristinato", rest) else Logger:Warn("Reset: %s (%s)", err, rest) end
+        if ok then Logger:Info(L["Unit frame '%s' ripristinato"], rest) else Logger:Warn("Reset: %s (%s)", err, rest) end
     else
         Logger:Info("/badb uf preview | unlock | reset <player|target|targettarget|focus|party>")
     end

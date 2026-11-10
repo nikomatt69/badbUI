@@ -5,6 +5,7 @@
 -- e NON entrano mai negli snapshot (altrimenti crescerebbero a spirale).
 -- API (tutte "non lanciano"): Create, List, GetInfo, Restore, Delete, Export, Import, Prune.
 local _, ns = ...
+local L = ns.Badb.L
 local Badb = ns.Badb
 local Events, Logger = Badb.Events, Badb.Logger
 
@@ -17,7 +18,7 @@ local PROTECTED = { manual = true, imported = true }
 
 local M = Badb.Modules:New("Backups", {
     title = "Backup",
-    category = "Strumenti",
+    category = L["Strumenti"],
     defaults = {
         enabled = true,
         maxBackups = 20,       -- numero massimo di backup conservati
@@ -27,9 +28,9 @@ local M = Badb.Modules:New("Backups", {
     },
     options = {
         { type = "header", label = "Backup" },
-        { type = "toggle", path = "autoOnLogin", label = "Backup automatico al login" },
-        { type = "range", path = "autoHours", label = "Ore tra backup automatici", min = 1, max = 168, step = 1 },
-        { type = "range", path = "maxBackups", label = "Backup conservati", min = 3, max = 50, step = 1 },
+        { type = "toggle", path = "autoOnLogin", label = L["Backup automatico al login"] },
+        { type = "range", path = "autoHours", label = L["Ore tra backup automatici"], min = 1, max = 168, step = 1 },
+        { type = "range", path = "maxBackups", label = L["Backup conservati"], min = 3, max = 50, step = 1 },
     },
 })
 
@@ -79,7 +80,7 @@ local function deepCopy(v, depth, stack, counter)
     end
     if depth > MAX_DEPTH or stack[v] then return nil end
     counter.n = counter.n + 1
-    if counter.n > MAX_NODES then error("struttura troppo grande") end
+    if counter.n > MAX_NODES then error(L["struttura troppo grande"]) end
     stack[v] = true
     local out = {}
     for k, val in pairs(v) do
@@ -129,7 +130,7 @@ local function cleanKind(kind)
     return kind
 end
 
-local DEFAULT_LABELS = { manual = "Backup manuale", auto = "Backup automatico" }
+local DEFAULT_LABELS = { manual = L["Backup manuale"], auto = L["Backup automatico"] }
 
 ---------------------------------------------------------------------------
 -- Snapshot: costruzione e validazione
@@ -158,14 +159,14 @@ end
 local function checkTree(v, depth, counter)
     local tv = type(v)
     if tv == "string" or tv == "number" or tv == "boolean" then return true end
-    if tv ~= "table" then return false, "tipo non ammesso (" .. tv .. ")" end
-    if depth > MAX_DEPTH then return false, "struttura troppo profonda" end
+    if tv ~= "table" then return false, L["tipo non ammesso ("] .. tv .. ")" end
+    if depth > MAX_DEPTH then return false, L["struttura troppo profonda"] end
     counter.n = counter.n + 1
-    if counter.n > MAX_NODES then return false, "struttura troppo grande" end
-    if getmetatable(v) ~= nil then return false, "metatable non ammessa" end
+    if counter.n > MAX_NODES then return false, L["struttura troppo grande"] end
+    if getmetatable(v) ~= nil then return false, L["metatable non ammessa"] end
     for k, val in pairs(v) do
         local tk = type(k)
-        if tk ~= "string" and tk ~= "number" then return false, "chiave non valida" end
+        if tk ~= "string" and tk ~= "number" then return false, L["chiave non valida"] end
         local ok, err = checkTree(val, depth + 1, counter)
         if not ok then return false, err end
     end
@@ -174,15 +175,15 @@ end
 
 -- Valida uno snapshot (schema, tipi). Non modifica nulla. -> true | false, motivo
 function M.Validate(snap)
-    if type(snap) ~= "table" then return false, "snapshot non valido" end
+    if type(snap) ~= "table" then return false, L["snapshot non valido"] end
     local schema = snap.schema
-    if type(schema) ~= "number" or schema < 1 or schema % 1 ~= 0 then return false, "schema mancante o non valido" end
+    if type(schema) ~= "number" or schema < 1 or schema % 1 ~= 0 then return false, L["schema mancante o non valido"] end
     local cur = Badb.DB and Badb.DB.sv and Badb.DB.sv.schema
     if type(cur) == "number" and schema > cur then
-        return false, "snapshot creato da una versione piu' recente di BadbUI (schema " .. schema .. ")"
+        return false, L["snapshot creato da una versione piu' recente di BadbUI (schema "] .. schema .. ")"
     end
     for _, name in ipairs(SECTIONS) do
-        if type(snap[name]) ~= "table" then return false, "sezione '" .. name .. "' mancante o di tipo errato" end
+        if type(snap[name]) ~= "table" then return false, L["sezione '"] .. name .. L["' mancante o di tipo errato"] end
     end
     local counter = { n = 0 }
     for _, name in ipairs(SECTIONS) do
@@ -190,27 +191,27 @@ function M.Validate(snap)
         if not ok then return false, name .. ": " .. tostring(err) end
     end
     for pname, p in pairs(snap.profiles) do
-        if type(pname) ~= "string" or pname == "" then return false, "nome profilo non valido" end
-        if type(p) ~= "table" then return false, "profilo '" .. pname .. "' non e' una tabella" end
+        if type(pname) ~= "string" or pname == "" then return false, L["nome profilo non valido"] end
+        if type(p) ~= "table" then return false, L["profilo '"] .. pname .. L["' non e' una tabella"] end
         for _, sub in ipairs({ "modules", "frames" }) do
             local t = p[sub]
             if t ~= nil then
-                if type(t) ~= "table" then return false, "profilo '" .. pname .. "': '" .. sub .. "' non e' una tabella" end
+                if type(t) ~= "table" then return false, L["profilo '"] .. pname .. "': '" .. sub .. L["' non e' una tabella"] end
                 for key, val in pairs(t) do
                     if type(key) ~= "string" or type(val) ~= "table" then
-                        return false, "profilo '" .. pname .. "': voce '" .. tostring(key) .. "' di '" .. sub .. "' non valida"
+                        return false, L["profilo '"] .. pname .. L["': voce '"] .. tostring(key) .. L["' di '"] .. sub .. L["' non valida"]
                     end
                 end
             end
         end
     end
     for ck, pname in pairs(snap.profileKeys) do
-        if type(ck) ~= "string" or type(pname) ~= "string" or pname == "" then return false, "profileKeys non valido" end
+        if type(ck) ~= "string" or type(pname) ~= "string" or pname == "" then return false, L["profileKeys non valido"] end
     end
     for ck, map in pairs(snap.specProfiles) do
-        if type(ck) ~= "string" or type(map) ~= "table" then return false, "specProfiles non valido" end
+        if type(ck) ~= "string" or type(map) ~= "table" then return false, L["specProfiles non valido"] end
         for idx, pname in pairs(map) do
-            if type(idx) ~= "number" or type(pname) ~= "string" then return false, "specProfiles non valido" end
+            if type(idx) ~= "number" or type(pname) ~= "string" then return false, L["specProfiles non valido"] end
         end
     end
     return true
@@ -244,7 +245,7 @@ end
 -- Ritorna la lista persistente (creandola se create=true). Scarta solo voci palesemente inutilizzabili.
 local function getList(create)
     local sv = Badb.DB and Badb.DB.sv
-    if type(sv) ~= "table" then return nil, "database non inizializzato" end
+    if type(sv) ~= "table" then return nil, L["database non inizializzato"] end
     if type(sv.global) ~= "table" then
         if not create then return {} end
         sv.global = {}
@@ -309,7 +310,7 @@ local function planRotation(list, maxN, maxB, extraCount, extraBytes)
         end
     end
     if bytes + extraBytes > maxB then
-        return nil, string.format("spazio insufficiente per i backup (%d KB su %d KB): elimina qualche backup manuale",
+        return nil, string.format(L["spazio insufficiente per i backup (%d KB su %d KB): elimina qualche backup manuale"],
             math.ceil((bytes + extraBytes) / 1024), math.floor(maxB / 1024))
     end
     return remove
@@ -328,14 +329,14 @@ local function addEntry(self, snap, label, kind)
     local size = M.EstimateSize(snap)
     local maxB = maxBytes(self)
     if size > maxB then
-        return nil, string.format("backup troppo grande (%d KB, limite %d KB)", math.ceil(size / 1024), math.floor(maxB / 1024))
+        return nil, string.format(L["backup troppo grande (%d KB, limite %d KB)"], math.ceil(size / 1024), math.floor(maxB / 1024))
     end
     local list, err = getList(true)
     if not list then return nil, err end
     local remove, perr = planRotation(list, maxBackups(self), maxB, 1, size)
     if not remove then return nil, perr end
     local dropped = applyRemoval(list, remove)
-    if dropped > 0 then Logger:Info("Backup: ruotati %d backup vecchi", dropped) end
+    if dropped > 0 then Logger:Info(L["Backup: ruotati %d backup vecchi"], dropped) end
 
     local t = now()
     local n = 1
@@ -364,7 +365,7 @@ end
 
 local function createLive(self, label, kind)
     local sv = Badb.DB and Badb.DB.sv
-    if type(sv) ~= "table" then return nil, "database non inizializzato" end
+    if type(sv) ~= "table" then return nil, L["database non inizializzato"] end
     kind = cleanKind(kind)
     label = cleanLabel(label, DEFAULT_LABELS[kind] or kind)
     local snap = buildSnapshot(sv)
@@ -391,7 +392,7 @@ end
 function M:GetInfo(id)
     local list = getList(false)
     local e = list and findEntry(list, id)
-    if not e then return nil, "backup inesistente" end
+    if not e then return nil, L["backup inesistente"] end
     local info = { id = e.id, label = tostring(e.label or ""), kind = tostring(e.kind or "manual"), time = entryTime(e),
         size = entrySize(e), profiles = {} }
     if type(e.data) == "table" then
@@ -409,7 +410,7 @@ function M:Delete(id)
     local ok, a, b = pcall(function()
         local list = getList(false)
         local e, i = list and findEntry(list, id)
-        if not e then return false, "backup inesistente" end
+        if not e then return false, L["backup inesistente"] end
         table.remove(list, i)
         return true
     end)
@@ -433,9 +434,9 @@ function M:Export(id)
     return guarded("Export", function()
         local list = getList(false)
         local e = list and findEntry(list, id)
-        if not e then return nil, "backup inesistente" end
+        if not e then return nil, L["backup inesistente"] end
         local ok, err = M.Validate(e.data)
-        if not ok then return nil, "backup corrotto: " .. tostring(err) end
+        if not ok then return nil, L["backup corrotto: "] .. tostring(err) end
         return Badb.Serializer:Export("backup", {
             v = 1, label = tostring(e.label or ""), kind = tostring(e.kind or "manual"), time = entryTime(e),
             snapshot = e.data,
@@ -446,17 +447,17 @@ end
 -- Importa una stringa esportata: aggiunge un backup (kind "imported"), NON lo applica. -> id | nil, errore
 function M:Import(str, label)
     return guarded("Import", function()
-        if type(str) ~= "string" or str == "" then return nil, "input vuoto" end
+        if type(str) ~= "string" or str == "" then return nil, L["input vuoto"] end
         local limit = math.min(math.floor(maxBytes(self) * 1.5) + 4096, 16 * 1024 * 1024)
-        if #str > limit then return nil, "stringa troppo grande per essere un backup valido" end
+        if #str > limit then return nil, L["stringa troppo grande per essere un backup valido"] end
         local data, payload = Badb.Serializer:Import(str, "backup")
         if data == nil then return nil, payload end
-        if type(data) ~= "table" then return nil, "dati del backup non validi" end
+        if type(data) ~= "table" then return nil, L["dati del backup non validi"] end
         local ok, err = M.Validate(data.snapshot)
-        if not ok then return nil, "backup importato non valido: " .. tostring(err) end
+        if not ok then return nil, L["backup importato non valido: "] .. tostring(err) end
         local snap, cerr = normalizedCopy(data.snapshot)
         if not snap then return nil, cerr end
-        return addEntry(self, snap, cleanLabel(label ~= nil and label or data.label, "Importato"), "imported")
+        return addEntry(self, snap, cleanLabel(label ~= nil and label or data.label, L["Importato"]), "imported")
     end)
 end
 
@@ -471,20 +472,20 @@ end
 
 local function restoreNow(self, id)
     local sv = Badb.DB and Badb.DB.sv
-    if type(sv) ~= "table" then return false, "database non inizializzato" end
+    if type(sv) ~= "table" then return false, L["database non inizializzato"] end
     local list = getList(false)
     local entry = list and findEntry(list, id)
-    if not entry then return false, "backup inesistente" end
+    if not entry then return false, L["backup inesistente"] end
 
     -- 1) costruisci e valida la copia nuova: se qualcosa non va il DB non e' stato toccato.
     local ok, err = M.Validate(entry.data)
-    if not ok then return false, "backup corrotto: " .. tostring(err) end
+    if not ok then return false, L["backup corrotto: "] .. tostring(err) end
     local snap, cerr = normalizedCopy(entry.data)
-    if not snap then return false, "backup corrotto: " .. tostring(cerr) end
+    if not snap then return false, L["backup corrotto: "] .. tostring(cerr) end
 
     -- 2) rete di sicurezza (la rotazione potrebbe eliminare `entry`, ma abbiamo gia' la copia).
-    local pre, perr = createLive(self, "Prima del ripristino", "pre-restore")
-    if not pre then return false, "impossibile creare il backup di sicurezza: " .. tostring(perr) end
+    local pre, perr = createLive(self, L["Prima del ripristino"], "pre-restore")
+    if not pre then return false, L["impossibile creare il backup di sicurezza: "] .. tostring(perr) end
 
     -- 3) scambio: assegnazioni semplici, nessuna operazione che possa fallire a meta'.
     snap.global.backups = type(sv.global) == "table" and sv.global.backups or nil
@@ -503,7 +504,7 @@ local function restoreNow(self, id)
     end
     local rok, rerr = pcall(DB.SetProfile, DB, target)
     if not rok then
-        Logger:Error("Backups:Restore - ricarica profilo fallita: %s", tostring(rerr))
+        Logger:Error(L["Backups:Restore - ricarica profilo fallita: %s"], tostring(rerr))
     end
     -- FrameManager azzera la config dei frame al cambio profilo: la ripristiniamo e riapplichiamo.
     if keepFrames and DB.profile and type(DB.profile.frames) == "table" then
@@ -512,7 +513,7 @@ local function restoreNow(self, id)
     end
     -- gli override di ruolo (sv.global.roleOverrides) fanno parte dello snapshot: ricalcola il ruolo
     if Badb.Player and Badb.Player.Invalidate then pcall(Badb.Player.Invalidate, Badb.Player) end
-    Logger:Info("Backup '%s' ripristinato (profilo '%s')", tostring(entry.label or id), tostring(target))
+    Logger:Info(L["Backup '%s' ripristinato (profilo '%s')"], tostring(entry.label or id), tostring(target))
     Events:Fire("BADB_BACKUP_RESTORED", id)
     return true
 end
@@ -520,12 +521,12 @@ end
 -- Ripristina un backup. In combattimento e' differito a fine combattimento (ritorna true, "differito").
 function M:Restore(id)
     return guarded("Restore", function()
-        if type(id) ~= "string" then return false, "id non valido" end
+        if type(id) ~= "string" then return false, L["id non valido"] end
         local list = getList(false)
         local entry = list and findEntry(list, id)
-        if not entry then return false, "backup inesistente" end
+        if not entry then return false, L["backup inesistente"] end
         local ok, err = M.Validate(entry.data)
-        if not ok then return false, "backup corrotto: " .. tostring(err) end -- rifiuto immediato, anche in combat
+        if not ok then return false, L["backup corrotto: "] .. tostring(err) end -- rifiuto immediato, anche in combat
 
         self._restoreToken = (self._restoreToken or 0) + 1
         local token, queued = self._restoreToken, true
@@ -537,11 +538,11 @@ function M:Restore(id)
                 Logger:Error("Backups:Restore - %s", tostring(a))
                 return false, tostring(a)
             end
-            if not a then Logger:Warn("Ripristino non eseguito: %s", tostring(b)) end
+            if not a then Logger:Warn(L["Ripristino non eseguito: %s"], tostring(b)) end
             return a, b
         end)
         if queued then
-            Logger:Info("Ripristino in coda: partira' a fine combattimento")
+            Logger:Info(L["Ripristino in coda: partira' a fine combattimento"])
             return true, "differito"
         end
         return r1, r2
@@ -565,8 +566,8 @@ function M:AutoCheck()
             if age >= 0 and age < limit then return nil end -- ce n'e' uno recente
         end
     end
-    local id, err = self:Create("Automatico al login", "auto")
-    if not id then Logger:Warn("Backup automatico non creato: %s", tostring(err)) end
+    local id, err = self:Create(L["Automatico al login"], "auto")
+    if not id then Logger:Warn(L["Backup automatico non creato: %s"], tostring(err)) end
     return id
 end
 
@@ -603,27 +604,27 @@ local function say(fmt, ...) Logger:Info(fmt, ...) end
 
 M.commands = {
     backup = {
-        help = "backup create [etichetta] | list | restore <id|n> | delete <id|n>",
+        help = L["backup create [etichetta] | list | restore <id|n> | delete <id|n>"],
         fn = function(args)
             local sub, rest = (args or ""):match("^(%S*)%s*(.-)$")
             sub = (sub or ""):lower()
             if sub == "create" then
                 local id, err = M:Create(rest ~= "" and rest or nil, "manual")
-                if id then say("Backup creato: %s", id) else say("Backup non creato: %s", tostring(err)) end
+                if id then say(L["Backup creato: %s"], id) else say(L["Backup non creato: %s"], tostring(err)) end
             elseif sub == "restore" then
                 local id = resolveId(rest)
-                if not id then say("Backup non trovato: usa /badb backup list"); return end
+                if not id then say(L["Backup non trovato: usa /badb backup list"]); return end
                 local ok, err = M:Restore(id)
-                if ok then say(err == "differito" and "Ripristino differito a fine combattimento" or "Ripristino completato")
-                else say("Ripristino fallito: %s", tostring(err)) end
+                if ok then say(err == "differito" and L["Ripristino differito a fine combattimento"] or L["Ripristino completato"])
+                else say(L["Ripristino fallito: %s"], tostring(err)) end
             elseif sub == "delete" then
                 local id = resolveId(rest)
-                if not id then say("Backup non trovato: usa /badb backup list"); return end
+                if not id then say(L["Backup non trovato: usa /badb backup list"]); return end
                 local ok, err = M:Delete(id)
-                say(ok and "Backup eliminato" or ("Eliminazione fallita: " .. tostring(err)))
+                say(ok and L["Backup eliminato"] or (L["Eliminazione fallita: "] .. tostring(err)))
             else -- list (default)
                 local list = M:List()
-                if #list == 0 then say("Nessun backup"); return end
+                if #list == 0 then say(L["Nessun backup"]); return end
                 for i, e in ipairs(list) do
                     say("%d. %s  %s [%s] %s  (%s)", i, fmtDate(e.time), e.label, e.kind, fmtKB(e.size), e.id)
                 end
@@ -667,20 +668,20 @@ local function buildPage(parent, ctx)
     local title = newText(parent, "GameFontNormalLarge", 16, 0)
     title:SetText("Backup")
     state.info = newText(parent, "GameFontHighlightSmall", 16, 28)
-    state.btnCreate = newButton(parent, "Crea backup", 120, 16, 48, function()
+    state.btnCreate = newButton(parent, L["Crea backup"], 120, 16, 48, function()
         local id, err = M:Create(nil, "manual")
-        notify(id and "Backup creato" or ("Backup non creato: " .. tostring(err)), id and "info" or "error")
+        notify(id and L["Backup creato"] or (L["Backup non creato: "] .. tostring(err)), id and "info" or "error")
         state.render()
     end)
-    state.btnImport = newButton(parent, "Importa...", 100, 142, 48, function()
+    state.btnImport = newButton(parent, L["Importa..."], 100, 142, 48, function()
         if UI and UI.TextBox then
-            UI:TextBox("Importa backup", "", function(str)
-                local id, err = M:Import(str, "Importato")
-                notify(id and "Backup importato" or ("Import fallito: " .. tostring(err)), id and "info" or "error")
+            UI:TextBox(L["Importa backup"], "", function(str)
+                local id, err = M:Import(str, L["Importato"])
+                notify(id and L["Backup importato"] or (L["Import fallito: "] .. tostring(err)), id and "info" or "error")
                 state.render()
             end)
         else
-            notify("Finestra di testo non disponibile", "error")
+            notify(L["Finestra di testo non disponibile"], "error")
         end
     end)
 
@@ -690,9 +691,9 @@ local function buildPage(parent, ctx)
         local y = 84 + (i - 1) * ROW_H
         r = {
             text = newText(parent, "GameFontHighlightSmall", 16, y + 4),
-            restore = newButton(parent, "Ripristina", 80, 330, y),
-            export = newButton(parent, "Esporta", 64, 414, y),
-            delete = newButton(parent, "Elimina", 64, 482, y),
+            restore = newButton(parent, L["Ripristina"], 80, 330, y),
+            export = newButton(parent, L["Esporta"], 64, 414, y),
+            delete = newButton(parent, L["Elimina"], 64, 482, y),
         }
         state.rows[i] = r
         return r
@@ -702,7 +703,7 @@ local function buildPage(parent, ctx)
         local list = M:List()
         local total = 0
         for _, e in ipairs(list) do total = total + e.size end
-        state.info:SetText(string.format("%d backup, %s su %s", #list, fmtKB(total), fmtKB(maxBytes(M))))
+        state.info:SetText(string.format(L["%d backup, %s su %s"], #list, fmtKB(total), fmtKB(maxBytes(M))))
         local shown = math.min(#list, 100)
         for i = 1, math.max(shown, #state.rows) do
             local e = list[i]
@@ -711,20 +712,20 @@ local function buildPage(parent, ctx)
                 local id = e.id
                 r.text:SetText(string.format("%s  %s |cff888888[%s] %s|r", fmtDate(e.time), e.label, e.kind, fmtKB(e.size)))
                 r.restore:SetScript("OnClick", function()
-                    confirm("Ripristinare il backup '" .. e.label .. "'? Verra' creato prima un backup di sicurezza.", function()
+                    confirm(L["Ripristinare il backup '"] .. e.label .. L["'? Verra' creato prima un backup di sicurezza."], function()
                         local ok, err = M:Restore(id)
-                        notify(ok and (err == "differito" and "Ripristino differito a fine combattimento" or "Backup ripristinato")
-                            or ("Ripristino fallito: " .. tostring(err)), ok and "info" or "error")
+                        notify(ok and (err == "differito" and L["Ripristino differito a fine combattimento"] or L["Backup ripristinato"])
+                            or (L["Ripristino fallito: "] .. tostring(err)), ok and "info" or "error")
                         state.render()
                     end)
                 end)
                 r.export:SetScript("OnClick", function()
                     local str, err = M:Export(id)
-                    if not str then notify("Export fallito: " .. tostring(err), "error"); return end
-                    if UI and UI.TextBox then UI:TextBox("Esporta backup", str) else notify("Finestra di testo non disponibile", "error") end
+                    if not str then notify(L["Export fallito: "] .. tostring(err), "error"); return end
+                    if UI and UI.TextBox then UI:TextBox(L["Esporta backup"], str) else notify(L["Finestra di testo non disponibile"], "error") end
                 end)
                 r.delete:SetScript("OnClick", function()
-                    confirm("Eliminare il backup '" .. e.label .. "'?", function()
+                    confirm(L["Eliminare il backup '"] .. e.label .. "'?", function()
                         M:Delete(id)
                         state.render()
                     end)
@@ -745,7 +746,7 @@ local function buildPage(parent, ctx)
 end
 
 M.page = {
-    title = "Backup", order = 90, category = "Gestione",
+    title = "Backup", order = 90, category = L["Gestione"],
     build = buildPage,
     refresh = function() if M._page and M._page.render then M._page.render() end end,
 }

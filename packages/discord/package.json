@@ -1,0 +1,23 @@
+{
+  "name": "@badb/discord",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun --watch src/index.ts",
+    "start": "bun src/index.ts",
+    "register": "bun src/register.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@badb/core": "workspace:*",
+    "@badb/sdk": "workspace:*",
+    "discord.js": "14.28.1"
+  },
+  "devDependencies": {
+    "@types/bun": "catalog:",
+    "typescript": "catalog:",
+    "@badb/server": "workspace:*"
+  }
+}

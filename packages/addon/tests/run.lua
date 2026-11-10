@@ -3,6 +3,7 @@
 -- Ogni file tests/*_test.lua restituisce una tabella { ["nome test"] = function(Mock) ... end }
 -- e viene eseguito in un ambiente pulito: addon ricaricato da zero per ogni file.
 local root = arg and arg[1] or "."
+local onlySuite = arg and arg[2]
 
 -- Auto-discovery: ogni tests/*_test.lua viene eseguito (ordine alfabetico).
 local SUITES = {}
@@ -10,7 +11,9 @@ do
     local p = io.popen('ls "' .. root .. '/tests" 2>/dev/null')
     if p then
         for name in p:lines() do
-            if name:match("_test%.lua$") then SUITES[#SUITES + 1] = "tests/" .. name end
+            if name:match("_test%.lua$") and (not onlySuite or name:find(onlySuite, 1, true)) then
+                SUITES[#SUITES + 1] = "tests/" .. name
+            end
         end
         p:close()
     end
@@ -23,7 +26,7 @@ local passed, failed = 0, 0
 local function freshEnv()
     -- Ripulisce i globali creati dal caso precedente.
     package.loaded["tests.wow_mock"] = nil
-    for _, k in ipairs({ "BadbUI", "BadbUIDB", "MainActionBar", "MultiBarBottomLeft" }) do _G[k] = nil end
+    for _, k in ipairs({ "BadbUI", "BadbUIDB", "BadbUI_GuildExport", "BadbUI_GuildSync", "BadbUI_ChatbotExport", "BadbUI_ChatbotSync", "MainActionBar", "MultiBarBottomLeft" }) do _G[k] = nil end
     local Mock = dofile(root .. "/tests/wow_mock.lua")
     Mock.CreateActionButtons("ActionButton", 12, "ACTIONBUTTON")
     Mock.CreateActionButtons("MultiBarBottomLeftButton", 12, "MULTIACTIONBAR1BUTTON")

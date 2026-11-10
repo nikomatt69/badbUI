@@ -20,6 +20,8 @@ export type Row = {
   professions: string
   updated: number
   source: "site" | "addon"
+  scanned_at: number | null
+  client: string | null
 }
 
 const SELECT = `SELECT character.*, user.name AS owner FROM character LEFT JOIN user ON user.id = character.user_id`
@@ -43,6 +45,8 @@ export function toCharacter(row: Row): Schema.Character {
     professions: json<Schema.Profession[]>(row.professions, []),
     updated: row.updated,
     source: row.source,
+    scannedAt: row.scanned_at,
+    client: json<Schema.Character["client"]>(row.client, null),
   }
 }
 
@@ -97,11 +101,14 @@ type Input = {
 /** Crea un personaggio o reclama quello importato dal roster di gioco (ancora senza proprietario). */
 export function save(ctx: Ctx, user: Schema.User, input: Input) {
   const existing = byName(ctx, input.name)
-  if (existing?.userId && existing.userId !== user.id) throw new Fail(409, "Personaggio già collegato a un altro account")
+  if (existing?.userId && existing.userId !== user.id)
+    throw new Fail(409, "Personaggio già collegato a un altro account")
   const fixed = spec(input.cls, input.spec)
   const role = Game.resolveRole(input.cls, fixed, input.role)
   const target = existing?.id ?? id()
-  if (existing) {
+  if (existing?.source === "addon") {
+    ctx.db.run("UPDATE character SET user_id = ? WHERE id = ?", [user.id, target])
+  } else if (existing) {
     ctx.db.run(
       "UPDATE character SET user_id = ?, realm = ?, cls = ?, spec = ?, role = ?, level = ?, race = ?, in_guild = 1, updated = ? WHERE id = ?",
       [user.id, input.realm, input.cls, fixed, role, input.level, input.race, ctx.now(), target],
@@ -111,7 +118,19 @@ export function save(ctx: Ctx, user: Schema.User, input: Input) {
     ctx.db.run(
       `INSERT INTO character (id, user_id, name, name_key, realm, cls, spec, role, level, race, updated, source)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'site')`,
-      [target, user.id, input.name, input.name.toLowerCase(), input.realm, input.cls, fixed, role, input.level, input.race, ctx.now()],
+      [
+        target,
+        user.id,
+        input.name,
+        input.name.toLowerCase(),
+        input.realm,
+        input.cls,
+        fixed,
+        role,
+        input.level,
+        input.race,
+        ctx.now(),
+      ],
     )
   }
   const first = ofUser(ctx, user.id).length === 1
@@ -123,25 +142,31 @@ export function save(ctx: Ctx, user: Schema.User, input: Input) {
 export function owned(ctx: Ctx, user: Schema.User, character: string) {
   const found = get(ctx, character)
   if (!found) throw new Fail(404, "Personaggio non trovato")
-  if (found.userId !== user.id && !Game.rankAtLeast(user.rank, "officer")) throw new Fail(403, "Non è un tuo personaggio")
+  if (found.userId !== user.id && !Game.rankAtLeast(user.rank, "officer"))
+    throw new Fail(403, "Non è un tuo personaggio")
   return found
 }
 
 export function patch(ctx: Ctx, user: Schema.User, character: string, input: Partial<Input>) {
   const found = owned(ctx, user, character)
+  if (found.source === "addon" && Object.keys(input).some((key) => key !== "main"))
+    throw new Fail(409, "Scheda letta da Forever: aggiorna i dati dal client tramite l'addon")
   const cls = input.cls ?? found.cls
   const fixed = spec(cls, input.spec === undefined ? found.spec : input.spec)
   const role = Game.resolveRole(cls, fixed, input.role ?? found.role)
-  ctx.db.run("UPDATE character SET realm = ?, cls = ?, spec = ?, role = ?, level = ?, race = ?, updated = ? WHERE id = ?", [
-    input.realm ?? found.realm,
-    cls,
-    fixed,
-    role,
-    input.level ?? found.level,
-    input.race === undefined ? found.race : input.race,
-    ctx.now(),
-    character,
-  ])
+  ctx.db.run(
+    "UPDATE character SET realm = ?, cls = ?, spec = ?, role = ?, level = ?, race = ?, updated = ? WHERE id = ?",
+    [
+      input.realm ?? found.realm,
+      cls,
+      fixed,
+      role,
+      input.level ?? found.level,
+      input.race === undefined ? found.race : input.race,
+      ctx.now(),
+      character,
+    ],
+  )
   if (input.main && found.userId) setMain(ctx, found.userId, character)
   touch(ctx, { type: "character", id: character })
   return get(ctx, character)!
@@ -158,9 +183,21 @@ export function remove(ctx: Ctx, user: Schema.User, character: string) {
 }
 
 /** Scheda completa letta dall'addon sul personaggio del giocatore: lo collega al suo account. */
-export function scan(ctx: Ctx, user: Schema.User, input: Schema.AddonCharacter) {
+export function scan(ctx: Ctx, user: Schema.User, input: Schema.AddonCharacter, client?: Schema.AddonSync["client"]) {
   const existing = byName(ctx, input.name)
-  if (existing?.userId && existing.userId !== user.id) return { ok: false as const, error: `${input.name}: collegato a un altro account` }
+  if (existing?.userId && existing.userId !== user.id)
+    return { ok: false as const, error: `${input.name}: collegato a un altro account` }
+  // Un companion rimasto indietro non può retrocedere l'armory a una vecchia scansione.
+  if (existing?.scannedAt && input.scanned * 1000 < existing.scannedAt)
+    return { ok: true as const, id: existing.id, changed: false }
+  if (
+    existing?.scannedAt === input.scanned * 1000 &&
+    existing.level === input.level &&
+    existing.spec === input.spec &&
+    JSON.stringify(existing.gear) === JSON.stringify(input.gear) &&
+    JSON.stringify(existing.professions) === JSON.stringify(input.professions)
+  )
+    return { ok: true as const, id: existing.id, changed: false }
   const fixed = spec(input.cls, input.spec)
   const role = Game.resolveRole(input.cls, fixed, input.role ?? existing?.role)
   const target = existing?.id ?? id()
@@ -193,7 +230,12 @@ export function scan(ctx: Ctx, user: Schema.User, input: Schema.AddonCharacter) 
     )
   }
   if (ofUser(ctx, user.id).every((c) => !c.main)) setMain(ctx, user.id, target)
-  return { ok: true as const, id: target }
+  ctx.db.run("UPDATE character SET scanned_at = ?, client = ? WHERE id = ?", [
+    input.scanned > 0 ? input.scanned * 1000 : null,
+    client ? JSON.stringify(client) : null,
+    target,
+  ])
+  return { ok: true as const, id: target, changed: true }
 }
 
 /** Roster di gilda visto in gioco da un ufficiale: crea chi manca, aggiorna grado e livello, segna chi e' uscito. */
@@ -202,9 +244,15 @@ export function roster(ctx: Ctx, entries: Schema.AddonSync["roster"]) {
   ctx.db.transaction(() => {
     for (const entry of entries) {
       const key = entry.name.toLowerCase()
-      const found = ctx.db.query<{ id: string; cls: string }, [string]>("SELECT id, cls FROM character WHERE name_key = ?").get(key)
+      const found = ctx.db
+        .query<{ id: string; cls: string }, [string]>("SELECT id, cls FROM character WHERE name_key = ?")
+        .get(key)
       if (found) {
-        ctx.db.run("UPDATE character SET level = ?, guild_rank = ?, in_guild = 1 WHERE id = ?", [entry.level, entry.guildRank, found.id])
+        ctx.db.run("UPDATE character SET level = ?, guild_rank = ?, in_guild = 1 WHERE id = ?", [
+          entry.level,
+          entry.guildRank,
+          found.id,
+        ])
         continue
       }
       ctx.db.run(
@@ -212,7 +260,27 @@ export function roster(ctx: Ctx, entries: Schema.AddonSync["roster"]) {
         [id(), entry.name, key, entry.cls, Game.resolveRole(entry.cls, null), entry.level, entry.guildRank, ctx.now()],
       )
     }
-    const all = ctx.db.query<{ id: string; name_key: string }, []>("SELECT id, name_key FROM character WHERE in_guild = 1 AND guild_rank IS NOT NULL").all()
-    for (const row of all) if (!seen.has(row.name_key)) ctx.db.run("UPDATE character SET in_guild = 0 WHERE id = ?", [row.id])
+    const all = ctx.db
+      .query<
+        { id: string; name_key: string },
+        []
+      >("SELECT id, name_key FROM character WHERE in_guild = 1 AND guild_rank IS NOT NULL")
+      .all()
+    for (const row of all)
+      if (!seen.has(row.name_key)) ctx.db.run("UPDATE character SET in_guild = 0 WHERE id = ?", [row.id])
   })()
+}
+
+/** I capigilda/ufficiali gestiscono i collegamenti, senza alterare dati letti dal gioco. */
+export function setOwner(ctx: Ctx, user: Schema.User, character: string, userId: string | null) {
+  if (!Game.rankAtLeast(user.rank, "officer")) throw new Fail(403, "Solo ufficiali e capigilda")
+  const found = get(ctx, character)
+  if (!found) throw new Fail(404, "Personaggio non trovato")
+  if (userId && !ctx.db.query("SELECT 1 FROM user WHERE id = ?").get(userId)) throw new Fail(404, "Account non trovato")
+  ctx.db.transaction(() => {
+    ctx.db.run("UPDATE character SET user_id = ?, main = 0 WHERE id = ?", [userId, character])
+    if (userId && ofUser(ctx, userId).every((c) => !c.main)) setMain(ctx, userId, character)
+  })()
+  touch(ctx, { type: "character", id: character })
+  return get(ctx, character)!
 }

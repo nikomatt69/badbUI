@@ -7,6 +7,7 @@
 -- Dati salvati (profilo, modulo "Integrations"):
 --   data = { [id] = { version = 1, capturedAt = time, payload = <tabella> } }
 local _, ns = ...
+local L = ns.Badb.L
 local Badb = ns.Badb
 local Events, Logger, Modules = Badb.Events, Badb.Logger, Badb.Modules
 
@@ -16,11 +17,11 @@ local MAX_DEPTH, MAX_NODES = 12, 20000
 local ID_PATTERN = "^[%w_%-]+$"      -- niente punti: l'id finisce in un percorso "data.<id>"
 
 local M = Modules:New("Integrations", {
-    title = "Integrazioni addon",
-    category = "Strumenti",
+    title = L["Integrazioni addon"],
+    category = L["Strumenti"],
     defaults = { enabled = true, autoApplyOnProfileChange = false, data = {} },
     options = {
-        { type = "toggle", path = "autoApplyOnProfileChange", label = "Riapplica le integrazioni al cambio profilo" },
+        { type = "toggle", path = "autoApplyOnProfileChange", label = L["Riapplica le integrazioni al cambio profilo"] },
     },
 })
 Badb.Integrations = M
@@ -64,10 +65,10 @@ local function sanitize(value, depth, path, budget)
         return value
     end
     if tv ~= "table" then return nil end
-    if depth > MAX_DEPTH then error("struttura troppo profonda", 0) end
-    if path[value] then error("riferimento ciclico nei dati", 0) end
+    if depth > MAX_DEPTH then error(L["struttura troppo profonda"], 0) end
+    if path[value] then error(L["riferimento ciclico nei dati"], 0) end
     budget.n = budget.n + 1
-    if budget.n > MAX_NODES then error("troppi elementi nei dati", 0) end
+    if budget.n > MAX_NODES then error(L["troppi elementi nei dati"], 0) end
     path[value] = true
     local out = {}
     for k, v in pairs(value) do
@@ -85,17 +86,17 @@ end
 -- Registro adapter
 -- ---------------------------------------------------------------------------------------
 function M:RegisterAdapter(def)
-    if type(def) ~= "table" then return false, "definizione non valida" end
+    if type(def) ~= "table" then return false, L["definizione non valida"] end
     local id = def.id
     if type(id) ~= "string" or #id > 64 or not id:match(ID_PATTERN) then
-        return false, "id non valido (solo lettere, numeri, '_' e '-')"
+        return false, L["id non valido (solo lettere, numeri, '_' e '-')"]
     end
     local supported = def.supported ~= false
     if supported and (type(def.capture) ~= "function" or type(def.apply) ~= "function") then
-        return false, "adapter '" .. id .. "': capture e apply sono obbligatori"
+        return false, "adapter '" .. id .. L["': capture e apply sono obbligatori"]
     end
-    if def.detect ~= nil and type(def.detect) ~= "function" then return false, "detect deve essere una funzione" end
-    if def.reset ~= nil and type(def.reset) ~= "function" then return false, "reset deve essere una funzione" end
+    if def.detect ~= nil and type(def.detect) ~= "function" then return false, L["detect deve essere una funzione"] end
+    if def.reset ~= nil and type(def.reset) ~= "function" then return false, L["reset deve essere una funzione"] end
     local a = {
         id = id,
         title = type(def.title) == "string" and def.title or id,
@@ -107,7 +108,7 @@ function M:RegisterAdapter(def)
         noteFn = type(def.noteFn) == "function" and def.noteFn or nil,
         confidence = (def.confidence == "A" or def.confidence == "B") and def.confidence or "C",
     }
-    if not supported and not a.unsupportedReason then a.unsupportedReason = "non supportato" end
+    if not supported and not a.unsupportedReason then a.unsupportedReason = L["non supportato"] end
     if not self.adapters[id] then self.order[#self.order + 1] = id end
     self.adapters[id] = a
     self.state[id] = self.state[id] or {}
@@ -115,21 +116,21 @@ function M:RegisterAdapter(def)
 end
 
 local function adapterFor(self, id)
-    if type(id) ~= "string" then return nil, "id integrazione non valido" end
+    if type(id) ~= "string" then return nil, L["id integrazione non valido"] end
     local a = self.adapters[id]
-    if not a then return nil, "integrazione sconosciuta: " .. id end
+    if not a then return nil, L["integrazione sconosciuta: "] .. id end
     return a
 end
 
 -- Esegue una funzione dell'adapter in pcall. Ritorna ok, r1, r2 (ok=false => r1 = messaggio).
 local function callAdapter(self, a, method, ...)
     local fn = a[method]
-    if type(fn) ~= "function" then return false, method .. " non disponibile per " .. a.title end
+    if type(fn) ~= "function" then return false, method .. L[" non disponibile per "] .. a.title end
     local ok, r1, r2 = pcall(fn, ...)
     if not ok then
         local msg = tostring(r1)
         self.state[a.id].lastError = msg
-        Logger:Error("Integrazione %s (%s): %s", a.id, method, msg)
+        Logger:Error(L["Integrazione %s (%s): %s"], a.id, method, msg)
         return false, msg
     end
     return true, r1, r2
@@ -149,7 +150,7 @@ local function isLoaded(self, a)
     local ok, r = pcall(a.detect)
     if not ok then
         self.state[a.id].lastError = tostring(r)
-        Logger:Error("Integrazione %s (detect): %s", a.id, tostring(r))
+        Logger:Error(L["Integrazione %s (detect): %s"], a.id, tostring(r))
         return false
     end
     return r and true or false
@@ -188,9 +189,9 @@ local function recordOf(self, id)
 end
 
 local RECORD_ERRORS = {
-    missing = "nessun dato catturato: esegui prima Cattura",
-    corrupt = "dati catturati corrotti: ripeti la Cattura",
-    newer = "dati creati da una versione piu' recente di BadbUI",
+    missing = L["nessun dato catturato: esegui prima Cattura"],
+    corrupt = L["dati catturati corrotti: ripeti la Cattura"],
+    newer = L["dati creati da una versione piu' recente di BadbUI"],
 }
 
 -- ---------------------------------------------------------------------------------------
@@ -239,31 +240,31 @@ function M:Capture(id)
     local a, err = adapterFor(self, id)
     if not a then return false, err end
     if not a.supported then return false, a.unsupportedReason end
-    if not isLoaded(self, a) then return false, a.title .. " non e' caricato" end
+    if not isLoaded(self, a) then return false, a.title .. L[" non e' caricato"] end
     local st = self.state[id]
     local ok, payload, msg = callAdapter(self, a, "capture")
     if not ok then return false, payload end
     if type(payload) ~= "table" then
-        err = (type(msg) == "string" and msg) or "capture non ha restituito dati validi"
+        err = (type(msg) == "string" and msg) or L["capture non ha restituito dati validi"]
         st.lastError = err
         return false, err
     end
     local okS, clean = pcall(sanitize, payload, 1, {}, { n = 0 })
     if not okS then
         st.lastError = tostring(clean)
-        return false, "payload non valido: " .. tostring(clean)
+        return false, L["payload non valido: "] .. tostring(clean)
     end
     local okE, str = pcall(Badb.Serializer.Export, Badb.Serializer, "integration:" .. id, clean)
     if not okE or type(str) ~= "string" then
-        st.lastError = "serializzazione fallita"
-        return false, "serializzazione del payload fallita"
+        st.lastError = L["serializzazione fallita"]
+        return false, L["serializzazione del payload fallita"]
     end
     if #str > MAX_PAYLOAD_BYTES then
-        err = string.format("payload troppo grande (%d byte, massimo %d)", #str, MAX_PAYLOAD_BYTES)
+        err = string.format(L["payload troppo grande (%d byte, massimo %d)"], #str, MAX_PAYLOAD_BYTES)
         st.lastError = err
         return false, err
     end
-    if not getData(self, true) then return false, "profilo BadbUI non disponibile" end
+    if not getData(self, true) then return false, L["profilo BadbUI non disponibile"] end
     self:Set("data." .. id, { version = DATA_VERSION, capturedAt = now(), payload = clean })
     st.lastError = nil
     return true
@@ -275,14 +276,14 @@ local function backup(label)
     local B = Badb.Backups
     if B and type(B.Create) == "function" then
         local ok, id = pcall(B.Create, B, label, "pre-import")
-        if not ok or not id then Logger:Warn("Backup pre-azione non riuscito (%s)", label) end
+        if not ok or not id then Logger:Warn(L["Backup pre-azione non riuscito (%s)"], label) end
     end
 end
 
 -- Controlli comuni ad Apply/Reset (immediati, validi anche in combattimento).
 local function usable(self, a)
     if not a.supported then return false, a.unsupportedReason end
-    if not isLoaded(self, a) then return false, a.title .. " non e' caricato" end
+    if not isLoaded(self, a) then return false, a.title .. L[" non e' caricato"] end
     return true
 end
 
@@ -293,13 +294,13 @@ local function doApply(self, id, opts)
     local okU, errU = usable(self, a)
     if not okU then return false, errU end
     local rec, why = recordOf(self, id)
-    if not rec then return false, RECORD_ERRORS[why] or "dati non validi" end
-    if self._busy then return false, "operazione gia' in corso" end
+    if not rec then return false, RECORD_ERRORS[why] or L["dati non validi"] end
+    if self._busy then return false, L["operazione gia' in corso"] end
 
     self._busy = true
     local st = self.state[id]
     local okRun, rOk, rErr, rWarn = pcall(function()
-        if not (opts and opts.noBackup) then backup("Integrazione " .. a.title) end
+        if not (opts and opts.noBackup) then backup(L["Integrazione "] .. a.title) end
         local okC, res, msg = callAdapter(self, a, "apply", Badb.CopyTable(rec.payload))
         if not okC then return false, res end
         if res == "skipped" then
@@ -308,9 +309,9 @@ local function doApply(self, id, opts)
             return true, nil, msg
         end
         if res == false or (res == nil and type(msg) == "string") then
-            local e = tostring(msg or "apply fallito")
+            local e = tostring(msg or L["apply fallito"])
             st.lastError = e
-            Logger:Error("Integrazione %s (apply): %s", id, e)
+            Logger:Error(L["Integrazione %s (apply): %s"], id, e)
             return false, e
         end
         st.lastError, st.lastWarning, st.lastApplied = nil, nil, now()
@@ -320,7 +321,7 @@ local function doApply(self, id, opts)
     self._busy = false
     if not okRun then
         st.lastError = tostring(rOk)
-        Logger:Error("Integrazione %s: %s", id, tostring(rOk))
+        Logger:Error(L["Integrazione %s: %s"], id, tostring(rOk))
         return false, tostring(rOk)
     end
     return rOk, rErr, rWarn
@@ -334,13 +335,13 @@ function M:Apply(id, opts)
     local okU, errU = usable(self, a)
     if not okU then return false, errU end
     local rec, why = recordOf(self, id)
-    if not rec then return false, RECORD_ERRORS[why] or "dati non validi" end
+    if not rec then return false, RECORD_ERRORS[why] or L["dati non validi"] end
     if inCombat() then
         Events:RunOutOfCombat("integration:apply:" .. id, function()
             local ok, e = doApply(self, id, opts)
-            if not ok then Logger:Warn("Applicazione differita di %s fallita: %s", id, tostring(e)) end
+            if not ok then Logger:Warn(L["Applicazione differita di %s fallita: %s"], id, tostring(e)) end
         end)
-        return true, nil, "differito a fine combattimento"
+        return true, nil, L["differito a fine combattimento"]
     end
     return doApply(self, id, opts)
 end
@@ -349,7 +350,7 @@ M.Apply = guarded(M.Apply)
 -- Applica tutte le integrazioni catturate, supportate e caricate. Un adapter che fallisce non
 -- blocca gli altri. Ritorna ok(=nessun fallimento), err, applicate, fallite.
 local function applyAllNow(self, opts)
-    if self._autoRunning then return false, "operazione gia' in corso", 0, 0 end
+    if self._autoRunning then return false, L["operazione gia' in corso"], 0, 0 end
     self._autoRunning = true
     local applied, failed, lastErr = 0, 0, nil
     for _, id in ipairs(self.order) do
@@ -379,11 +380,11 @@ M.ApplyAll = guarded(M.ApplyAll)
 function M:Reset(id)
     local a, err = adapterFor(self, id)
     if not a then return false, err end
-    if type(a.reset) ~= "function" then return false, "reset non supportato per " .. a.title end
+    if type(a.reset) ~= "function" then return false, L["reset non supportato per "] .. a.title end
     local okU, errU = usable(self, a)
     if not okU then return false, errU end
     local function run()
-        if self._busy then return false, "operazione gia' in corso" end
+        if self._busy then return false, L["operazione gia' in corso"] end
         self._busy = true
         local okRun, ok, e = pcall(function()
             backup("Reset " .. a.title)
@@ -403,9 +404,9 @@ function M:Reset(id)
     if inCombat() then
         Events:RunOutOfCombat("integration:reset:" .. id, function()
             local ok, e = run()
-            if not ok then Logger:Warn("Reset differito di %s fallito: %s", id, tostring(e)) end
+            if not ok then Logger:Warn(L["Reset differito di %s fallito: %s"], id, tostring(e)) end
         end)
-        return true, nil, "differito a fine combattimento"
+        return true, nil, L["differito a fine combattimento"]
     end
     return run()
 end
@@ -429,7 +430,7 @@ function M:OnInitialize()
         -- Un adapter di terze parti gia' registrato con lo stesso id ha la precedenza.
         if not self.adapters[def.id] then
             local ok, err = self:RegisterAdapter(def)
-            if not ok then Logger:Warn("Adapter %s scartato: %s", tostring(def.id), tostring(err)) end
+            if not ok then Logger:Warn(L["Adapter %s scartato: %s"], tostring(def.id), tostring(err)) end
         end
     end
 end
@@ -461,7 +462,7 @@ local function parseArgs(args)
     return a, b
 end
 
-local STATE_LABEL = { missing = "non installato", installed = "installato", captured = "catturato", unsupported = "non supportato" }
+local STATE_LABEL = { missing = L["non installato"], installed = L["installato"], captured = L["catturato"], unsupported = L["non supportato"] }
 
 local function report(ok, err, warn, okText)
     if ok then
@@ -483,12 +484,12 @@ M.commands = {
                         r.reason and (" - " .. r.reason) or "")
                 end
             elseif sub == "capture" or sub == "apply" or sub == "reset" or sub == "forget" then
-                if not id then Logger:Warn("uso: integration %s <id>", sub); return end
+                if not id then Logger:Warn(L["uso: integration %s <id>"], sub); return end
                 local method = sub:sub(1, 1):upper() .. sub:sub(2)
                 local ok, err, warn = M[method](M, id)
-                report(ok, err, warn, id .. ": " .. sub .. " eseguito")
+                report(ok, err, warn, id .. ": " .. sub .. L[" eseguito"])
             else
-                Logger:Info("uso: /badb integration list | capture <id> | apply <id> | reset <id> | forget <id>")
+                Logger:Info(L["uso: /badb integration list | capture <id> | apply <id> | reset <id> | forget <id>"])
             end
         end,
     },
@@ -530,7 +531,7 @@ local function buildPage(parent, ctx)
     local auto = CreateFrame("CheckButton", nil, parent, "UICheckButtonTemplate")
     auto:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, -y)
     local autoText = auto.text or auto.Text
-    if autoText then autoText:SetText("Riapplica le integrazioni al cambio profilo") end
+    if autoText then autoText:SetText(L["Riapplica le integrazioni al cambio profilo"]) end
     auto:SetScript("OnClick", function(self)
         M:Set("autoApplyOnProfileChange", self:GetChecked() and true or false)
     end)
@@ -579,12 +580,12 @@ local function buildPage(parent, ctx)
         row.status:SetPoint("TOPLEFT", parent, "TOPLEFT", 28, -y - 16)
         row.reason = parent:CreateFontString(nil, "ARTWORK", "GameFontDisableSmall")
         row.reason:SetPoint("TOPLEFT", parent, "TOPLEFT", 28, -y - 30)
-        row.capture = makeButton(parent, "Cattura", 330, -y, function() act(id, "Capture", "Catturato") end)
-        row.apply = makeButton(parent, "Applica", 404, -y, function() act(id, "Apply", "Applicato") end)
+        row.capture = makeButton(parent, L["Cattura"], 330, -y, function() act(id, "Capture", L["Catturato"]) end)
+        row.apply = makeButton(parent, L["Applica"], 404, -y, function() act(id, "Apply", L["Applicato"]) end)
         row.reset = makeButton(parent, "Reset", 478, -y, function()
             local UI = Badb.ConfigUI
-            local run = function() act(id, "Reset", "Reset eseguito") end
-            if UI and UI.Confirm then UI:Confirm("Ripristinare i default di " .. item.title .. "?", run) else run() end
+            local run = function() act(id, "Reset", L["Reset eseguito"]) end
+            if UI and UI.Confirm then UI:Confirm(L["Ripristinare i default di "] .. item.title .. "?", run) else run() end
         end)
         rows[#rows + 1] = row
         y = y + ROW_H
@@ -596,9 +597,9 @@ local function buildPage(parent, ctx)
 end
 
 M.page = {
-    title = "Integrazioni",
+    title = L["Integrazioni"],
     order = 50,
-    category = "Strumenti",
+    category = L["Strumenti"],
     build = buildPage,
     refresh = function() if M._pageRefresh then M._pageRefresh() end end,
 }

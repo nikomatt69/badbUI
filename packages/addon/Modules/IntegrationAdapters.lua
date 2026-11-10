@@ -12,6 +12,7 @@
 -- degrada con un errore chiaro invece di lanciare. Gli adapter AceDB salvano il NOME del profilo
 -- attivo, non il contenuto del profilo (vedi docs/integrations.md).
 local _, ns = ...
+local L = ns.Badb.L
 local Badb = ns.Badb
 
 local H = {}
@@ -42,7 +43,7 @@ end
 -- Chiama obj:method(...) in pcall. Ritorna ok, r1, r2, r3. Metodo mancante => false + messaggio.
 local function callMethod(obj, method, ...)
     local fn = safeGet(obj, method)
-    if type(fn) ~= "function" then return false, "metodo non disponibile: " .. tostring(method) end
+    if type(fn) ~= "function" then return false, L["metodo non disponibile: "] .. tostring(method) end
     local ok, a, b, c = pcall(fn, obj, ...)
     if not ok then return false, tostring(a) end
     return true, a, b, c
@@ -119,18 +120,18 @@ local function aceDBAdapter(id, title, addon, dbGetter, extra)
         detect = function() return detectAddon(addon, globalName) end,
         capture = function()
             local db = getDB()
-            if not db then return nil, "database di " .. title .. " non disponibile" end
+            if not db then return nil, L["database di "] .. title .. L[" non disponibile"] end
             local name = nameOf(db, { "GetCurrentProfile" })
-            if not name then return nil, "profilo attivo di " .. title .. " non leggibile (API AceDB assente?)" end
+            if not name then return nil, L["profilo attivo di "] .. title .. L[" non leggibile (API AceDB assente?)"] end
             local payload = { profile = name }
             if extra.captureExtra then pcall(extra.captureExtra, db, payload) end
             return payload
         end,
         apply = function(payload)
             local db = getDB()
-            if not db then return false, "database di " .. title .. " non disponibile" end
+            if not db then return false, L["database di "] .. title .. L[" non disponibile"] end
             local name = type(payload) == "table" and payload.profile
-            if not validName(name) then return false, "nome profilo non valido nei dati catturati" end
+            if not validName(name) then return false, L["nome profilo non valido nei dati catturati"] end
             local current = nameOf(db, { "GetCurrentProfile" })
             local exists, known = aceProfileExists(db, name)
             if known and not exists then
@@ -139,20 +140,20 @@ local function aceDBAdapter(id, title, addon, dbGetter, extra)
                     if ok and r1 ~= nil then return r1, r2 end
                 end
                 -- Un SetProfile creerebbe un profilo vuoto: meglio non toccare nulla.
-                return "skipped", "profilo mancante: '" .. name .. "' non esiste su questo account (" .. title .. ")"
+                return "skipped", L["profilo mancante: '"] .. name .. L["' non esiste su questo account ("] .. title .. ")"
             end
             if current == name then return true end
             local ok, err = callMethod(db, "SetProfile", name)
             if not ok then return false, err end
             local after = nameOf(db, { "GetCurrentProfile" })
             if after and after ~= name then
-                return false, "SetProfile non ha cambiato il profilo di " .. title
+                return false, L["SetProfile non ha cambiato il profilo di "] .. title
             end
             return true
         end,
         reset = function()
             local db = getDB()
-            if not db then return false, "database di " .. title .. " non disponibile" end
+            if not db then return false, L["database di "] .. title .. L[" non disponibile"] end
             local ok, err = callMethod(db, "ResetProfile")
             if not ok then return false, err end
             return true
@@ -194,10 +195,10 @@ end, {
         local D = elvuiDistributor()
         if not D or type(payload.exportString) ~= "string" then return nil end
         local ok, err = callMethod(D, "ImportProfile", payload.exportString)
-        if not ok then return false, "import del profilo ElvUI fallito: " .. tostring(err) end
+        if not ok then return false, L["import del profilo ElvUI fallito: "] .. tostring(err) end
         local exists, known = aceProfileExists(db, name)
         if known and not exists then
-            return "skipped", "profilo mancante: '" .. name .. "' non creato dall'import di ElvUI"
+            return "skipped", L["profilo mancante: '"] .. name .. L["' non creato dall'import di ElvUI"]
         end
         local okSet, errSet = callMethod(db, "SetProfile", name)
         if not okSet then return false, errSet end
@@ -216,15 +217,15 @@ Defs[#Defs + 1] = {
     capture = function()
         local D = detailsObj()
         local name = nameOf(D, { "GetCurrentProfileName", "GetCurrentProfile" })
-        if not name then return nil, "profilo attivo di Details! non leggibile (API assente?)" end
+        if not name then return nil, L["profilo attivo di Details! non leggibile (API assente?)"] end
         return { profile = name }
     end,
     apply = function(payload)
         local D = detailsObj()
         local name = type(payload) == "table" and payload.profile
-        if not validName(name) then return false, "nome profilo non valido nei dati catturati" end
+        if not validName(name) then return false, L["nome profilo non valido nei dati catturati"] end
         if type(safeGet(D, "ApplyProfile")) ~= "function" then
-            return false, "Details:ApplyProfile non disponibile"
+            return false, L["Details:ApplyProfile non disponibile"]
         end
         -- Esistenza del profilo: elenco se disponibile (best-effort).
         local ok, list = callMethod(D, "GetProfileList")
@@ -234,7 +235,7 @@ Defs[#Defs + 1] = {
                 if v == name or k == name then found = true; break end
             end
             if not found then
-                return "skipped", "profilo mancante: '" .. name .. "' non esiste su questo account (Details!)"
+                return "skipped", L["profilo mancante: '"] .. name .. L["' non esiste su questo account (Details!)"]
             end
         end
         if nameOf(D, { "GetCurrentProfileName", "GetCurrentProfile" }) == name then return true end
@@ -245,7 +246,7 @@ Defs[#Defs + 1] = {
     reset = function()
         local D = detailsObj()
         local name = nameOf(D, { "GetCurrentProfileName", "GetCurrentProfile" })
-        if not name then return false, "profilo attivo di Details! non leggibile" end
+        if not name then return false, L["profilo attivo di Details! non leggibile"] end
         local ok, err = callMethod(D, "ResetProfile", name)
         if not ok then return false, err end
         return true
@@ -276,15 +277,15 @@ Defs[#Defs + 1] = {
     detect = function() return detectAddon("DBM-Core", "DBM") end,
     capture = function()
         local name = rawget(_G, "DBM_UsedProfile")
-        if not validName(name) then return nil, "profilo attivo di DBM non determinabile (DBM_UsedProfile assente)" end
+        if not validName(name) then return nil, L["profilo attivo di DBM non determinabile (DBM_UsedProfile assente)"] end
         return { profile = name }
     end,
     apply = function(payload)
         local name = type(payload) == "table" and payload.profile
-        if not validName(name) then return false, "nome profilo non valido nei dati catturati" end
+        if not validName(name) then return false, L["nome profilo non valido nei dati catturati"] end
         local all = rawget(_G, "DBM_AllSavedOptions")
         if type(all) == "table" and safeGet(all, name) == nil then
-            return "skipped", "profilo mancante: '" .. name .. "' non esiste su questo personaggio (DBM)"
+            return "skipped", L["profilo mancante: '"] .. name .. L["' non esiste su questo personaggio (DBM)"]
         end
         if rawget(_G, "DBM_UsedProfile") == name then return true end
         local ok, err = callMethod(rawget(_G, "DBM"), "ApplyProfile", name)
@@ -300,7 +301,7 @@ Defs[#Defs + 1] = {
 Defs[#Defs + 1] = {
     id = "weakauras", title = "WeakAuras", addon = "WeakAuras",
     supported = false,
-    unsupportedReason = "WeakAuras non espone un'API pubblica per catturare o riapplicare le aura: usa l'export/import nativo di WeakAuras",
+    unsupportedReason = L["WeakAuras non espone un'API pubblica per catturare o riapplicare le aura: usa l'export/import nativo di WeakAuras"],
     detect = function() return detectAddon("WeakAuras", "WeakAuras") end,
 }
 
@@ -314,7 +315,7 @@ local clique = aceDBAdapter("clique", "Clique", "Clique", function()
 end)
 clique.noteFn = function()
     if type(rawget(_G, "C_ClickBindings")) == "table" then
-        return "solo il profilo Clique; il click casting integrato di Blizzard (C_ClickBindings) non e' catturabile"
+        return L["solo il profilo Clique; il click casting integrato di Blizzard (C_ClickBindings) non e' catturabile"]
     end
 end
 table.insert(Defs, #Defs, clique) -- prima di WeakAuras
@@ -325,7 +326,7 @@ table.insert(Defs, #Defs, clique) -- prima di WeakAuras
 Defs[#Defs + 1] = {
     id = "ellesmereui", title = "EllesmereUI", addon = "EllesmereUI",
     supported = false,
-    unsupportedReason = "API di profilo di EllesmereUI sconosciuta: solo rilevamento (usa il suo export nativo)",
+    unsupportedReason = L["API di profilo di EllesmereUI sconosciuta: solo rilevamento (usa il suo export nativo)"],
     detect = function()
         local known = addOnLoadedKnown("EllesmereUI")
         if known ~= nil then return known end
@@ -341,7 +342,7 @@ local XPERL_NAMES = { "XPerl", "ZPerl", "MetaPerl", "CPerl", "FPerl", "XPerl_Pla
 Defs[#Defs + 1] = {
     id = "xperl", title = "X-Perl", addon = "XPerl",
     supported = false,
-    unsupportedReason = "struttura dati di X-Perl non verificata: solo rilevamento (usa il suo export nativo)",
+    unsupportedReason = L["struttura dati di X-Perl non verificata: solo rilevamento (usa il suo export nativo)"],
     detect = function()
         local sawFalse = false
         for _, name in ipairs(XPERL_NAMES) do
@@ -359,16 +360,16 @@ Defs[#Defs + 1] = {
 -- (A = confermato, B = una fonte/secondaria, C = non verificato). Tutti gli adapter sono best-effort.
 -- ---------------------------------------------------------------------------------------
 local META = {
-    elvui = { "build Forever segnalata da una fonte", "B" },
-    details = { "meter real-time limitato nelle istanze (combat log non leggibile)", "B" },
-    plater = { "non verificato", "C" },
-    bartender4 = { "non verificato su Forever (API AceDB standard)", "C" },
-    bigwigs = { "timer dalla timeline nativa, si cattura solo il profilo", "B" },
-    dbm = { "timer dalla timeline nativa, si cattura solo il profilo", "B" },
-    clique = { "non verificato; solo il profilo Clique", "C" },
-    weakauras = { "stato incerto su Forever (restrizioni stile Midnight, build non ufficiali)", "C" },
-    ellesmereui = { "solo rilevamento: API di profilo non nota", "C" },
-    xperl = { "solo rilevamento: sostituisce i frame unita' (spegni UnitFrames di BadbUI)", "C" },
+    elvui = { L["build Forever segnalata da una fonte"], "B" },
+    details = { L["meter real-time limitato nelle istanze (combat log non leggibile)"], "B" },
+    plater = { L["non verificato"], "C" },
+    bartender4 = { L["non verificato su Forever (API AceDB standard)"], "C" },
+    bigwigs = { L["timer dalla timeline nativa, si cattura solo il profilo"], "B" },
+    dbm = { L["timer dalla timeline nativa, si cattura solo il profilo"], "B" },
+    clique = { L["non verificato; solo il profilo Clique"], "C" },
+    weakauras = { L["stato incerto su Forever (restrizioni stile Midnight, build non ufficiali)"], "C" },
+    ellesmereui = { L["solo rilevamento: API di profilo non nota"], "C" },
+    xperl = { L["solo rilevamento: sostituisce i frame unita' (spegni UnitFrames di BadbUI)"], "C" },
 }
 for _, def in ipairs(Defs) do
     local m = META[def.id]

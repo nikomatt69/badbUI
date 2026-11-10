@@ -6,6 +6,7 @@
 -- secret in combattimento: in quel caso il bordo resta quello predefinito (mai confronti su valori opachi).
 -- Al disable si ripristina l'alpha originale della cornice Blizzard.
 local _, ns = ...
+local L = ns.Badb.L
 local Badb = ns.Badb
 local Modules, Compat = Badb.Modules, Badb.Compat
 
@@ -17,16 +18,16 @@ local function theme() return Badb.Theme end
 
 local M = Modules:New("Tooltip", {
     title = "Tooltip",
-    category = "Interfaccia",
-    description = "Tooltip piatti in stile ElvUI: sfondo scuro, bordo per classe o qualita', barra vita sottile.",
+    category = L["Interfaccia"],
+    description = L["Tooltip piatti in stile ElvUI: sfondo scuro, bordo per classe o qualita', barra vita sottile."],
     defaults = { enabled = true, classBorder = true, qualityBorder = true, bgAlpha = 0.8, flatHealthBar = true },
     options = {
-        { type = "toggle", path = "classBorder", label = "Bordo del colore della classe sui giocatori" },
-        { type = "toggle", path = "qualityBorder", label = "Bordo del colore della qualita' sugli oggetti" },
-        { type = "range", path = "bgAlpha", label = "Opacita' dello sfondo", min = 0.3, max = 1, step = 0.05 },
-        { type = "toggle", path = "flatHealthBar", label = "Barra della vita piatta" },
+        { type = "toggle", path = "classBorder", label = L["Bordo del colore della classe sui giocatori"] },
+        { type = "toggle", path = "qualityBorder", label = L["Bordo del colore della qualita' sugli oggetti"] },
+        { type = "range", path = "bgAlpha", label = L["Opacita' dello sfondo"], min = 0.3, max = 1, step = 0.05 },
+        { type = "toggle", path = "flatHealthBar", label = L["Barra della vita piatta"] },
     },
-    page = { title = "Tooltip", order = 7, category = "Interfaccia", keywords = { "tooltip", "suggerimento", "bordo", "classe", "qualita" } },
+    page = { title = "Tooltip", order = 7, category = L["Interfaccia"], keywords = { "tooltip", L["suggerimento"], L["bordo"], L["classe"], L["qualita"] } },
 })
 Badb.Tooltip = M
 M.skinned = {}

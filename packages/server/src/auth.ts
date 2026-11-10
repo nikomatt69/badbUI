@@ -1,7 +1,8 @@
 // Account, sessioni e codici di collegamento (Discord, addon, app).
 import { Game, type Schema } from "@badb/core"
-import { timingSafeEqual } from "node:crypto"
+import { createHash, timingSafeEqual } from "node:crypto"
 import { Fail, id, touch, type Ctx } from "./ctx"
+import { passwords } from "./password"
 
 const DAY = 86_400_000
 /** Durata delle sessioni per tipo di client. */
@@ -32,7 +33,7 @@ export function toUser(row: Row): Schema.User {
 }
 
 function hash(token: string) {
-  return new Bun.CryptoHasher("sha256").update(token).digest("hex")
+  return createHash("sha256").update(token).digest("hex")
 }
 
 function secret(bytes: number) {
@@ -63,10 +64,15 @@ export function byId(ctx: Ctx, user: string) {
   return row ? toUser(row) : undefined
 }
 
-export async function register(ctx: Ctx, input: { name: string; password: string }) {
+export async function register(ctx: Ctx, input: { name: string; password: string; setupKey?: string }) {
+  if (!ctx.db.query("SELECT 1 FROM user").get() && (ctx.config.requireSetup || ctx.config.setupKey)) {
+    if (!ctx.config.setupKey) throw new Fail(503, "Configurazione iniziale del server in corso")
+    if (!equal(input.setupKey ?? "", ctx.config.setupKey))
+      throw new Fail(403, "Per creare il primo capogilda serve il codice installazione")
+  }
   const key = input.name.toLowerCase()
   if (ctx.db.query("SELECT 1 FROM user WHERE name_key = ?").get(key)) throw new Fail(409, "Nome già in uso")
-  const password = await Bun.password.hash(input.password)
+  const password = await (ctx.passwords ?? passwords).hash(input.password)
   const user = id()
   // Il primo account diventa capogilda: e' chi installa il server. La scelta e' atomica nella INSERT.
   ctx.db.run(
@@ -79,11 +85,17 @@ export async function register(ctx: Ctx, input: { name: string; password: string
 }
 
 // Hash usato quando l'account non esiste: il tempo di risposta resta lo stesso.
-const decoy = Bun.password.hash("badb-decoy-password")
+const decoys = new WeakMap<Ctx, Promise<string>>()
+function decoy(ctx: Ctx) {
+  if (!decoys.has(ctx)) decoys.set(ctx, (ctx.passwords ?? passwords).hash("badb-decoy-password"))
+  return decoys.get(ctx)!
+}
 
 export async function login(ctx: Ctx, input: { name: string; password: string }) {
   const row = ctx.db.query<Row, [string]>("SELECT * FROM user WHERE name_key = ?").get(input.name.toLowerCase())
-  const ok = await Bun.password.verify(input.password, row?.password ?? (await decoy)).catch(() => false)
+  const ok = await (ctx.passwords ?? passwords)
+    .verify(input.password, row?.password ?? (await decoy(ctx)))
+    .catch(() => false)
   if (!row || !ok) throw new Fail(401, "Nome o password errati")
   return { token: issue(ctx, row.id, "web"), user: toUser(row) }
 }
@@ -107,9 +119,10 @@ export function identify(ctx: Ctx, header: string | undefined, discord: string |
   if (scheme !== "Bearer") return undefined
   const key = hash(value)
   const row = ctx.db
-    .query<Row & { kind: string; expires: number }, [string]>(
-      "SELECT user.*, session.kind, session.expires FROM session JOIN user ON user.id = session.user_id WHERE session.hash = ?",
-    )
+    .query<
+      Row & { kind: string; expires: number },
+      [string]
+    >("SELECT user.*, session.kind, session.expires FROM session JOIN user ON user.id = session.user_id WHERE session.hash = ?")
     .get(key)
   if (!row) return undefined
   if (row.expires < ctx.now()) {
@@ -131,16 +144,22 @@ export function link(ctx: Ctx, user: string, kind: "discord" | "addon" | "mobile
   const code = [...crypto.getRandomValues(new Uint8Array(8))].map((b) => alphabet[b % alphabet.length]).join("")
   ctx.db.run("DELETE FROM link WHERE user_id = ? AND kind = ?", [user, kind])
   ctx.db.run("DELETE FROM link WHERE expires < ?", [ctx.now()])
-  ctx.db.run("INSERT INTO link (code, user_id, kind, expires) VALUES (?, ?, ?, ?)", [code, user, kind, ctx.now() + LINK_TTL])
+  ctx.db.run("INSERT INTO link (code, user_id, kind, expires) VALUES (?, ?, ?, ?)", [
+    code,
+    user,
+    kind,
+    ctx.now() + LINK_TTL,
+  ])
   return { code, expires: ctx.now() + LINK_TTL }
 }
 
 function take(ctx: Ctx, code: string, kinds: string[]) {
   // DELETE ... RETURNING consuma il codice in un solo passo: non puo' essere riscattato due volte.
   const row = ctx.db
-    .query<{ user_id: string; kind: string; expires: number }, [string]>(
-      "DELETE FROM link WHERE code = ? RETURNING user_id, kind, expires",
-    )
+    .query<
+      { user_id: string; kind: string; expires: number },
+      [string]
+    >("DELETE FROM link WHERE code = ? RETURNING user_id, kind, expires")
     .get(code.trim().toUpperCase())
   if (!row || row.expires < ctx.now() || !kinds.includes(row.kind)) throw new Fail(400, "Codice non valido o scaduto")
   return row
@@ -171,10 +190,7 @@ export function unlink(ctx: Ctx, user: string) {
 }
 
 export function list(ctx: Ctx) {
-  return ctx.db
-    .query<Row, []>("SELECT * FROM user ORDER BY name_key")
-    .all()
-    .map(toUser)
+  return ctx.db.query<Row, []>("SELECT * FROM user ORDER BY name_key").all().map(toUser)
 }
 
 /** Cambio di grado: gli ufficiali gestiscono ospiti e membri, solo il capogilda nomina ufficiali. */
@@ -182,7 +198,8 @@ export function setRank(ctx: Ctx, actor: Schema.User, target: string, rank: Game
   const user = byId(ctx, target)
   if (!user) throw new Fail(404, "Utente non trovato")
   const high = (r: Game.Rank) => Game.rankAtLeast(r, "officer")
-  if (actor.rank !== "gm" && (high(user.rank) || high(rank))) throw new Fail(403, "Solo il capogilda gestisce gli ufficiali")
+  if (actor.rank !== "gm" && (high(user.rank) || high(rank)))
+    throw new Fail(403, "Solo il capogilda gestisce gli ufficiali")
   if (user.rank === "gm" && rank !== "gm") {
     const gms = ctx.db.query<{ n: number }, []>("SELECT COUNT(*) AS n FROM user WHERE rank = 'gm'").get()?.n ?? 0
     if (gms <= 1) throw new Fail(409, "Serve almeno un capogilda")

@@ -3,6 +3,7 @@
 -- Per ogni frame salva nel profilo: posizione, scala, alpha, visibilita' e condizioni.
 -- Ripristina sempre lo stato originale quando un frame viene "rilasciato".
 local _, ns = ...
+local L = ns.Badb.L
 local Badb = ns.Badb
 local Events, Logger, DB, Compat = Badb.Events, Badb.Logger, Badb.DB, Badb.Compat
 
@@ -20,7 +21,7 @@ FM:Register("PlayerFrame", {
 function FM:Register(key, desc)
     desc.key = key
     desc.title = desc.title or key
-    desc.category = desc.category or "Altro"
+    desc.category = desc.category or L["Altro"]
     self.registry[key] = desc
     if self.ready then self:Apply(key) end
 end
@@ -184,10 +185,10 @@ local function createMover(desc, f)
         if GameTooltip and GameTooltip.SetOwner then
             GameTooltip:SetOwner(self, "ANCHOR_TOP")
             GameTooltip:SetText(desc.title)
-            GameTooltip:AddLine("Trascina: sposta (griglia)", 1, 1, 1)
-            GameTooltip:AddLine("Frecce: 1 px (Maiusc 10 px)", 1, 1, 1)
-            if desc.scalable ~= false then GameTooltip:AddLine("Maiusc + rotella: scala", 1, 1, 1) end
-            GameTooltip:AddLine("Tasto destro: ripristina", 1, 1, 1)
+            GameTooltip:AddLine(L["Trascina: sposta (griglia)"], 1, 1, 1)
+            GameTooltip:AddLine(L["Frecce: 1 px (Maiusc 10 px)"], 1, 1, 1)
+            if desc.scalable ~= false then GameTooltip:AddLine(L["Maiusc + rotella: scala"], 1, 1, 1) end
+            GameTooltip:AddLine(L["Tasto destro: ripristina"], 1, 1, 1)
             GameTooltip:Show()
         end
     end)
@@ -219,7 +220,7 @@ FM._nudge = nudge -- usato dai test
 
 function FM:SetUnlocked(state)
     if state and InCombatLockdown() then
-        Logger:Warn("Impossibile sbloccare in combattimento")
+        Logger:Warn(L["Impossibile sbloccare in combattimento"])
         return
     end
     self.unlocked = state

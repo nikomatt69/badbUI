@@ -6,6 +6,7 @@
 --   specProfiles  { ["Personaggio - Reame"] = { [specIndex] = nomeProfilo } } (dual spec)
 --   global        impostazioni non legate al profilo
 local _, ns = ...
+local L = ns.Badb.L
 local Badb = ns.Badb
 local Events, Logger = Badb.Events, Badb.Logger
 
@@ -39,10 +40,10 @@ local function migrate(sv)
         local fn = DB.migrations[nextVer]
         if fn then
             local ok, err = pcall(fn, sv)
-            if not ok then Logger:Error("Migrazione %d fallita: %s", nextVer, err); return end
+            if not ok then Logger:Error(L["Migrazione %d fallita: %s"], nextVer, err); return end
         end
         sv.schema = nextVer
-        Logger:Info("Database aggiornato allo schema %d", nextVer)
+        Logger:Info(L["Database aggiornato allo schema %d"], nextVer)
     end
 end
 
@@ -81,11 +82,11 @@ end
 -- Nomi profilo: stringa non vuota (dopo trim), max 48 caratteri, senza codici colore/escape.
 DB.MAX_NAME = 48
 function DB.NormalizeName(name)
-    if type(name) ~= "string" then return nil, "nome non valido" end
+    if type(name) ~= "string" then return nil, L["nome non valido"] end
     name = name:gsub("^%s+", ""):gsub("%s+$", "")
-    if name == "" then return nil, "il nome non puo' essere vuoto" end
-    if #name > DB.MAX_NAME then return nil, "nome troppo lungo (max " .. DB.MAX_NAME .. " caratteri)" end
-    if name:find("|", 1, true) or name:find("[%c]") then return nil, "il nome contiene caratteri non ammessi" end
+    if name == "" then return nil, L["il nome non puo' essere vuoto"] end
+    if #name > DB.MAX_NAME then return nil, L["nome troppo lungo (max "] .. DB.MAX_NAME .. L[" caratteri)"] end
+    if name:find("|", 1, true) or name:find("[%c]") then return nil, L["il nome contiene caratteri non ammessi"] end
     return name
 end
 
@@ -102,10 +103,10 @@ end
 
 function DB:CopyProfile(from, to)
     local src = self.sv.profiles[from]
-    if not src then return false, "profilo inesistente" end
+    if not src then return false, L["profilo inesistente"] end
     local name, err = DB.NormalizeName(to)
     if not name then return false, err end
-    if self.sv.profiles[name] then return false, "esiste gia' un profilo con questo nome" end
+    if self.sv.profiles[name] then return false, L["esiste gia' un profilo con questo nome"] end
     self.sv.profiles[name] = Badb.CopyTable(src)
     Events:Fire("BADB_PROFILES_UPDATED")
     return true, name
@@ -115,7 +116,7 @@ end
 function DB:NewProfile(name)
     local n, err = DB.NormalizeName(name)
     if not n then return false, err end
-    if self.sv.profiles[n] then return false, "esiste gia' un profilo con questo nome" end
+    if self.sv.profiles[n] then return false, L["esiste gia' un profilo con questo nome"] end
     self.sv.profiles[n] = Badb.MergeDefaults({}, self.defaults)
     Events:Fire("BADB_PROFILES_UPDATED")
     return true, n
@@ -124,11 +125,11 @@ end
 -- Rinomina mantenendo la stessa tabella (nessuna copia) e riallineando personaggi e spec.
 function DB:RenameProfile(old, new)
     local sv = self.sv
-    if not sv.profiles[old] then return false, "profilo inesistente" end
+    if not sv.profiles[old] then return false, L["profilo inesistente"] end
     local name, err = DB.NormalizeName(new)
     if not name then return false, err end
-    if name == old then return false, "il nome e' uguale a quello attuale" end
-    if sv.profiles[name] then return false, "esiste gia' un profilo con questo nome" end
+    if name == old then return false, L["il nome e' uguale a quello attuale"] end
+    if sv.profiles[name] then return false, L["esiste gia' un profilo con questo nome"] end
     sv.profiles[name], sv.profiles[old] = sv.profiles[old], nil
     forEachReference(sv, function(t, k, v) if v == old then t[k] = name end end)
     if self.profileName == old then self.profileName = name end
@@ -139,8 +140,8 @@ end
 -- Elimina e pulisce ogni riferimento: un'assegnazione per spec rimasta orfana ricreerebbe
 -- un profilo vuoto con lo stesso nome al successivo cambio di specializzazione.
 function DB:DeleteProfile(name)
-    if name == self.profileName then return false, "non puoi eliminare il profilo attivo" end
-    if not self.sv.profiles[name] then return false, "profilo inesistente" end
+    if name == self.profileName then return false, L["non puoi eliminare il profilo attivo"] end
+    if not self.sv.profiles[name] then return false, L["profilo inesistente"] end
     self.sv.profiles[name] = nil
     forEachReference(self.sv, function(t, k, v) if v == name then t[k] = nil end end)
     Events:Fire("BADB_PROFILES_UPDATED")
@@ -179,9 +180,9 @@ end
 
 -- Un profilo importato deve avere la forma attesa: tabelle per modules/frames, ogni voce una tabella.
 local function sanitizeProfile(data)
-    if type(data) ~= "table" then return nil, "contenuto del profilo non valido" end
+    if type(data) ~= "table" then return nil, L["contenuto del profilo non valido"] end
     for _, key in ipairs({ "modules", "frames" }) do
-        if data[key] ~= nil and type(data[key]) ~= "table" then return nil, "campo '" .. key .. "' non valido" end
+        if data[key] ~= nil and type(data[key]) ~= "table" then return nil, L["campo '"] .. key .. L["' non valido"] end
         for k, v in pairs(data[key] or {}) do
             if type(k) ~= "string" or type(v) ~= "table" then data[key][k] = nil end
         end
@@ -196,7 +197,7 @@ function DB:ImportProfile(str, newName)
     if not data then return false, err end
     local name, nerr = DB.NormalizeName(newName)
     if not name then return false, nerr end
-    if self.sv.profiles[name] then return false, "esiste gia' un profilo con questo nome" end
+    if self.sv.profiles[name] then return false, L["esiste gia' un profilo con questo nome"] end
     self.sv.profiles[name] = Badb.MergeDefaults(data, self.defaults)
     Events:Fire("BADB_PROFILES_UPDATED")
     return true, name
@@ -219,7 +220,7 @@ end
 function DB:ExportModule(moduleName, profileName)
     local p = self.sv.profiles[profileName or self.profileName]
     local m = p and p.modules and p.modules[moduleName]
-    if type(m) ~= "table" then return nil, "modulo inesistente: " .. tostring(moduleName) end
+    if type(m) ~= "table" then return nil, L["modulo inesistente: "] .. tostring(moduleName) end
     return Badb.Serializer:Export("module:" .. moduleName, m)
 end
 
@@ -227,9 +228,9 @@ function DB:ImportModule(str)
     local data, payload = Badb.Serializer:Import(str)
     if not data then return false, payload end
     local name = type(payload.kind) == "string" and payload.kind:match("^module:(.+)$")
-    if not name then return false, "la stringa non contiene le opzioni di un modulo" end
-    if not self.defaults.modules[name] then return false, "modulo sconosciuto: " .. name end
-    if type(data) ~= "table" then return false, "contenuto del modulo non valido" end
+    if not name then return false, L["la stringa non contiene le opzioni di un modulo"] end
+    if not self.defaults.modules[name] then return false, L["modulo sconosciuto: "] .. name end
+    if type(data) ~= "table" then return false, L["contenuto del modulo non valido"] end
     self.profile.modules[name] = Badb.MergeDefaults(data, self.defaults.modules[name])
     Events:Fire("BADB_PROFILE_CHANGED", self.profileName)
     return true, name
@@ -242,7 +243,7 @@ function DB:PreviewImport(str)
     if not data then return nil, payload end
     local info = { kind = payload.kind, addon = payload.addon, modules = {}, unknown = {}, frames = 0, hasLayout = false }
     if payload.kind == "profile" then
-        if type(data) ~= "table" then return nil, "contenuto del profilo non valido" end
+        if type(data) ~= "table" then return nil, L["contenuto del profilo non valido"] end
         for name, v in pairs(type(data.modules) == "table" and data.modules or {}) do
             if type(name) == "string" and type(v) == "table" then
                 local list = self.defaults.modules[name] and info.modules or info.unknown
@@ -260,7 +261,7 @@ function DB:PreviewImport(str)
         local list = self.defaults.modules[name] and info.modules or info.unknown
         list[1] = name
     else
-        return nil, "tipo di stringa non supportato: " .. tostring(payload.kind)
+        return nil, L["tipo di stringa non supportato: "] .. tostring(payload.kind)
     end
     return info
 end
@@ -289,7 +290,7 @@ local function onSpecChanged()
     -- Un profilo eliminato nel frattempo (anche da un altro personaggio) non va ricreato vuoto.
     if target and not DB.sv.profiles[target] then
         map[currentSpec()] = nil
-        Logger:Warn("Il profilo '%s' associato alla specializzazione non esiste piu'", tostring(target))
+        Logger:Warn(L["Il profilo '%s' associato alla specializzazione non esiste piu'"], tostring(target))
         return
     end
     if target and target ~= DB.profileName then

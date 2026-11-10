@@ -4,11 +4,12 @@
 -- Edit Mode (stringa ufficiale Blizzard) e lo attiva automaticamente al cambio profilo.
 -- Risultato: un'unica stringa di import contiene layout Blizzard + tutte le opzioni BadbUI.
 local _, ns = ...
+local L = ns.Badb.L
 local Badb = ns.Badb
 local Compat, Logger, Events = Badb.Compat, Badb.Logger, Badb.Events
 
 local M = Badb.Modules:New("EditModeBridge", {
-    title = "Layout Edit Mode",
+    title = L["Layout Edit Mode"],
     category = "Layout",
     defaults = {
         enabled = true,
@@ -17,8 +18,8 @@ local M = Badb.Modules:New("EditModeBridge", {
         autoActivate = true,
     },
     options = {
-        { type = "toggle", path = "autoActivate", label = "Attiva il layout al cambio profilo" },
-        { type = "execute", label = "Cattura layout attuale", func = function() Badb.Modules:Get("EditModeBridge"):Capture() end },
+        { type = "toggle", path = "autoActivate", label = L["Attiva il layout al cambio profilo"] },
+        { type = "execute", label = L["Cattura layout attuale"], func = function() Badb.Modules:Get("EditModeBridge"):Capture() end },
     },
 })
 
@@ -38,12 +39,12 @@ function M:Capture()
     local layouts = getLayouts()
     local info = layouts.layouts[layouts.activeLayout]
     if not info then
-        Logger:Warn("Nessun layout Edit Mode attivo (i preset Blizzard non sono esportabili: creane una copia)")
+        Logger:Warn(L["Nessun layout Edit Mode attivo (i preset Blizzard non sono esportabili: creane una copia)"])
         return
     end
     self:Set("layoutName", info.layoutName)
     self:Set("layoutString", C_EditMode.ConvertLayoutInfoToString(info))
-    Logger:Info("Layout '%s' associato al profilo %s", info.layoutName, Badb.DB:GetProfileName())
+    Logger:Info(L["Layout '%s' associato al profilo %s"], info.layoutName, Badb.DB:GetProfileName())
 end
 
 -- Attiva il layout del profilo; se non esiste sull'account lo ricrea dalla stringa salvata.
@@ -63,21 +64,21 @@ function M:Activate()
                 C_EditMode.SaveLayouts(layouts)
                 layouts = getLayouts()
                 idx = findLayoutIndex(layouts, name)
-                Logger:Info("Layout Edit Mode '%s' ricreato dal profilo", name)
+                Logger:Info(L["Layout Edit Mode '%s' ricreato dal profilo"], name)
             end
         end
         if idx then
             -- activeLayout conta anche i 2 preset Blizzard in testa alla lista.
             C_EditMode.SetActiveLayout(idx + (Enum.EditModePresetLayoutsMeta and Enum.EditModePresetLayoutsMeta.NumValues or 2))
         else
-            Logger:Warn("Layout '%s' non trovato", name)
+            Logger:Warn(L["Layout '%s' non trovato"], name)
         end
     end)
 end
 
 function M:OnEnable()
     if not Compat.hasEditMode then
-        Logger:Warn("Edit Mode non disponibile su questo client: modulo inattivo")
+        Logger:Warn(L["Edit Mode non disponibile su questo client: modulo inattivo"])
         return
     end
     self:On("BADB_PROFILE_CHANGED", function()

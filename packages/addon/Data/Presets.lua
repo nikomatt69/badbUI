@@ -11,6 +11,7 @@
 --   * micro menu e barra borse nascosti fuori dal leveling (si riaprono con i tasti rapidi).
 -- Fatti di gioco usati: docs/FOREVER_FACTS.md (righe citate in `facts`). Posizioni in unita' UI: da rifinire in gioco.
 local _, ns = ...
+local L = ns.Badb.L
 local Badb = ns.Badb
 local P, Player = Badb.Presets, Badb.Player
 if not (P and P.Register and Player and Player.CLASSES) then return end
@@ -22,15 +23,15 @@ P.Data = Data
 -- Fatti (riferimenti a docs/FOREVER_FACTS.md)
 ------------------------------------------------------------------------------
 local FACT = {
-    dungeon = "PvE: dungeon a 5 giocatori (FOREVER_FACTS, PvE)",
-    raid = "PvE: raid da 10 / 20 / 40 (Barrow Deeps, Hyjal Summit, Onyxia) (FOREVER_FACTS, PvE)",
-    solo = "Leveling 1-60 e mondo aperto; preset Classic/Enhanced di Blizzard al primo login (FOREVER_FACTS, Client)",
-    bg = "PvP: Warsong Gulch 10v10, Arathi Basin e Darkspear Islands 15v15 (FOREVER_FACTS, PvP)",
+    dungeon = L["PvE: dungeon a 5 giocatori (FOREVER_FACTS, PvE)"],
+    raid = L["PvE: raid da 10 / 20 / 40 (Barrow Deeps, Hyjal Summit, Onyxia) (FOREVER_FACTS, PvE)"],
+    solo = L["Leveling 1-60 e mondo aperto; preset Classic/Enhanced di Blizzard al primo login (FOREVER_FACTS, Client)"],
+    bg = L["PvP: Warsong Gulch 10v10, Arathi Basin e Darkspear Islands 15v15 (FOREVER_FACTS, PvP)"],
     av = "PvP: Alterac Valley 40v40 (FOREVER_FACTS, PvP)",
-    world = "PvP: world PvP nelle zone contese e duelli; nessuna arena (FOREVER_FACTS, PvP)",
-    editMode = "Edit Mode integrato per barre e unit frame (FOREVER_FACTS, Client)",
-    roles = "Ruoli per classe e dual spec al 40 (FOREVER_FACTS, Classi)",
-    secret = "Salute e minaccia sono secret values: niente testi calcolati in combattimento (FOREVER_FACTS, Restrizioni)",
+    world = L["PvP: world PvP nelle zone contese e duelli; nessuna arena (FOREVER_FACTS, PvP)"],
+    editMode = L["Edit Mode integrato per barre e unit frame (FOREVER_FACTS, Client)"],
+    roles = L["Ruoli per classe e dual spec al 40 (FOREVER_FACTS, Classi)"],
+    secret = L["Salute e minaccia sono secret values: niente testi calcolati in combattimento (FOREVER_FACTS, Restrizioni)"],
 }
 
 ------------------------------------------------------------------------------
@@ -113,8 +114,8 @@ local HIDE = { hidden = true }
 local BASE = {
     dungeon = {
         title = "Dungeon", mode = "pve",
-        description = "Gruppo da 5: nameplate impilate sempre visibili, party in stile raid leggibile, HUD centrato.",
-        why = "In dungeon conta leggere i 5 del gruppo e i pack di nemici: party in stile raid e nameplate impilate sempre visibili.",
+        description = L["Gruppo da 5: nameplate impilate sempre visibili, party in stile raid leggibile, HUD centrato."],
+        why = L["In dungeon conta leggere i 5 del gruppo e i pack di nemici: party in stile raid e nameplate impilate sempre visibili."],
         modules = {
             Nameplates = { enabled = true, showEnemies = true, showFriends = false, showAlways = true, showMinions = true,
                 stacking = "stack", overlapV = 1.1, selectedScale = 1.25, minAlpha = 0.55, targetBorder = true },
@@ -129,8 +130,8 @@ local BASE = {
     },
     raid = {
         title = "Raid", mode = "pve", defaultVariant = "20",
-        description = "Molte unita' a schermo: raid frame dimensionati per 10/20/40, solo debuff utili, nameplate essenziali.",
-        why = "Nei raid da 10/20/40 la dimensione dei raid frame segue il numero di giocatori; nameplate essenziali per non coprire le meccaniche.",
+        description = L["Molte unita' a schermo: raid frame dimensionati per 10/20/40, solo debuff utili, nameplate essenziali."],
+        why = L["Nei raid da 10/20/40 la dimensione dei raid frame segue il numero di giocatori; nameplate essenziali per non coprire le meccaniche."],
         modules = {
             Nameplates = { enabled = true, showEnemies = true, showFriends = false, showAlways = true, showMinions = false,
                 stacking = "stack", overlapV = 1.0, globalScale = 0.9, minAlpha = 0.5, occludedAlpha = 0.3 },
@@ -150,9 +151,9 @@ local BASE = {
         },
     },
     solo = {
-        title = "Solo e leveling", mode = "pve",
-        description = "Quest e mondo aperto: HUD pulito, tracker missioni ed esperienza visibili, nameplate solo in combattimento.",
-        why = "Durante il leveling servono tracker missioni e barra esperienza; il resto resta pulito e le nameplate compaiono solo in combattimento.",
+        title = L["Solo e leveling"], mode = "pve",
+        description = L["Quest e mondo aperto: HUD pulito, tracker missioni ed esperienza visibili, nameplate solo in combattimento."],
+        why = L["Durante il leveling servono tracker missioni e barra esperienza; il resto resta pulito e le nameplate compaiono solo in combattimento."],
         modules = {
             Nameplates = { enabled = true, showEnemies = true, showFriends = false, showAlways = false, showMinions = false,
                 stacking = "stack", minAlpha = 0.7, maxDistance = 41 },
@@ -166,9 +167,9 @@ local BASE = {
         frames = { MicroMenu = HIDE },
     },
     bg = {
-        title = "Campo di battaglia", mode = "pvp",
-        description = "Warsong, Arathi, Darkspear (10-15 giocatori): nameplate nemiche grandi e lontane, alleati ridotti.",
-        why = "Nei BG da 10-15 contano i nemici: nameplate grandi con colore di classe fino a 60 yard, alleati senza nameplate e gruppo compatto.",
+        title = L["Campo di battaglia"], mode = "pvp",
+        description = L["Warsong, Arathi, Darkspear (10-15 giocatori): nameplate nemiche grandi e lontane, alleati ridotti."],
+        why = L["Nei BG da 10-15 contano i nemici: nameplate grandi con colore di classe fino a 60 yard, alleati senza nameplate e gruppo compatto."],
         modules = {
             Nameplates = { enabled = true, showEnemies = true, showFriends = false, showAlways = true, showMinions = true,
                 classColorEnemies = true, maxDistance = 60, stacking = "stack", globalScale = 1.1, selectedScale = 1.35,
@@ -186,8 +187,8 @@ local BASE = {
     },
     av = {
         title = "Alterac Valley", mode = "pvp",
-        description = "40 contro 40: raid frame compatti, nameplate solo nemiche e senza pet per restare leggibili nella mischia.",
-        why = "In Alterac 40v40 le unita' sono troppe: raid frame compatti in alto a sinistra e nameplate solo nemiche, senza pet e totem.",
+        description = L["40 contro 40: raid frame compatti, nameplate solo nemiche e senza pet per restare leggibili nella mischia."],
+        why = L["In Alterac 40v40 le unita' sono troppe: raid frame compatti in alto a sinistra e nameplate solo nemiche, senza pet e totem."],
         modules = {
             Nameplates = { enabled = true, showEnemies = true, showFriends = false, showAlways = true, showMinions = false,
                 classColorEnemies = true, maxDistance = 60, stacking = "stack", globalScale = 1.0, selectedScale = 1.3,
@@ -202,9 +203,9 @@ local BASE = {
         frames = { MicroMenu = HIDE, BagsBar = HIDE, StatusTracking = HIDE },
     },
     world = {
-        title = "World PvP e duelli", mode = "pvp",
-        description = "Zone contese e duelli: nameplate nemiche sempre visibili con pet e totem, tracker missioni a portata.",
-        why = "Nel world PvP e nei duelli si combatte mentre si questa: nemici sempre visibili con pet e totem, tracker missioni mantenuto.",
+        title = L["World PvP e duelli"], mode = "pvp",
+        description = L["Zone contese e duelli: nameplate nemiche sempre visibili con pet e totem, tracker missioni a portata."],
+        why = L["Nel world PvP e nei duelli si combatte mentre si questa: nemici sempre visibili con pet e totem, tracker missioni mantenuto."],
         modules = {
             Nameplates = { enabled = true, showEnemies = true, showFriends = false, showAlways = true, showMinions = true,
                 classColorEnemies = true, maxDistance = 60, stacking = "stack", globalScale = 1.05, selectedScale = 1.35,
@@ -228,7 +229,7 @@ Data.BASE = BASE
 ------------------------------------------------------------------------------
 local ROLE = {
     healer = {
-        why = "Da healer i frame di gruppo sono il centro dell'interfaccia: grandi, con risorse, cure in arrivo e solo debuff dissipabili.",
+        why = L["Da healer i frame di gruppo sono il centro dell'interfaccia: grandi, con risorse, cure in arrivo e solo debuff dissipabili."],
         modules = {
             Nameplates = { globalScale = 0.9, minAlpha = 0.45 },
             GroupFrames = { powerBars = true, incomingHeals = true, onlyDispellable = true, partyWidth = 144, partyHeight = 72 },
@@ -236,7 +237,7 @@ local ROLE = {
         pvpModules = { Nameplates = { globalScale = 1.0 } },
     },
     tank = {
-        why = "Da tank servono i nemici: nameplate piu' grandi con pet e guardiani, aggro evidente e pulse dei cooldown difensivi.",
+        why = L["Da tank servono i nemici: nameplate piu' grandi con pet e guardiani, aggro evidente e pulse dei cooldown difensivi."],
         modules = {
             Nameplates = { showMinions = true, globalScale = 1.15, minAlpha = 0.75, selectedScale = 1.2 },
             GroupFrames = { aggroHighlight = true },
@@ -245,7 +246,7 @@ local ROLE = {
         },
     },
     dps = {
-        why = "Da DPS conta il bersaglio: scala maggiore sul bersaglio e unita' secondarie attenuate.",
+        why = L["Da DPS conta il bersaglio: scala maggiore sul bersaglio e unita' secondarie attenuate."],
         modules = {
             Nameplates = { selectedScale = 1.3, minAlpha = 0.5, targetBorder = true },
         },
@@ -259,28 +260,28 @@ local DPS_RANGE = { WARRIOR = "melee", PALADIN = "melee", HUNTER = "ranged", ROG
 Data.DPS_RANGE = DPS_RANGE
 
 local CLASS = {
-    WARRIOR = { why = "Il Guerriero vive di posture: barra delle posture sempre visibile.",
+    WARRIOR = { why = L["Il Guerriero vive di posture: barra delle posture sempre visibile."],
         modules = { ActionBars = { fade = { stance = false } } } },
-    PALADIN = { why = "Il Paladino ibrido tiene visibili le barre laterali per aure e benedizioni.",
+    PALADIN = { why = L["Il Paladino ibrido tiene visibili le barre laterali per aure e benedizioni."],
         modules = { ActionBars = { fade = { right = false } } } },
-    HUNTER = { why = "Il Cacciatore combatte a distanza col famiglio: barra del pet visibile e nameplate fino a 60 yard.",
+    HUNTER = { why = L["Il Cacciatore combatte a distanza col famiglio: barra del pet visibile e nameplate fino a 60 yard."],
         modules = { ActionBars = { fade = { pet = false } }, Nameplates = { maxDistance = 60 } } },
-    ROGUE = { why = "Il Ladro non usa la barra delle forme: nascosta, piu' spazio per i cooldown.",
+    ROGUE = { why = L["Il Ladro non usa la barra delle forme: nascosta, piu' spazio per i cooldown."],
         modules = { ActionBars = { fade = { stance = true } }, Cooldowns = { expiringThreshold = 3 } } },
-    PRIEST = { why = "Il Sacerdote alterna cure e Ombra: barre compatte e risorse dei compagni sempre visibili.",
+    PRIEST = { why = L["Il Sacerdote alterna cure e Ombra: barre compatte e risorse dei compagni sempre visibili."],
         modules = { GroupFrames = { powerBars = true } } },
-    SHAMAN = { why = "Lo Sciamano gestisce i totem: pet e totem nemici visibili per distinguerli dai propri.",
+    SHAMAN = { why = L["Lo Sciamano gestisce i totem: pet e totem nemici visibili per distinguerli dai propri."],
         modules = { Nameplates = { showMinions = true } } },
-    MAGE = { why = "Il Mago combatte a distanza: barre compatte e nameplate leggibili da lontano.",
+    MAGE = { why = L["Il Mago combatte a distanza: barre compatte e nameplate leggibili da lontano."],
         modules = { Nameplates = { maxDistance = 60 } } },
-    WARLOCK = { why = "Lo Stregone ha sempre un demone: barra del pet visibile e nameplate a lunga distanza.",
+    WARLOCK = { why = L["Lo Stregone ha sempre un demone: barra del pet visibile e nameplate a lunga distanza."],
         modules = { ActionBars = { fade = { pet = false } }, Nameplates = { maxDistance = 60 } } },
-    DRUID = { why = "Il Druido cambia forma di continuo: barra delle forme sempre visibile.",
+    DRUID = { why = L["Il Druido cambia forma di continuo: barra delle forme sempre visibile."],
         modules = { ActionBars = { fade = { stance = false } } } },
 }
 Data.CLASS = CLASS
 
-local SCEN_NAMES = { dungeon = "Dungeon", raid = "Raid", solo = "Solo", bg = "Campo di battaglia", av = "Alterac", world = "World PvP" }
+local SCEN_NAMES = { dungeon = "Dungeon", raid = "Raid", solo = "Solo", bg = L["Campo di battaglia"], av = "Alterac", world = "World PvP" }
 
 local function merge(dst, src)
     for k, v in pairs(src or {}) do
@@ -356,7 +357,7 @@ function Data.Build(classInfo, scenario)
     end
     def.rationale = string.format("%s %s %s", base.why, cls.why or "", ROLE[primary].why)
     if #roles > 1 then
-        def.rationale = def.rationale .. " Ruoli alternativi della classe: " .. table.concat(roleWhy, ", ") .. "."
+        def.rationale = def.rationale .. L[" Ruoli alternativi della classe: "] .. table.concat(roleWhy, ", ") .. "."
     end
     if mode == "pvp" then def.facts[#def.facts + 1] = FACT.world end
     if scenario == "raid" then def.facts[#def.facts + 1] = FACT.secret end

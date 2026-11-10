@@ -6,14 +6,15 @@
 --   4. Finestra (sidebar, ricerca, contenuto) e pannello leggero in Settings
 -- Le pagine dei moduli sono lette a runtime da Badb.Modules.list[*].page (vedi docs/configui.md).
 local _, ns = ...
+local L = ns.Badb.L
 local Badb = ns.Badb
 local DB, Modules, Compat, W, Events, Logger = Badb.DB, Badb.Modules, Badb.Compat, Badb.Widgets, Badb.Events, Badb.Logger
 
 local UI = { custom = {}, customOrder = {}, actions = {}, pageFrames = {}, sbHeaders = {}, sbButtons = {}, searchRows = {} }
 Badb.ConfigUI = UI
 
-UI.CATEGORIES = { "Gestione", "Interfaccia", "Strumenti", "Contenuti" }
-local DEFAULT_CATEGORY = "Strumenti"
+UI.CATEGORIES = { L["Gestione"], L["Interfaccia"], L["Strumenti"], L["Contenuti"] }
+local DEFAULT_CATEGORY = L["Strumenti"]
 local FRAME_W, FRAME_H = 880, 600
 local MIN_W, MIN_H, MAX_W, MAX_H = 820, 460, 1300, 950
 local SIDEBAR_W = 176
@@ -51,16 +52,16 @@ end
 ---------------------------------------------------------------------------
 -- Pagine core. `build` e' risolto in UI.corePages (definite piu' sotto).
 local CORE = {
-    { key = "overview", title = "Panoramica", category = "Gestione", order = 0,
-      keywords = "stato avvisi azioni recenti scorciatoie home" },
-    { key = "profiles", title = "Profili", category = "Gestione", order = 10,
-      keywords = "profilo copia rinomina elimina reset importa esporta specializzazione spec" },
-    { key = "modules", title = "Moduli", category = "Gestione", order = 900,
-      keywords = "moduli attiva disattiva abilita opzioni" },
-    { key = "about", title = "Informazioni", category = "Gestione", order = 999,
-      keywords = "versione comandi slash scala finestra crediti log" },
-    { key = "frames", title = "Frame", category = "Interfaccia", order = 0,
-      keywords = "frame sblocca sposta posizione alpha trasparenza scala visibile ripristina" },
+    { key = "overview", title = L["Panoramica"], category = L["Gestione"], order = 0,
+      keywords = L["stato avvisi azioni recenti scorciatoie home"] },
+    { key = "profiles", title = L["Profili"], category = L["Gestione"], order = 10,
+      keywords = L["profilo copia rinomina elimina reset importa esporta specializzazione spec"] },
+    { key = "modules", title = L["Moduli"], category = L["Gestione"], order = 900,
+      keywords = L["moduli attiva disattiva abilita opzioni"] },
+    { key = "about", title = L["Informazioni"], category = L["Gestione"], order = 999,
+      keywords = L["versione comandi slash scala finestra crediti log"] },
+    { key = "frames", title = "Frame", category = L["Interfaccia"], order = 0,
+      keywords = L["frame sblocca sposta posizione alpha trasparenza scala visibile ripristina"] },
 }
 UI.corePages = {}
 
@@ -172,10 +173,10 @@ end
 
 -- Registra una pagina non legata a un modulo. page = { title, order, category, build, refresh }.
 function UI:RegisterPage(key, page)
-    if type(key) ~= "string" or key == "" then return false, "chiave non valida" end
-    if type(page) ~= "table" or type(page.build) ~= "function" then return false, "page.build mancante" end
-    for _, c in ipairs(CORE) do if c.key == key then return false, "chiave riservata" end end
-    if key:sub(1, 4) == "mod:" then return false, "prefisso 'mod:' riservato" end
+    if type(key) ~= "string" or key == "" then return false, L["chiave non valida"] end
+    if type(page) ~= "table" or type(page.build) ~= "function" then return false, L["page.build mancante"] end
+    for _, c in ipairs(CORE) do if c.key == key then return false, L["chiave riservata"] end end
+    if key:sub(1, 4) == "mod:" then return false, L["prefisso 'mod:' riservato"] end
     if not self.custom[key] then self.customOrder[#self.customOrder + 1] = key end
     self.custom[key] = page
     if self.built then self:RebuildSidebar() end
@@ -213,14 +214,14 @@ function UI:Search(query)
             local own = pageOfModule[name]
             if not (own and has(own.title)) and (has(m.title) or has(name)) then
                 out[#out + 1] = { kind = "module", key = own and own.key or "modules", title = tstr(m.title, name),
-                    detail = "Modulo", module = name }
+                    detail = L["Modulo"], module = name }
             end
             if type(m.options) == "table" then
                 for _, opt in ipairs(m.options) do
                     local label = W.OptionLabel(opt)
                     if label and has(label) then
                         out[#out + 1] = { kind = "option", key = "modules", title = label,
-                            detail = "Moduli > " .. tstr(m.title, name), module = name }
+                            detail = L["Moduli > "] .. tstr(m.title, name), module = name }
                     end
                 end
             end
@@ -287,12 +288,12 @@ local diagCache = { at = -100 }
 function UI:GetWarnings()
     local out = {}
     if InCombatLockdown and InCombatLockdown() then
-        out[#out + 1] = { level = "warn", text = "In combattimento: alcune modifiche saranno applicate a fine combattimento." }
+        out[#out + 1] = { level = "warn", text = L["In combattimento: alcune modifiche saranno applicate a fine combattimento."] }
     end
     local FM = Badb.FrameManager
     if FM and FM.unlocked then
-        out[#out + 1] = { level = "warn", text = "Frame sbloccati: trascinali e poi bloccali.",
-            actionLabel = "Blocca", action = function() FM:SetUnlocked(false) end }
+        out[#out + 1] = { level = "warn", text = L["Frame sbloccati: trascinali e poi bloccali."],
+            actionLabel = L["Blocca"], action = function() FM:SetUnlocked(false) end }
     end
     local Wiz = Badb.Wizard
     if Wiz then
@@ -304,7 +305,7 @@ function UI:GetWarnings()
             done = DB.sv.global.wizardDone
         end
         if not done then
-            out[#out + 1] = { level = "info", text = "Configurazione guidata non completata.", actionLabel = "Avvia",
+            out[#out + 1] = { level = "info", text = L["Configurazione guidata non completata."], actionLabel = L["Avvia"],
                 action = function()
                     if Wiz.Open then Wiz:Open() elseif Wiz.Start then Wiz:Start(true) end
                 end }
@@ -323,8 +324,8 @@ function UI:GetWarnings()
         end
         if errors + warns > 0 then
             out[#out + 1] = { level = errors > 0 and "error" or "warn",
-                text = string.format("Diagnostica: %d errori, %d avvisi.", errors, warns),
-                actionLabel = "Dettagli", action = function() UI:OpenPage("Diagnostics") end }
+                text = string.format(L["Diagnostica: %d errori, %d avvisi."], errors, warns),
+                actionLabel = L["Dettagli"], action = function() UI:OpenPage("Diagnostics") end }
         end
     end
     local nerr = 0
@@ -332,8 +333,8 @@ function UI:GetWarnings()
         if line:find("ERROR:", 1, true) then nerr = nerr + 1 end
     end
     if nerr > 0 then
-        out[#out + 1] = { level = "warn", text = string.format("%d errori nel log.", nerr), actionLabel = "Log",
-            action = function() UI.TextBox("Log BadbUI", table.concat(Logger.buffer, "\n")) end }
+        out[#out + 1] = { level = "warn", text = string.format(L["%d errori nel log."], nerr), actionLabel = "Log",
+            action = function() UI.TextBox(L["Log BadbUI"], table.concat(Logger.buffer, "\n")) end }
     end
     return out
 end
@@ -369,7 +370,7 @@ local function ensureTextBox()
     end
     f.edit = edit
     edit:SetScript("OnEscapePressed", function() f:Hide() end)
-    f.ok = W.MakeButton(f, "Chiudi", 120, 22)
+    f.ok = W.MakeButton(f, L["Chiudi"], 120, 22)
     f.ok:SetPoint("BOTTOM", 0, 12)
     addSpecial("BadbUITextBox")
     box = f
@@ -388,7 +389,7 @@ function UI.TextBox(...)
         f.edit:SetText(text)
         W.Call(f.edit, "HighlightText")
         W.Call(f.edit, "SetFocus")
-        f.ok:SetText(label or (onAccept and "Importa" or "Chiudi"))
+        f.ok:SetText(label or (onAccept and L["Importa"] or L["Chiudi"]))
         f.ok:SetScript("OnClick", function()
             if type(onAccept) == "function" then W.Safe(onAccept, "TextBox", f.edit:GetText()) end
             f:Hide()
@@ -423,9 +424,9 @@ function UI.ShowConfirm(it)
         f.text = f:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
         f.text:SetPoint("TOPLEFT", 20, -20); f.text:SetPoint("TOPRIGHT", -20, -20)
         f.text:SetJustifyH("CENTER"); W.Call(f.text, "SetWordWrap", true)
-        f.yes = W.MakeButton(f, "Conferma", 120, 24, function() confirmFinish(true) end)
+        f.yes = W.MakeButton(f, L["Conferma"], 120, 24, function() confirmFinish(true) end)
         f.yes:SetPoint("BOTTOMRIGHT", f, "BOTTOM", -6, 16)
-        f.no = W.MakeButton(f, "Annulla", 120, 24, function() confirmFinish(false) end)
+        f.no = W.MakeButton(f, L["Annulla"], 120, 24, function() confirmFinish(false) end)
         f.no:SetPoint("BOTTOMLEFT", f, "BOTTOM", 6, 16)
         -- ESC: UISpecialFrames nasconde il frame -> equivale ad Annulla.
         f:SetScript("OnHide", function() if confirmCur then confirmFinish(false) end end)
@@ -556,7 +557,7 @@ UI.ErrorBox = errorBox
 
 local function setModuleEnabled(name, value)
     local ok, err = pcall(Modules.SetEnabled, Modules, name, value)
-    if not ok then Logger:Error("Modulo %s: %s", tostring(name), tostring(err)) end
+    if not ok then Logger:Error(L["Modulo %s: %s"], tostring(name), tostring(err)) end
 end
 
 ---------------------------------------------------------------------------
@@ -571,12 +572,12 @@ local function moduleRows()
         local m = Modules.list[name]
         if m then
             local on = m.enabled and true or false
-            local acts = { { label = on and "Disattiva" or "Attiva", width = 70, func = function() setModuleEnabled(name, not on) end } }
+            local acts = { { label = on and L["Disattiva"] or L["Attiva"], width = 70, func = function() setModuleEnabled(name, not on) end } }
             if type(m.page) == "table" then
-                acts[#acts + 1] = { label = "Apri", width = 50, func = function() UI:OpenPage(name) end, noRefresh = true }
+                acts[#acts + 1] = { label = L["Apri"], width = 50, func = function() UI:OpenPage(name) end, noRefresh = true }
             end
             rows[#rows + 1] = { text = tstr(m.title, name), actions = acts,
-                detail = on and "|cff5fd068attivo|r" or "|cff888888disattivo|r" }
+                detail = on and L["|cff5fd068attivo|r"] or L["|cff888888disattivo|r"] }
         end
     end
     return rows
@@ -585,41 +586,41 @@ end
 P.overview = function(parent, ctx)
     local S = newStack(parent, ctx)
     S:Text("BadbUI  |cff888888v" .. tostring(Badb.version) .. "|r", "GameFontHighlightHuge", 36)
-    S:Text("Gestione completa dell'interfaccia di WoW: Forever.", "GameFontDisable", 24)
+    S:Text(L["Gestione completa dell'interfaccia di WoW: Forever."], "GameFontDisable", 24)
     S:Widgets({ { type = "label", text = function()
         local total, on = 0, 0
         for _, name in ipairs(Modules.order or {}) do
             total = total + 1
             if Modules.list[name] and Modules.list[name].enabled then on = on + 1 end
         end
-        return string.format("Profilo attivo: |cff3fa7ff%s|r\nModuli attivi: %d di %d", tostring(DB:GetProfileName()), on, total)
+        return string.format(L["Profilo attivo: |cff3fa7ff%s|r\nModuli attivi: %d di %d"], tostring(DB:GetProfileName()), on, total)
     end } })
     S:Gap(6)
-    S:Header("Scorciatoie")
+    S:Header(L["Scorciatoie"])
     local shortcuts = {}
     for _, rec in ipairs(UI:CollectPages()) do
         if rec.kind == "module" and #shortcuts < 9 then
             shortcuts[#shortcuts + 1] = { rec.title, function() UI:Open(rec.key) end }
         end
     end
-    shortcuts[#shortcuts + 1] = { "Profili", function() UI:Open("profiles") end }
+    shortcuts[#shortcuts + 1] = { L["Profili"], function() UI:Open("profiles") end }
     shortcuts[#shortcuts + 1] = { "Frame", function() UI:Open("frames") end }
     S:Buttons(shortcuts, 170, 3)
     S:Gap(6)
-    S:Header("Avvisi")
-    S:Widgets({ { type = "list", height = 96, empty = "Nessun avviso", items = function()
+    S:Header(L["Avvisi"])
+    S:Widgets({ { type = "list", height = 96, empty = L["Nessun avviso"], items = function()
         local rows = {}
         for _, w in ipairs(UI:GetWarnings()) do
             local c = ({ error = "ff5050", warn = "ffcc00", info = "3fa7ff" })[w.level] or "ffffff"
-            local acts = w.action and { { label = w.actionLabel or "Apri", width = 70, func = w.action } } or nil
+            local acts = w.action and { { label = w.actionLabel or L["Apri"], width = 70, func = w.action } } or nil
             rows[#rows + 1] = { text = "|cff" .. c .. w.text .. "|r", actions = acts }
         end
         return rows
     end } })
-    S:Header("Moduli")
+    S:Header(L["Moduli"])
     S:Widgets({ { type = "list", height = 170, items = moduleRows } })
-    S:Header("Ultime azioni")
-    S:Widgets({ { type = "list", height = 110, empty = "Nessuna azione recente", items = function()
+    S:Header(L["Ultime azioni"])
+    S:Widgets({ { type = "list", height = 110, empty = L["Nessuna azione recente"], items = function()
         local rows = {}
         for _, a in ipairs(UI.actions) do rows[#rows + 1] = { text = "|cff888888" .. a.time .. "|r  " .. a.text } end
         return rows
@@ -638,7 +639,7 @@ local function notify(ok, err, okText)
     if ok then
         UI:Toast(okText, "ok")
     else
-        UI:Toast(tostring(err or "operazione non riuscita"), "error")
+        UI:Toast(tostring(err or L["operazione non riuscita"]), "error")
     end
     UI:Refresh()
 end
@@ -649,7 +650,7 @@ function UI:RenameProfile(old, new) return DB:RenameProfile(old, new) end
 function UI:CopyProfile(src, name) return DB:CopyProfile(src, name) end
 
 function UI:ImportProfileString(str)
-    local name = uniqueProfileName("Importato " .. date("%Y-%m-%d %H:%M"))
+    local name = uniqueProfileName(L["Importato "] .. date("%Y-%m-%d %H:%M"))
     local ok, err = DB:ImportProfile(str, name)
     if ok then DB:SetProfile(name) end
     return ok, err, name
@@ -660,29 +661,29 @@ local function profileRows()
     for _, name in ipairs(DB:ListProfiles()) do
         local isActive = name == active
         rows[#rows + 1] = {
-            text = name, detail = isActive and "|cff3fa7ffattivo|r" or "",
+            text = name, detail = isActive and L["|cff3fa7ffattivo|r"] or "",
             actions = {
-                { label = "Attiva", width = 54, disabled = isActive, func = function() DB:SetProfile(name) end },
-                { label = "Copia", width = 48, func = function()
-                    UI.TextBox("Nome della copia di '" .. name .. "'", "", function(txt)
+                { label = L["Attiva"], width = 54, disabled = isActive, func = function() DB:SetProfile(name) end },
+                { label = L["Copia"], width = 48, func = function()
+                    UI.TextBox(L["Nome della copia di '"] .. name .. "'", "", function(txt)
                         local ok, res = UI:CopyProfile(name, txt)
-                        notify(ok, res, "Profilo copiato")
+                        notify(ok, res, L["Profilo copiato"])
                     end)
                 end },
-                { label = "Rinomina", width = 62, func = function()
-                    UI.TextBox("Nuovo nome per '" .. name .. "'", name, function(txt)
+                { label = L["Rinomina"], width = 62, func = function()
+                    UI.TextBox(L["Nuovo nome per '"] .. name .. "'", name, function(txt)
                         local ok, err = UI:RenameProfile(name, txt)
-                        notify(ok, err, "Profilo rinominato")
+                        notify(ok, err, L["Profilo rinominato"])
                     end)
                 end },
-                { label = "Esporta", width = 54, noRefresh = true, func = function()
-                    UI.TextBox("Esporta profilo '" .. name .. "'", DB:ExportProfile(name))
+                { label = L["Esporta"], width = 54, noRefresh = true, func = function()
+                    UI.TextBox(L["Esporta profilo '"] .. name .. "'", DB:ExportProfile(name))
                 end },
-                { label = "Elimina", width = 54, disabled = isActive,
-                  confirm = "Eliminare il profilo '" .. name .. "'? L'operazione non e' reversibile.",
+                { label = L["Elimina"], width = 54, disabled = isActive,
+                  confirm = L["Eliminare il profilo '"] .. name .. L["'? L'operazione non e' reversibile."],
                   func = function()
                       local ok, err = DB:DeleteProfile(name)
-                      notify(ok, err, "Profilo eliminato")
+                      notify(ok, err, L["Profilo eliminato"])
                   end },
             },
         }
@@ -703,46 +704,46 @@ local function specName(i)
         local ok, _, name = pcall(GetSpecializationInfo, i)
         if ok and type(name) == "string" then return name end
     end
-    return "Specializzazione " .. i
+    return L["Specializzazione "] .. i
 end
 
 P.profiles = function(parent, ctx)
     local S = newStack(parent, ctx)
-    S:Header("Profili")
+    S:Header(L["Profili"])
     S:Widgets({ { type = "label", text = function()
-        return "Profilo attivo: |cff3fa7ff" .. tostring(DB:GetProfileName()) .. "|r"
+        return L["Profilo attivo: |cff3fa7ff"] .. tostring(DB:GetProfileName()) .. "|r"
     end } })
-    S:Widgets({ { type = "list", height = 190, empty = "Nessun profilo", items = profileRows } })
+    S:Widgets({ { type = "list", height = 190, empty = L["Nessun profilo"], items = profileRows } })
     S:Buttons({
-        { "Nuovo / Copia", function()
-            UI.TextBox("Nome del nuovo profilo (copia dell'attivo)", "", function(name)
+        { L["Nuovo / Copia"], function()
+            UI.TextBox(L["Nome del nuovo profilo (copia dell'attivo)"], "", function(name)
                 local ok, res = UI:CopyProfile(DB:GetProfileName(), name)
                 if ok then DB:SetProfile(res) end
                 local err = not ok and res or nil
-                notify(ok, err, "Profilo creato")
+                notify(ok, err, L["Profilo creato"])
             end)
         end },
-        { "Esporta attivo", function() UI.TextBox("Esporta profilo", DB:ExportProfile()) end },
-        { "Importa", function()
+        { L["Esporta attivo"], function() UI.TextBox(L["Esporta profilo"], DB:ExportProfile()) end },
+        { L["Importa"], function()
             -- Pagina Import / Export con anteprima; fallback alla finestra di testo se assente.
             local IO = Badb.ImportExport
             if IO and IO:OpenImport() then return end
-            UI.TextBox("Incolla la stringa BadbUI", "", function(str)
+            UI.TextBox(L["Incolla la stringa BadbUI"], "", function(str)
                 local ok, err = UI:ImportProfileString(str)
-                if not ok then Logger:Error("Import fallito: %s", tostring(err)) end
-                notify(ok, err, "Profilo importato")
+                if not ok then Logger:Error(L["Import fallito: %s"], tostring(err)) end
+                notify(ok, err, L["Profilo importato"])
             end)
         end },
         { "Reset", function()
-            UI:Confirm("Reimpostare il profilo '" .. tostring(DB:GetProfileName()) .. "' ai valori predefiniti?", function()
+            UI:Confirm(L["Reimpostare il profilo '"] .. tostring(DB:GetProfileName()) .. L["' ai valori predefiniti?"], function()
                 DB:ResetProfile()
-                notify(true, nil, "Profilo reimpostato")
+                notify(true, nil, L["Profilo reimpostato"])
             end)
         end },
     }, 128, 4)
     S:Gap(8)
-    S:Header("Profilo per specializzazione")
-    S:Text("Il profilo scelto viene attivato automaticamente al cambio di specializzazione.", "GameFontDisableSmall", 18)
+    S:Header(L["Profilo per specializzazione"])
+    S:Text(L["Il profilo scelto viene attivato automaticamente al cambio di specializzazione."], "GameFontDisableSmall", 18)
     local specs = {}
     for i = 1, specCount() do
         specs[#specs + 1] = {
@@ -819,14 +820,14 @@ P.modules = function(parent, ctx)
             h:SetScript("OnClick", function() s:SetExpanded(not s.expanded) end)
             local right = -6
             if type(m.page) == "table" then
-                local open = W.MakeButton(h, "Pagina", 56, 20, function() UI:OpenPage(name) end)
+                local open = W.MakeButton(h, L["Pagina"], 56, 20, function() UI:OpenPage(name) end)
                 open:SetPoint("RIGHT", h, "RIGHT", right, 0)
                 right = right - 62
             end
             local cb = W.CreateFrame("CheckButton", nil, h, "UICheckButtonTemplate")
             cb:SetSize(24, 24); cb:SetPoint("RIGHT", h, "RIGHT", right, 0)
             local cbText = cb.text or cb.Text
-            if cbText then cbText:SetText("Attivo"); cbText:ClearAllPoints(); cbText:SetPoint("RIGHT", cb, "LEFT", -2, 0) end
+            if cbText then cbText:SetText(L["Attivo"]); cbText:ClearAllPoints(); cbText:SetPoint("RIGHT", cb, "LEFT", -2, 0) end
             cb:SetScript("OnClick", function(self) setModuleEnabled(name, self:GetChecked() and true or false) end)
             s.check = cb
         end
@@ -883,30 +884,30 @@ P.frames = function(parent, ctx)
     local S = newStack(parent, ctx)
     S:Header("Frame")
     if not FM then
-        S:Text("FrameManager non disponibile.", "GameFontDisable", 20)
+        S:Text(L["FrameManager non disponibile."], "GameFontDisable", 20)
         return S.y + 16
     end
     local status = S:Text("", "GameFontHighlight", 22)
-    local btn = S:Buttons({ { "Sblocca frame", function()
+    local btn = S:Buttons({ { L["Sblocca frame"], function()
         local ok, err = pcall(FM.SetUnlocked, FM, not FM.unlocked)
-        if not ok then Logger:Error("Sblocco frame: %s", tostring(err)) end
+        if not ok then Logger:Error(L["Sblocco frame: %s"], tostring(err)) end
         UI:Refresh()
     end, width = 150 } })[1]
     ctx.AddRefresh(function()
-        status:SetText(FM.unlocked and "|cffffcc00Frame sbloccati: trascina per spostare, tasto destro per ripristinare.|r"
-            or "Frame bloccati.")
-        btn:SetText(FM.unlocked and "Blocca frame" or "Sblocca frame")
+        status:SetText(FM.unlocked and L["|cffffcc00Frame sbloccati: trascina per spostare, tasto destro per ripristinare.|r"]
+            or L["Frame bloccati."])
+        btn:SetText(FM.unlocked and L["Blocca frame"] or L["Sblocca frame"])
     end)
     S:Gap(4)
 
     local byCat, cats = {}, {}
     for key, desc in pairs(FM.registry or {}) do
-        local c = tstr(desc.category, "Altro")
+        local c = tstr(desc.category, L["Altro"])
         if not byCat[c] then byCat[c] = {}; cats[#cats + 1] = c end
         byCat[c][#byCat[c] + 1] = { key = key, desc = desc }
     end
     table.sort(cats)
-    if #cats == 0 then S:Text("Nessun frame registrato.", "GameFontDisable", 20) end
+    if #cats == 0 then S:Text(L["Nessun frame registrato."], "GameFontDisable", 20) end
     for _, c in ipairs(cats) do
         table.sort(byCat[c], function(a, b)
             local ta, tb = tostring(a.desc.title or a.key):lower(), tostring(b.desc.title or b.key):lower()
@@ -929,7 +930,7 @@ P.frames = function(parent, ctx)
                 local cb = W.CreateFrame("CheckButton", nil, row, "UICheckButtonTemplate")
                 cb:SetSize(24, 24); cb:SetPoint("LEFT", row, "LEFT", 146, 0)
                 local t = cb.text or cb.Text
-                if t then t:SetText("Visibile") end
+                if t then t:SetText(L["Visibile"]) end
                 cb:SetScript("OnClick", function(self)
                     local vis = self:GetChecked() and true or false
                     W.Safe(function()
@@ -942,7 +943,7 @@ P.frames = function(parent, ctx)
                         else
                             FM:SetOption(key, "hidden", true)
                         end
-                    end, "Frame visibile")
+                    end, L["Frame visibile"])
                 end)
                 refreshers[#refreshers + 1] = function() cb:SetChecked(not frameConf(key).hidden) end
                 row.visible = cb
@@ -956,10 +957,10 @@ P.frames = function(parent, ctx)
             if desc.scalable and not editMode then
                 row.scale = miniSlider(row, 385, 80, 0.5, 2, 0.05,
                     function() return frameConf(key).scale or 1 end,
-                    function(v) FM:SetOption(key, "scale", v) end, "Scala %.2f")
+                    function(v) FM:SetOption(key, "scale", v) end, L["Scala %.2f"])
                 refreshers[#refreshers + 1] = function() row.scale:Refresh() end
             end
-            local rb = W.MakeButton(row, "Ripristina", 66, 20, function()
+            local rb = W.MakeButton(row, L["Ripristina"], 66, 20, function()
                 FM:Restore(key)
                 UI:Refresh()
             end)
@@ -997,19 +998,19 @@ P.about = function(parent, ctx)
         local ok, v, b = pcall(GetBuildInfo)
         if ok then build = string.format("Client %s (build %s, interface %s)", tostring(v), tostring(b), tostring(Compat.interface)) end
     end
-    S:Text("Versione " .. tostring(Badb.version) .. "\n" .. build .. "\nAutore: Nikoemme", "GameFontHighlight", 52)
+    S:Text(L["Versione "] .. tostring(Badb.version) .. "\n" .. build .. L["\nAutore: Nikoemme"], "GameFontHighlight", 52)
     S:Gap(4)
-    S:Header("Finestra")
+    S:Header(L["Finestra"])
     local scaleLabel = S:Text("", "GameFontHighlight", 22)
-    ctx.AddRefresh(function() scaleLabel:SetText(string.format("Scala: %.2f", UI.State().scale or 1)) end)
+    ctx.AddRefresh(function() scaleLabel:SetText(string.format(L["Scala: %.2f"], UI.State().scale or 1)) end)
     S:Buttons({
-        { "Riduci scala", function() UI:SetScale((UI.State().scale or 1) - 0.05); UI:Refresh() end },
-        { "Aumenta scala", function() UI:SetScale((UI.State().scale or 1) + 0.05); UI:Refresh() end },
-        { "Reimposta finestra", function() UI:ResetWindow(); UI:Refresh() end, width = 150 },
-        { "Mostra log", function() UI.TextBox("Log BadbUI", table.concat(Logger.buffer, "\n")) end },
+        { L["Riduci scala"], function() UI:SetScale((UI.State().scale or 1) - 0.05); UI:Refresh() end },
+        { L["Aumenta scala"], function() UI:SetScale((UI.State().scale or 1) + 0.05); UI:Refresh() end },
+        { L["Reimposta finestra"], function() UI:ResetWindow(); UI:Refresh() end, width = 150 },
+        { L["Mostra log"], function() UI.TextBox(L["Log BadbUI"], table.concat(Logger.buffer, "\n")) end },
     }, 130, 4)
     S:Gap(6)
-    S:Header("Comandi  /badb  /bui")
+    S:Header(L["Comandi  /badb  /bui"])
     S:Widgets({ { type = "label", small = true, text = function()
         local lines = {}
         local Slash = Badb.Slash
@@ -1027,8 +1028,8 @@ end
 local function buildDisabledNotice(container, rec)
     local fs = container:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
     fs:SetPoint("TOPLEFT", 16, -16); fs:SetWidth(W.width); fs:SetJustifyH("LEFT")
-    fs:SetText("Il modulo |cffffd100" .. moduleTitle(rec.module) .. "|r e' disattivato.\nAttivalo per usare questa pagina.")
-    local b = W.MakeButton(container, "Attiva modulo", 140, 24, function() setModuleEnabled(rec.module, true) end)
+    fs:SetText(L["Il modulo |cffffd100"] .. moduleTitle(rec.module) .. L["|r e' disattivato.\nAttivalo per usare questa pagina."])
+    local b = W.MakeButton(container, L["Attiva modulo"], 140, 24, function() setModuleEnabled(rec.module, true) end)
     b:SetPoint("TOPLEFT", 16, -64)
     return 110
 end
@@ -1059,17 +1060,17 @@ local function buildPage(self, rec)
     if rec.enabled == false then
         resize(buildDisabledNotice(entry.container, rec))
     elseif type(rec.build) ~= "function" then
-        local f, h = errorBox(entry.container, "Pagina non valida", "build mancante")
+        local f, h = errorBox(entry.container, L["Pagina non valida"], L["build mancante"])
         entry.failed, entry.errorFrame = true, f
         resize(h)
     else
         local ok, h = pcall(rec.build, entry.container, ctx)
         if not ok then
-            Logger:Error("Pagina '%s': %s", rec.title, tostring(h))
+            Logger:Error(L["Pagina '%s': %s"], rec.title, tostring(h))
             entry.container:Hide()
             entry.container = newContainer(self) -- scarta i widget a meta' costruiti
             entry.refreshers = {}
-            local f, eh = errorBox(entry.container, "Errore nella pagina '" .. rec.title .. "'", h)
+            local f, eh = errorBox(entry.container, L["Errore nella pagina '"] .. rec.title .. "'", h)
             entry.failed, entry.errorFrame, entry.buildError = true, f, tostring(h)
             resize(eh)
         else
@@ -1097,11 +1098,11 @@ function UI:RefreshPage(key)
         if not ok then err = tostring(e) end
     end
     if err then
-        if entry.lastErr ~= err then Logger:Error("Pagina '%s' refresh: %s", entry.rec.title, err) end
+        if entry.lastErr ~= err then Logger:Error(L["Pagina '%s' refresh: %s"], entry.rec.title, err) end
     end
     entry.lastErr = err
     if self.current == key and self.refreshError then
-        self.refreshError:SetText(err and ("|cffff5050Errore nel refresh: " .. err:sub(1, 120) .. "|r") or "")
+        self.refreshError:SetText(err and (L["|cffff5050Errore nel refresh: "] .. err:sub(1, 120) .. "|r") or "")
     end
 end
 
@@ -1276,7 +1277,7 @@ function UI:Create()
     self.searchBox = sb
     local hint = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     hint:SetPoint("LEFT", sb, "RIGHT", 10, 0)
-    hint:SetText("Cerca pagine e opzioni")
+    hint:SetText(L["Cerca pagine e opzioni"])
     local panel = W.CreateFrame("Frame", nil, f, "BackdropTemplate")
     panel:SetSize(308, 8); panel:SetPoint("TOPLEFT", sb, "BOTTOMLEFT", 0, -2)
     panel:SetFrameStrata("FULLSCREEN_DIALOG")
@@ -1381,28 +1382,28 @@ end
 -- Eventi e pannello leggero in Settings
 ---------------------------------------------------------------------------
 Events:On(UI, "BADB_PROFILE_CHANGED", function(_, name)
-    UI:RecordAction("Profilo attivo: " .. tostring(name))
+    UI:RecordAction(L["Profilo attivo: "] .. tostring(name))
     UI:Refresh()
 end)
 Events:On(UI, "BADB_MODULE_ENABLED", function(_, name)
-    UI:RecordAction("Modulo attivato: " .. moduleTitle(name))
+    UI:RecordAction(L["Modulo attivato: "] .. moduleTitle(name))
     UI:Refresh()
 end)
 Events:On(UI, "BADB_MODULE_DISABLED", function(_, name)
-    UI:RecordAction("Modulo disattivato: " .. moduleTitle(name))
+    UI:RecordAction(L["Modulo disattivato: "] .. moduleTitle(name))
     UI:Refresh()
 end)
 Events:On(UI, "PLAYER_ENTERING_WORLD", function() UI.recording = true end)
 Events:On(UI, "BADB_OPTION_CHANGED", function() UI:QueueRefresh() end)
 Events:On(UI, "BADB_UNLOCK_CHANGED", function(_, state)
-    UI:RecordAction(state and "Frame sbloccati" or "Frame bloccati")
+    UI:RecordAction(state and L["Frame sbloccati"] or L["Frame bloccati"])
     UI:Refresh()
 end)
-Events:On(UI, "BADB_PRESET_APPLIED", function(_, key) UI:RecordAction("Preset applicato: " .. tostring(key)); UI:Refresh() end)
-Events:On(UI, "BADB_PRESET_UNDONE", function(_, key) UI:RecordAction("Preset annullato: " .. tostring(key)); UI:Refresh() end)
-Events:On(UI, "BADB_BACKUP_CREATED", function(_, id) UI:RecordAction("Backup creato: " .. tostring(id)); UI:Refresh() end)
-Events:On(UI, "BADB_BACKUP_RESTORED", function(_, id) UI:RecordAction("Backup ripristinato: " .. tostring(id)); UI:Refresh() end)
-Events:On(UI, "BADB_INTEGRATION_APPLIED", function(_, id) UI:RecordAction("Integrazione applicata: " .. tostring(id)) end)
+Events:On(UI, "BADB_PRESET_APPLIED", function(_, key) UI:RecordAction(L["Preset applicato: "] .. tostring(key)); UI:Refresh() end)
+Events:On(UI, "BADB_PRESET_UNDONE", function(_, key) UI:RecordAction(L["Preset annullato: "] .. tostring(key)); UI:Refresh() end)
+Events:On(UI, "BADB_BACKUP_CREATED", function(_, id) UI:RecordAction(L["Backup creato: "] .. tostring(id)); UI:Refresh() end)
+Events:On(UI, "BADB_BACKUP_RESTORED", function(_, id) UI:RecordAction(L["Backup ripristinato: "] .. tostring(id)); UI:Refresh() end)
+Events:On(UI, "BADB_INTEGRATION_APPLIED", function(_, id) UI:RecordAction(L["Integrazione applicata: "] .. tostring(id)) end)
 Events:On(UI, "PLAYER_REGEN_DISABLED", function() UI:QueueRefresh() end)
 Events:On(UI, "PLAYER_REGEN_ENABLED", function() UI:QueueRefresh() end)
 
@@ -1415,9 +1416,41 @@ do
     t:SetPoint("TOPLEFT", 16, -16); t:SetText("BadbUI")
     local d = panel:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
     d:SetPoint("TOPLEFT", 16, -52); d:SetWidth(520); d:SetJustifyH("LEFT")
-    d:SetText("Tutta la configurazione e' nella finestra BadbUI (comando /badb).")
-    local b = W.MakeButton(panel, "Apri BadbUI", 160, 26, function() UI:Open() end)
+    d:SetText(L["Tutta la configurazione e' nella finestra BadbUI (comando /badb)."])
+    local b = W.MakeButton(panel, L["Apri BadbUI"], 160, 26, function() UI:Open() end)
     b:SetPoint("TOPLEFT", 16, -90)
     panel.openButton = b
 end
 Compat.RegisterOptionsPanel(panel, "BadbUI")
+
+-- Native child categories make Blizzard display the expandable + beside BadbUI.
+UI.settingsPanels = {}
+function UI:RegisterSettingsShortcuts()
+    if not panel.settingsCategory or #self.settingsPanels > 0 then return end
+    if not (Settings and type(Settings.RegisterCanvasLayoutSubcategory) == "function") then return end
+    local shortcuts = {
+        { title = "Control panel", page = "home", button = "Open BadbUI" },
+        { title = "Macro catalog", page = "Macros" },
+        { title = "Profiles", page = "profiles" },
+        { title = "Help", page = "help" },
+    }
+    for _, shortcut in ipairs(shortcuts) do
+        local child = CreateFrame("Frame")
+        child:Hide()
+        local heading = child:CreateFontString(nil, "ARTWORK", "GameFontHighlightHuge")
+        heading:SetPoint("TOPLEFT", 16, -16); heading:SetText(shortcut.title)
+        local description = child:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+        description:SetPoint("TOPLEFT", 16, -52); description:SetWidth(520); description:SetJustifyH("LEFT")
+        description:SetText("Open this section in BadbUI. You can also use /badb at any time.")
+        local button = W.MakeButton(child, shortcut.button or ("Open " .. shortcut.title), 200, 26, function()
+            if SettingsPanel and SettingsPanel.Hide then SettingsPanel:Hide() end
+            if shortcut.page == "help" and Badb.Help then Badb.Help:Open("start")
+            else UI:OpenPage(shortcut.page) end
+        end)
+        button:SetPoint("TOPLEFT", 16, -90)
+        child.openButton, child.pageKey = button, shortcut.page
+        Compat.RegisterOptionsPanel(child, shortcut.title, panel.settingsCategory)
+        self.settingsPanels[#self.settingsPanels + 1] = child
+    end
+end
+UI:RegisterSettingsShortcuts()

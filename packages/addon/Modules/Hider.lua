@@ -2,22 +2,23 @@
 -- Aggiungere un elemento = aggiungere una riga a TARGETS. Tutto il resto (UI, profili,
 -- import/export, ripristino) e' automatico.
 local _, ns = ...
+local L = ns.Badb.L
 local Badb = ns.Badb
 local FM = Badb.FrameManager
 
 local TARGETS = {
-    { key = "MicroMenu",      frame = "MicroMenuContainer", title = "Micro menu",        category = "Barre" },
-    { key = "BagsBar",        frame = "BagsBar",            title = "Barra borse",       category = "Barre" },
-    { key = "StatusTracking", frame = "StatusTrackingBarManager", title = "Barra esperienza", category = "Barre" },
-    { key = "ObjectiveTracker", frame = "ObjectiveTrackerFrame", title = "Tracker missioni", category = "HUD" },
+    { key = "MicroMenu",      frame = "MicroMenuContainer", title = "Micro menu",        category = L["Barre"] },
+    { key = "BagsBar",        frame = "BagsBar",            title = L["Barra borse"],       category = L["Barre"] },
+    { key = "StatusTracking", frame = "StatusTrackingBarManager", title = L["Barra esperienza"], category = L["Barre"] },
+    { key = "ObjectiveTracker", frame = "ObjectiveTrackerFrame", title = L["Tracker missioni"], category = "HUD" },
     { key = "BuffFrame",      frame = "BuffFrame",          title = "Buff",              category = "HUD" },
-    { key = "Minimap",        frame = "MinimapCluster",     title = "Minimappa",         category = "HUD" },
+    { key = "Minimap",        frame = "MinimapCluster",     title = L["Minimappa"],         category = "HUD" },
 }
 
 local options = {}
 for _, t in ipairs(TARGETS) do
     options[#options + 1] = {
-        type = "toggle", label = "Nascondi: " .. t.title,
+        type = "toggle", label = L["Nascondi: "] .. t.title,
         get = function() local c = Badb.DB.profile.frames[t.key]; return c and c.hidden end,
         set = function(v)
             if v then FM:SetOption(t.key, "hidden", true) else FM:Restore(t.key) end
@@ -26,8 +27,8 @@ for _, t in ipairs(TARGETS) do
 end
 
 local M = Badb.Modules:New("Hider", {
-    title = "Nascondi elementi",
-    category = "Interfaccia",
+    title = L["Nascondi elementi"],
+    category = L["Interfaccia"],
     defaults = { enabled = true },
     options = options,
 })

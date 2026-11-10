@@ -6,19 +6,20 @@
 --   * Stile (texture barra vita, dimensione nome, sfondo) applicato con hooksecurefunc sulle
 --     funzioni di setup Blizzard: nessun taint, nessuna lettura di valori secret.
 local _, ns = ...
+local L = ns.Badb.L
 local Badb = ns.Badb
 local CVars, Compat, Logger, Events = Badb.CVars, Badb.Compat, Badb.Logger, Badb.Events
 
 local HEALTH_TEXT = {
-    { value = "none", text = "Nessuno" },
-    { value = "health", text = "Vita attuale" },
-    { value = "losthealth", text = "Vita mancante" },
-    { value = "perc", text = "Percentuale" },
+    { value = "none", text = L["Nessuno"] },
+    { value = "health", text = L["Vita attuale"] },
+    { value = "losthealth", text = L["Vita mancante"] },
+    { value = "perc", text = L["Percentuale"] },
 }
 local TEXTURES = {
     { value = "blizzard", text = "Blizzard" },
-    { value = "flat", text = "Piatta (Badb)" },
-    { value = "smooth", text = "Morbida" },
+    { value = "flat", text = L["Piatta (Badb)"] },
+    { value = "smooth", text = L["Morbida"] },
 }
 local TEXTURE_PATHS = {
     flat = "Interface\\Buttons\\WHITE8X8",
@@ -26,9 +27,9 @@ local TEXTURE_PATHS = {
 }
 
 local M = Badb.Modules:New("GroupFrames", {
-    title = "Raid e party",
-    category = "Gruppo",
-    description = "Opzioni, dimensioni e stile dei frame di gruppo Blizzard.",
+    title = L["Raid e party"],
+    category = L["Gruppo"],
+    description = L["Opzioni, dimensioni e stile dei frame di gruppo Blizzard."],
     defaults = {
         enabled = false,
         raidStyleParty = true,     -- party con lo stesso stile dei raid frame
@@ -53,26 +54,26 @@ local M = Badb.Modules:New("GroupFrames", {
 })
 
 M.options = {
-    { type = "header", label = "Opzioni Blizzard" },
-    { type = "toggle", path = "raidStyleParty", label = "Party in stile raid" },
-    { type = "toggle", path = "classColors", label = "Colore di classe" },
-    { type = "toggle", path = "powerBars", label = "Barre risorse" },
-    { type = "toggle", path = "showPets", label = "Mostra pet" },
-    { type = "toggle", path = "aggroHighlight", label = "Evidenzia aggro" },
-    { type = "toggle", path = "mainTankAssist", label = "Mostra main tank e assist" },
-    { type = "toggle", path = "onlyDispellable", label = "Solo debuff dissipabili" },
-    { type = "toggle", path = "incomingHeals", label = "Cure in arrivo" },
-    { type = "select", path = "healthText", label = "Testo vita", values = HEALTH_TEXT },
-    { type = "header", label = "Dimensioni (layout Edit Mode)" },
-    { type = "toggle", path = "resizeFrames", label = "Gestisci dimensioni da BadbUI" },
-    { type = "range", path = "partyWidth", label = "Larghezza party", min = 72, max = 144, step = 2 },
-    { type = "range", path = "partyHeight", label = "Altezza party", min = 36, max = 72, step = 2 },
-    { type = "range", path = "raidWidth", label = "Larghezza raid", min = 72, max = 144, step = 2 },
-    { type = "range", path = "raidHeight", label = "Altezza raid", min = 36, max = 72, step = 2 },
-    { type = "header", label = "Stile" },
-    { type = "select", path = "texture", label = "Texture barra vita", values = TEXTURES },
-    { type = "range", path = "nameSize", label = "Dimensione nome", min = 8, max = 16, step = 1 },
-    { type = "toggle", path = "darkBackground", label = "Sfondo scuro" },
+    { type = "header", label = L["Opzioni Blizzard"] },
+    { type = "toggle", path = "raidStyleParty", label = L["Party in stile raid"] },
+    { type = "toggle", path = "classColors", label = L["Colore di classe"] },
+    { type = "toggle", path = "powerBars", label = L["Barre risorse"] },
+    { type = "toggle", path = "showPets", label = L["Mostra pet"] },
+    { type = "toggle", path = "aggroHighlight", label = L["Evidenzia aggro"] },
+    { type = "toggle", path = "mainTankAssist", label = L["Mostra main tank e assist"] },
+    { type = "toggle", path = "onlyDispellable", label = L["Solo debuff dissipabili"] },
+    { type = "toggle", path = "incomingHeals", label = L["Cure in arrivo"] },
+    { type = "select", path = "healthText", label = L["Testo vita"], values = HEALTH_TEXT },
+    { type = "header", label = L["Dimensioni (layout Edit Mode)"] },
+    { type = "toggle", path = "resizeFrames", label = L["Gestisci dimensioni da BadbUI"] },
+    { type = "range", path = "partyWidth", label = L["Larghezza party"], min = 72, max = 144, step = 2 },
+    { type = "range", path = "partyHeight", label = L["Altezza party"], min = 36, max = 72, step = 2 },
+    { type = "range", path = "raidWidth", label = L["Larghezza raid"], min = 72, max = 144, step = 2 },
+    { type = "range", path = "raidHeight", label = L["Altezza raid"], min = 36, max = 72, step = 2 },
+    { type = "header", label = L["Stile"] },
+    { type = "select", path = "texture", label = L["Texture barra vita"], values = TEXTURES },
+    { type = "range", path = "nameSize", label = L["Dimensione nome"], min = 8, max = 16, step = 1 },
+    { type = "toggle", path = "darkBackground", label = L["Sfondo scuro"] },
 }
 
 ------------------------------------------------------------------------------
@@ -142,7 +143,7 @@ function M:ApplySizes()
         local idx = layouts.activeLayout - presets
         local info = layouts.layouts[idx]
         if not info then
-            Logger:Warn("Raid e party: il layout Edit Mode attivo e' un preset Blizzard. Crea un layout personale per gestire le dimensioni.")
+            Logger:Warn(L["Raid e party: il layout Edit Mode attivo e' un preset Blizzard. Crea un layout personale per gestire le dimensioni."])
             return
         end
         local sys, ix, set = E.EditModeSystem.UnitFrame, E.EditModeUnitFrameSystemIndices, E.EditModeUnitFrameSetting
@@ -153,7 +154,7 @@ function M:ApplySizes()
         changed = setSystemSetting(info, sys, ix.Raid, set.FrameHeight, self:Get("raidHeight")) or changed
         if changed then
             C_EditMode.SaveLayouts(layouts)
-            Logger:Debug("Dimensioni raid/party salvate nel layout '%s'", info.layoutName or "?")
+            Logger:Debug(L["Dimensioni raid/party salvate nel layout '%s'"], info.layoutName or "?")
             -- Mantiene allineata la copia del layout salvata nel profilo BadbUI.
             local bridge = Badb.Modules:Get("EditModeBridge")
             if bridge and bridge.enabled and bridge:Get("layoutName") == info.layoutName then bridge:Capture() end

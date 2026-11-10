@@ -30,7 +30,7 @@ end
 
 T["azioni rapide: elenco completo, ognuna con un'azione"] = function()
     local rows = MP().quickActions()
-    eq(#rows, 7)
+    eq(#rows, 8)
     for _, r in ipairs(rows) do truthy(r.actions and #r.actions == 1 and type(r.actions[1].func) == "function", r.text) end
     truthy(act(find(rows, "ElvUI"), "Applica").confirm, "lo stile ElvUI deve chiedere conferma")
     truthy(act(find(rows, "Ricarica"), "Ricarica").confirm, "il reload deve chiedere conferma")
