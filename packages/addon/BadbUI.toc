@@ -113,6 +113,10 @@ Modules\Bags\Bags.lua
 # --
 
 # >>> qol: automazioni, finestre mobili, errori Lua, ordine dei gruppi
+Locales\Suite\QoL.lua
+Modules\QoL\Automation.lua
+Modules\QoL\Page.lua
+Data\QoL\Guides.lua
 # <<< qol
 
 # --
