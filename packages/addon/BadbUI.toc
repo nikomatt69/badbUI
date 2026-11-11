@@ -88,6 +88,10 @@ Modules\Bags\Bags.lua
 # --
 
 # >>> combat: contatore danni/cure e minaccia
+Locales\Suite\Combat.lua
+Modules\Combat\Source.lua
+Modules\Combat\Combat.lua
+Data\Combat\Guides.lua
 # <<< combat
 
 # --
