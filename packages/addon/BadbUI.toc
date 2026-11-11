@@ -83,6 +83,11 @@ Modules\Bags\Bags.lua
 # --
 
 # >>> auction: casa d'aste (prezzi, liste, vendita)
+Locales\Suite\Auction.lua
+Data\Auction\Store.lua
+Modules\Auction\Market.lua
+Modules\Auction\Window.lua
+Data\Auction\Guides.lua
 # <<< auction
 
 # --
