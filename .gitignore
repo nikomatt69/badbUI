@@ -26,3 +26,9 @@ artifacts/local/
 __pycache__/
 
 /packages/web/public/downloads/
+.muse/
+*.log
+*.tmp
+.badbui-update-backup/
+.badbui-update-lock
+site/tmp-verify/
