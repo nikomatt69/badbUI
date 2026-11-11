@@ -107,6 +107,10 @@ Data\Combat\Guides.lua
 # --
 
 # >>> quests: missioni e leveling
+Locales\Suite\Quests.lua
+Modules\Quests\Journal.lua
+Modules\Quests\Quests.lua
+Modules\Quests\Window.lua
 # <<< quests
 
 # --
