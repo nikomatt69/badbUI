@@ -33,4 +33,12 @@ ns.Badb.Localization:RegisterLocale("enUS", {
     ["coperto"] = "covered",
     ["in parte"] = "partly",
     ["modulo spento"] = "module off",
+    ["Usa il layout BadbUI predefinito nei profili senza layout"] = "Use the default BadbUI layout in profiles without a layout",
+    ["Ripristina il layout BadbUI predefinito"] = "Restore the default BadbUI layout",
+    ["layout default - ripristina e attiva il layout Edit Mode predefinito di BadbUI"] = "layout default - restores and activates BadbUI's default Edit Mode layout",
+    ["Layout Edit Mode del profilo: %s"] = "Edit Mode layout of the profile: %s",
+    ["Layout predefinito non disponibile"] = "Default layout not available",
+    ["stringa del layout non riconosciuta dal client"] = "layout string not recognized by the client",
+    ["Layout BadbUI predefinito non installato: %s"] = "Default BadbUI layout not installed: %s",
+    ["Layout Edit Mode '%s' predefinito attivato"] = "Default Edit Mode layout '%s' activated",
 })

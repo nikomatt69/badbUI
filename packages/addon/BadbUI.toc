@@ -37,6 +37,7 @@ UI\Dropdown.lua
 UI\Layout.lua
 
 # Moduli
+Data\EditModeDefault.lua
 Modules\EditModeBridge.lua
 Modules\Hider.lua
 Modules\Scaling.lua
