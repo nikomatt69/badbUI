@@ -75,6 +75,9 @@ Modules\Diagnostics.lua
 Modules\Suite.lua
 
 # >>> bags: borse, banca e inventario di tutti i personaggi
+Locales\Suite\Bags.lua
+Modules\Bags\Inventory.lua
+Modules\Bags\Bags.lua
 # <<< bags
 
 # --
