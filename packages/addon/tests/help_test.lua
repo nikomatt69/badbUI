@@ -13,7 +13,8 @@ T["manual covers every module and links resolve"] = function()
         if section.guide then assert(B.Guides:Get(section.guide), section.guide) end
         if section.page then assert(B.ConfigUI:ResolveKey(section.page), section.page) end
     end
-    for _, id in ipairs({ "start", "language", "profiles", "layout", "macros", "contexts", "scripts", "guild", "chatbot", "guides", "troubleshooting", "limits", "modules", "commands" }) do assert(topics[id], id) end
+    for _, id in ipairs({ "start", "language", "profiles", "layout", "macros", "contexts", "scripts", "chatbot", "guides", "troubleshooting", "limits", "modules", "commands" }) do assert(topics[id], id) end
+    assert(not topics.guild)
 end
 T["module descriptions supply localized manual text without a static entry"] = function()
     local B = BadbUI
@@ -46,7 +47,7 @@ T["manual builds filters resizes and handles empty searches"] = function()
     local startHeight = page.height
     B.Help:Select("all", ""); assert(page.height > startHeight)
     assert(page.height < 20000, "The complete manual must fit the scrollable page")
-    B.Help:Select("start", "guildscan")
+    B.Help:Select("start", "profile")
     local matched = 0
     for _, section in ipairs(B.Help:Sections()) do if B.Help:Matches(section) then matched = matched + 1 end end
     assert(matched >= 2)

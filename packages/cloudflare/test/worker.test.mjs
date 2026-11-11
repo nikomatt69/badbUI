@@ -71,6 +71,7 @@ test(
       const release = await releaseResponse.json()
       assert.ok(release.macroCount >= 6000)
       assert.ok(release.artifacts.some((artifact) => artifact.kind === "addon"))
+      assert.ok(release.artifacts.some((artifact) => artifact.kind === "guild-addon"))
       for (const artifact of release.artifacts) {
         for (const path of [artifact.url, artifact.latestUrl]) {
           const download = await mf.dispatchFetch(`https://badb.test${path}`)

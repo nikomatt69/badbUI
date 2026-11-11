@@ -105,8 +105,6 @@ local function build(parent, ctx)
         add({ type = "label", text = entry.id == "commands" and function() return Help:CommandText() end or entry.text }, entry)
         if entry.page then
             add({ type = "execute", label = L["Open settings"], func = function() UI:OpenPage(entry.page) end }, entry)
-        elseif entry.id == "guild" then
-            add({ type = "execute", label = L["Open guild panel"], func = function() Badb.Slash:Dispatch("guild") end }, entry)
         end
         if entry.guide then
             add({ type = "execute", label = L["Read guide"], disabled = function()

@@ -20,6 +20,7 @@
     "test": "bun turbo test",
     "test:addon": "cd packages/addon && luajit tests/run.lua . && luajit tests/run_stub.lua && luajit tests/ui/run.lua .",
     "addon:package": "bun run script/package-addon.ts",
+    "guild-addon:package": "bun run script/package-addon.ts guild",
     "start": "bun packages/server/src/index.ts",
     "mobile:build": "bun run --cwd packages/mobile build",
     "cloudflare:dev": "bun run web:build && wrangler dev",
@@ -27,7 +28,7 @@
     "cloudflare:deploy": "bun run cloudflare:build && wrangler deploy",
     "cloudflare:test": "bun run cloudflare:build && node --test packages/cloudflare/test/worker.test.mjs",
     "companion:package": "bun script/package-companion.ts",
-    "release:package": "bun run addon:package && bun run companion:package && bun run chat:package && bun script/package-release.ts"
+    "release:package": "bun run addon:package && bun run guild-addon:package && bun run companion:package && bun run chat:package && bun script/package-release.ts"
   },
   "workspaces": {
     "packages": [

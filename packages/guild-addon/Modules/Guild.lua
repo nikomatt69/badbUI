@@ -3,7 +3,10 @@
 local _, ns = ...
 local L = ns.Badb.L
 local Badb = ns.Badb
-local M = Badb.Modules:New("Guild", { title = L["Gilda"], category = L["Gilda"], defaults = { enabled = true } })
+local M = Badb.Modules:New("Guild", {
+    title = L["Gilda"], category = L["Contenuti"], defaults = { enabled = true },
+    description = L["Consulta calendario, armory e tattiche di gilda dal companion."],
+})
 Badb.Guild = M
 local days = { L["Lun"], L["Mar"], L["Mer"], L["Gio"], L["Ven"], L["Sab"], L["Dom"] }
 local slots = { L["Mattina"], L["Pomeriggio"], L["Sera"] }
@@ -32,7 +35,7 @@ end
 local function store()
     if type(BadbUI_GuildExport) ~= "table" then BadbUI_GuildExport = {} end
     local s = BadbUI_GuildExport
-    s.version = Badb.version
+    s.version = ns.version
     s.characters = type(s.characters) == "table" and s.characters or {}
     s.actions = type(s.actions) == "table" and s.actions or {}
     s.roster = type(s.roster) == "table" and s.roster or {}
@@ -145,6 +148,7 @@ local function button(parent, label, x, y, width, fn)
     return b
 end
 function M:Show()
+    if not self.enabled then out(L["Attiva il modulo Gilda per aprire il pannello."]); return end
     if InCombatLockdown and InCombatLockdown() then out(L["Apri il pannello fuori dal combattimento."]); return end
     if self.frame then self.frame:Show(); return end
     local f = Badb.Compat.CreateFrame("Frame", "BadbUIGuild", UIParent)
@@ -243,3 +247,14 @@ M.commands = {
     gilda = { help = L["Calendario, disponibilità e tattiche della gilda"], fn = function() M:Show() end },
     guildscan = { help = L["Aggiorna lo snapshot Forever; /reload per inviarlo al companion"], fn = function() M:Capture(); M:CaptureRoster(); out(L["Snapshot aggiornato; /reload per esportare."]) end },
 }
+
+M.options = {
+    { type = "execute", label = L["Apri pannello gilda"], func = function() M:Show() end },
+}
+
+M:On("ADDON_LOADED", function(_, name)
+    if name ~= ns.name then return end
+    M:Off("ADDON_LOADED")
+    M:OnInitialize()
+    if IsLoggedIn and IsLoggedIn() and M:Get("enabled") then Badb.Modules:Enable(M.name) end
+end)

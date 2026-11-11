@@ -1,10 +1,10 @@
 ## Interface: 16001
 ## Title: |cff3fa7ffBadb|rUI
-## Notes: Modular Forever interface and guild companion: armory, availability, raids, tactics and guides.
-## Notes-itIT: Interfaccia modulare e companion di gilda Forever: armory, disponibilità, raid, tattiche e guide.
+## Notes: Modular interface, gameplay tools, profiles, macros and offline guides for WoW Forever.
+## Notes-itIT: Interfaccia modulare, strumenti di gioco, profili, macro e guide offline per WoW Forever.
 ## Author: Nikoemme
-## Version: 1.0.1
-## SavedVariables: BadbUIDB, BadbUI_GuildExport, BadbUI_ChatbotExport
+## Version: 1.1.0
+## SavedVariables: BadbUIDB, BadbUI_ChatbotExport
 ## IconTexture: Interface\Icons\INV_Shield_06
 ## Category: Interface Enhancements
 
@@ -156,10 +156,6 @@ Config\ImportExport.lua
 
 # Galleria del design system (dopo Slash: registra /badb gallery e /badb theme)
 UI\Gallery.lua
-
-# Ponte gilda (file dati prima del modulo)
-Data\GuildSync.lua
-Modules\Guild.lua
 
 # nikcli embedded chatbot (in-game interface and character context)
 Data\ChatbotSync.lua

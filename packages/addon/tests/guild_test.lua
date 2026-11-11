@@ -7,6 +7,12 @@ local function with(values, fn)
     if not ok then error(err) end
 end
 local T = {}
+T["addon base e ponte hanno un ciclo di vita distinto"] = function(Mock)
+    assert(BadbUI.Guild and BadbUI.Guild.enabled)
+    local commands = BadbUI.Slash:List()
+    for _, command in ipairs(commands) do if command.name == "guild" then return end end
+    error("Comando del ponte facoltativo mancante")
+end
 T["scansione: solo dati del client Forever, nome completo e metadati"] = function()
     with({
         UnitName = function() return "Niko Emme" end,
@@ -55,4 +61,16 @@ T["coda: settimana dal server, maschere validate e limite"] = function()
     for i = #BadbUI_GuildExport.actions + 1, 200 do BadbUI_GuildExport.actions[i] = { id = tostring(i) } end
     eq(G:Signup("id", "yes"), false)
 end
+local function runWithGuild(test)
+    return function(Mock)
+        assert(not BadbUI.Guild and not BadbUI_GuildExport and not BadbUI_GuildSync)
+        local root = arg[1] or "."
+        Mock.LoadAddon(root .. "/../guild-addon", "BadbUI_Guild.toc", "BadbUI_Guild")
+        Mock.Fire("ADDON_LOADED", "BadbUI_Guild")
+        assert(BadbUI_GuildExport, "il ponte inizializza le sue SavedVariables")
+        BadbUI.Modules:Enable("Guild")
+        test(Mock)
+    end
+end
+for name, test in pairs(T) do T[name] = runWithGuild(test) end
 return T

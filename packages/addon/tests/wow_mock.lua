@@ -171,7 +171,7 @@ function Mock.Fire(event, ...)
 end
 
 -- Carica i file della TOC nell'ordine dichiarato, con il vararg (nome, namespace).
-function Mock.LoadAddon(root, tocName)
+function Mock.LoadAddon(root, tocName, addonName)
     local ns = {}
     local toc = assert(io.open(root .. "/" .. tocName))
     for line in toc:lines() do
@@ -182,7 +182,7 @@ function Mock.LoadAddon(root, tocName)
             local src = f:read("*a")
             f:close()
             local chunk = assert((loadstring or load)(src, "@" .. line))
-            chunk("BadbUI", ns)
+            chunk(addonName or "BadbUI", ns)
         end
     end
     toc:close()
