@@ -126,6 +126,10 @@ Modules\Quests\Window.lua
 # --
 
 # >>> loot: bottini, punteggio oggetti, best in slot
+Locales\Suite\Loot.lua
+Modules\Loot\Model.lua
+Modules\Loot\Loot.lua
+Data\Loot\Guides.lua
 # <<< loot
 
 # --
