@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Documentation — BadbUI 1.2.1 for WoW Forever</title>
+<meta name="description" content="Complete documentation for BadbUI 1.2.1: installation, every module, slash commands, profiles and presets, updates via the companion, FAQ, honest limits and troubleshooting.">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+  /* Inline fallback — used when assets/site.css is not present yet.
+     Class names match the shared site stylesheet so either source styles the page. */
+  :root{
+    --bg:#050914; --bg-2:#080e1f; --panel:#0a1122; --panel-2:#0d1528;
+    --line:#1c2947; --line-soft:rgba(148,170,220,.14);
+    --text:#e8ecf4; --muted:#8b96b0; --muted-2:#5d6a87;
+    --amber:#f5b94d; --amber-soft:rgba(245,185,77,.12);
+    --ok:#5fd08c; --warn:#f5b94d; --bad:#f07a7a;
+    --radius:14px; --max:1180px;
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased}
+  a{color:var(--amber);text-decoration:none}
+  a:hover{text-decoration:underline}
+  code{font-family:var(--mono);font-size:.88em;background:var(--panel-2);border:1px solid var(--line-soft);border-radius:6px;padding:.08em .38em;color:#ffd98f;white-space:nowrap}
+  .site-header{position:sticky;top:0;z-index:50;background:rgba(5,9,20,.88);backdrop-filter:blur(12px);border-bottom:1px solid var(--line-soft)}
+  .site-header__inner{max-width:var(--max);margin:0 auto;padding:0 24px;height:60px;display:flex;align-items:center;gap:28px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.02em;color:var(--text)}
+  .brand:hover{text-decoration:none}
+  .brand__mark{width:28px;height:28px;border:1px solid var(--amber);border-radius:8px;display:grid;place-items:center;color:var(--amber);font-size:14px}
+  .brand small{color:var(--muted);font-weight:500}
+  .site-nav{display:flex;gap:22px;margin-left:auto;font-size:14px}
+  .site-nav a{color:var(--muted)}
+  .site-nav a:hover{color:var(--text);text-decoration:none}
+  .site-nav a[aria-current="page"]{color:var(--amber)}
+  .btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:10px;padding:9px 16px;font-size:14px;font-weight:600}
+  .btn:hover{border-color:var(--amber);text-decoration:none}
+  .btn--amber{background:var(--amber);border-color:var(--amber);color:#171106}
+  .btn--amber:hover{background:#ffc76a;color:#171106}
+  .docs-hero{border-bottom:1px solid var(--line-soft);background:linear-gradient(180deg,var(--bg-2),var(--bg))}
+  .docs-hero__inner{max-width:var(--max);margin:0 auto;padding:56px 24px 40px}
+  .eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--amber);font-weight:700;margin:0 0 12px}
+  .docs-hero h1{font-size:40px;line-height:1.12;margin:0 0 14px;letter-spacing:-.02em;font-weight:700}
+  .docs-hero p{color:var(--muted);max-width:680px;margin:0;font-size:17px}
+  .docs-hero__meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+  .badge{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:12.5px;color:var(--muted);background:var(--panel)}
+  .badge strong{color:var(--text);font-weight:600}
+  .docs-layout{max-width:var(--max);margin:0 auto;padding:0 24px;display:grid;grid-template-columns:250px minmax(0,1fr);gap:48px;align-items:start}
+  .sidebar{position:sticky;top:84px;padding:32px 0 48px;max-height:calc(100vh - 84px);overflow:auto}
+  .sidebar__title{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted-2);margin:22px 0 8px;font-weight:700}
+  .sidebar__title:first-child{margin-top:0}
+  .sidebar ul{list-style:none;margin:0;padding:0}
+  .sidebar li a{display:block;padding:5px 10px;border-left:1px solid var(--line-soft);color:var(--muted);font-size:14px}
+  .sidebar li a:hover{color:var(--text);text-decoration:none}
+  .sidebar li a.active{color:var(--amber);border-left-color:var(--amber)}
+  .sidebar__toggle{display:none}
+  .docs-main{padding:32px 0 72px;min-width:0}
+  .doc-section{padding:28px 0 8px;border-bottom:1px solid var(--line-soft);scroll-margin-top:84px}
+  .doc-section:last-of-type{border-bottom:0}
+  .doc-section h2{font-size:26px;letter-spacing:-.01em;margin:0 0 8px;line-height:1.25}
+  .doc-section h3{font-size:18px;margin:28px 0 8px}
+  .doc-section p{color:#c3cbdd;max-width:760px}
+  .doc-section ul,.doc-section ol{color:#c3cbdd;max-width:760px;padding-left:22px}
+  .doc-section li{margin:5px 0}
+  .lead{font-size:17px;color:var(--muted)!important}
+  .module-head{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:4px}
+  .module-head h3{margin:0}
+  .cmd-chip{font-family:var(--mono);font-size:12.5px;background:var(--amber-soft);border:1px solid rgba(245,185,77,.35);color:#ffd98f;border-radius:999px;padding:3px 11px;cursor:pointer}
+  .cmd-chip:hover{border-color:var(--amber)}
+  .tag{font-size:11px;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--line);border-radius:999px;padding:2px 9px;color:var(--muted)}
+  .tag--full{color:var(--ok);border-color:rgba(95,208,140,.4)}
+  .tag--partial{color:var(--warn);border-color:rgba(245,185,77,.4)}
+  .card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:12px;margin:18px 0 6px}
+  .card{border:1px solid var(--line-soft);background:var(--panel);border-radius:var(--radius);padding:16px}
+  .card h4{margin:0 0 6px;font-size:15px}
+  .card h4 a{color:var(--text)}
+  .card h4 a:hover{color:var(--amber);text-decoration:none}
+  .card p{font-size:13.5px;color:var(--muted);margin:0}
+  .card .cmd-chip{margin-top:10px;display:inline-block}
+  .table-wrap{overflow-x:auto;border:1px solid var(--line-soft);border-radius:var(--radius);margin:16px 0}
+  table{border-collapse:collapse;width:100%;font-size:14px;min-width:560px}
+  th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+  th{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:var(--panel);font-weight:700}
+  tr:last-child td{border-bottom:0}
+  td:first-child{white-space:nowrap}
+  .callout{border:1px solid var(--line-soft);border-left:3px solid var(--amber);background:var(--panel);border-radius:10px;padding:14px 18px;margin:16px 0;max-width:760px}
+  .callout p{margin:0;color:#c3cbdd}
+  .callout--warn{border-left-color:var(--warn)}
+  .callout--bad{border-left-color:var(--bad)}
+  .callout strong{color:var(--text)}
+  .steps{counter-reset:step;list-style:none;padding:0!important;max-width:760px}
+  .steps li{counter-increment:step;position:relative;padding:0 0 18px 44px;margin:0}
+  .steps li::before{content:counter(step);position:absolute;left:0;top:0;width:28px;height:28px;border:1px solid var(--amber);color:var(--amber);border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700;background:var(--bg)}
+  .steps li::after{content:"";position:absolute;left:13.5px;top:32px;bottom:2px;width:1px;background:var(--line-soft)}
+  .steps li:last-child::after{display:none}
+  .steps strong{color:var(--text)}
+  pre{background:var(--panel);border:1px solid var(--line-soft);border-radius:10px;padding:14px 16px;overflow-x:auto;max-width:760px}
+  pre code{background:none;border:0;padding:0;color:#ffd98f;white-space:pre}
+  details{border:1px solid var(--line-soft);border-radius:10px;background:var(--panel);margin:10px 0;max-width:760px}
+  details summary{cursor:pointer;padding:13px 18px;font-weight:600;font-size:15px;list-style:none}
+  details summary::-webkit-details-marker{display:none}
+  details summary::before{content:"+ ";color:var(--amber);font-family:var(--mono)}
+  details[open ] summary::before{content:"– "}
+  details .details-body{padding:0 18px 15px;color:#c3cbdd;font-size:15px}
+  details .details-body p{margin:0 0 8px}
+  .limit-row{display:grid;grid-template-columns:220px 1fr;gap:16px;padding:14px 0;border-bottom:1px solid var(--line-soft);max-width:820px}
+  .limit-row:last-child{border-bottom:0}
+  .limit-row strong{color:var(--text)}
+  .limit-row p{margin:0}
+  .site-footer{border-top:1px solid var(--line-soft);margin-top:24px}
+  .site-footer__inner{max-width:var(--max);margin:0 auto;padding:28px 24px 40px;display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between;color:var(--muted-2);font-size:13px}
+  .site-footer a{color:var(--muted)}
+  @media (max-width:860px){
+    .docs-layout{grid-template-columns:1fr;gap:0}
+    .sidebar{position:static;max-height:none;padding:20px 0 0;overflow:visible}
+    .sidebar__toggle{display:inline-flex;margin-bottom:10px}
+    .sidebar nav{display:none}
+    .sidebar nav.open{display:block}
+    .docs-hero h1{font-size:31px}
+    .site-nav{display:none}
+    .limit-row{grid-template-columns:1fr;gap:4px}
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-header__inner">
+    <a class="brand" href="index.html"><span class="brand__mark">B</span> BadbUI <small>v1.2.1</small></a>
+    <nav class="site-nav" aria-label="Site">
+      <a href="index.html">Home</a>
+      <a href="features.html">Features</a>
+      <a href="docs.html" aria-current="page">Docs</a>
+      <a href="download.html">Download</a>
+      <a href="docs.html#faq">FAQ</a>
+    </nav>
+    <a class="btn btn--amber" href="download.html">Download</a>
+  </div>
+</header>
+
+<div class="docs-hero">
+  <div class="docs-hero__inner">
+    <p class="eyebrow">Documentation</p>
+    <h1>BadbUI 1.2.1 — the complete guide</h1>
+    <p>One addon for WoW Forever that replaces your bags, auction house, combat meter, encounter timers, world map tools, quest journal, loot comparison and quality-of-life tweaks. This page covers installation, every module, every slash command, profiles, updates and the limits we state openly.</p>
+    <div class="docs-hero__meta">
+      <span class="badge">Version <strong>1.2.1</strong></span>
+      <span class="badge">Client <strong>WoW Forever 1.60.x</strong></span>
+      <span class="badge">Interface <strong>16001</strong></span>
+      <span class="badge">Macros <strong>6,609 included</strong></span>
+      <span class="badge">Presets <strong>54 templates</strong></span>
+    </div>
+  </div>
+</div>
+
+<div class="docs-layout">
+
+  <aside class="sidebar">
+    <button class="btn sidebar__toggle" id="navToggle" aria-expanded="false">Contents</button>
+    <nav id="sidebarNav" aria-label="Documentation">
+      <p class="sidebar__title">Start here</p>
+      <ul>
+        <li><a href="#getting-started">Getting started</a></li>
+        <li><a href="#commands">Slash commands</a></li>
+        <li><a href="#profiles">Profiles, presets &amp; wizard</a></li>
+        <li><a href="#updates">Updates via companion</a></li>
+      </ul>
+      <p class="sidebar__title">Modules</p>
+      <ul>
+        <li><a href="#mod-bags">Bags</a></li>
+        <li><a href="#mod-auction">Auction</a></li>
+        <li><a href="#mod-combat">Combat</a></li>
+        <li><a href="#mod-encounters">Encounters</a></li>
+        <li><a href="#mod-world">World</a></li>
+        <li><a href="#mod-quests">Quests &amp; Quest Tracker</a></li>
+        <li><a href="#mod-loot">Loot</a></li>
+        <li><a href="#mod-qol">QoL</a></li>
+        <li><a href="#mod-system">System Profile</a></li>
+        <li><a href="#mod-arena">Arena</a></li>
+        <li><a href="#mod-professions">Professions</a></li>
+        <li><a href="#mod-macros">Macros</a></li>
+        <li><a href="#mod-guides">Guides</a></li>
+        <li><a href="#mod-suite">Suite</a></li>
+        <li><a href="#mod-backups">Backups</a></li>
+      </ul>
+      <p class="sidebar__title">Help</p>
+      <ul>
+        <li><a href="#faq">FAQ</a></li>
+        <li><a href="#limits">Honest limits</a></li>
+        <li><a href="#troubleshooting">Troubleshooting</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <main class="docs-main">
+
+    <!-- ============ GETTING STARTED ============ -->
+    <section class="doc-section" id="getting-started">
+      <h2>Getting started</h2>
+      <p class="lead">From download to a configured interface in about five minutes. BadbUI is a single addon folder — no libraries to install separately, no in-game dependencies.</p>
+
+      <h3>Install</h3>
+      <ol class="steps">
+        <li><strong>Download and extract.</strong> Unzip the release so the folder lands in <code>&lt;Forever client&gt;/Interface/AddOns/BadbUI/</code>. The file <code>Interface/AddOns/BadbUI/BadbUI.toc</code> must exist at exactly that path — if you see a doubled <code>BadbUI/BadbUI/</code> folder, move the inner one up.</li>
+        <li><strong>Check the client.</strong> BadbUI 1.2.1 targets interface <code>16001</code> (Forever 1.60.x). In game you can confirm your build with <code>/dump select(4, GetBuildInfo())</code>. A different interface number means the client will mark the addon out of date.</li>
+        <li><strong>Log in and enable.</strong> On the character screen open <em>AddOns</em> and tick <strong>BadbUI</strong>. First login opens the setup wizard automatically after a few seconds — or start it any time with <code>/badb setup</code>.</li>
+        <li><strong>Open the control panel.</strong> Type <code>/badb</code>. Everything — modules, profiles, macros, guides, updates — lives in this one window. The same panel is also listed under the game's native <em>Options → AddOns → BadbUI</em>.</li>
+        <li><strong>Arrange your frames.</strong> Type <code>/badb unlock</code> to drag unit frames, the quest tracker, meters and monitors into place, then <code>/badb unlock</code> again to lock. Positions are saved per profile.</li>
+        <li><strong>Save your settings.</strong> BadbUI stores settings in SavedVariables, which WoW only writes on <code>/reload</code>, logout or a clean exit. After big changes, type <code>/reload</code> so nothing is lost in a crash.</li>
+      </ol>
+
+      <div class="callout">
+        <p><strong>The two commands to remember:</strong> <code>/badb</code> opens everything, and <code>/reload</code> saves and refreshes the UI. Every other command on this page is a shortcut into the same panel.</p>
+      </div>
+
+      <h3>First-run wizard</h3>
+      <p>The wizard (<code>/badb setup</code>) walks through role confirmation, a class preset, content choices and integrations, then applies everything with a backup taken first — so <code>/badb undo</code> can roll the whole thing back. New characters on an account that already finished the wizard get a short version: reuse an existing profile or create a new one. Full details are in <a href="#profiles">Profiles, presets &amp; wizard</a>.</p>
+
+      <h3>Updating from a previous version</h3>
+      <p>Replace the <code>BadbUI</code> folder with the new one and <code>/reload</code>. Your settings survive — they live in <code>WTF</code>, not in the addon folder. If you run the companion, in-game updates are even easier: see <a href="#updates">Updates via companion</a>.</p>
+    </section>
+
+    <!-- ============ MODULES OVERVIEW ============ -->
+    <section class="doc-section" id="modules">
+      <h2>Modules at a glance</h2>
+      <p class="lead">Every module can be switched on or off independently with <code>/badb enable &lt;module&gt;</code> and <code>/badb disable &lt;module&gt;</code>. Disabling a module never deletes data it already created — macros stay on your bars, backups stay restorable, saved searches stay saved.</p>
+      <div class="card-grid">
+        <div class="card"><h4><a href="#mod-bags">Bags</a></h4><p>Unified search across bags and bank, for every character on the account.</p><span class="cmd-chip" data-cmd="/badb bags">/badb bags</span></div>
+        <div class="card"><h4><a href="#mod-auction">Auction</a></h4><p>Price search, saved searches and a 21-day local price history.</p><span class="cmd-chip" data-cmd="/badb auction">/badb auction</span></div>
+        <div class="card"><h4><a href="#mod-combat">Combat</a></h4><p>Damage/healing meter and target threat from the client's native APIs.</p><span class="cmd-chip" data-cmd="/badb combat">/badb combat</span></div>
+        <div class="card"><h4><a href="#mod-encounters">Encounters</a></h4><p>Boss timeline, battleground queues, instance visits and lockouts.</p><span class="cmd-chip" data-cmd="/badb encounters">/badb encounters</span></div>
+        <div class="card"><h4><a href="#mod-world">World</a></h4><p>Saved waypoints with an on-screen destination and distance monitor.</p><span class="cmd-chip" data-cmd="/badb waypoint">/badb waypoint</span></div>
+        <div class="card"><h4><a href="#mod-quests">Quests</a></h4><p>Searchable quest journal, pinned quests, turn-in history and tracker.</p><span class="cmd-chip" data-cmd="/badb quests">/badb quests</span></div>
+        <div class="card"><h4><a href="#mod-loot">Loot</a></h4><p>Item comparison with your own stat weights, favourites and observed drops.</p><span class="cmd-chip" data-cmd="/badb loot">/badb loot</span></div>
+        <div class="card"><h4><a href="#mod-qol">QoL</a></h4><p>Auto-loot, auto-repair, junk selling and quest-dialog automation.</p><span class="cmd-chip" data-cmd="/badb qol">/badb qol</span></div>
+        <div class="card"><h4><a href="#mod-system">System Profile</a></h4><p>Detects a performance tier for your machine and applies matching graphics settings.</p><span class="cmd-chip" data-cmd="/badb system">/badb system</span></div>
+        <div class="card"><h4><a href="#mod-arena">Arena</a></h4><p>Gladius-style opponent list for battlegrounds and world PvP.</p><span class="cmd-chip" data-cmd="/badb arena">/badb arena</span></div>
+        <div class="card"><h4><a href="#mod-professions">Professions</a></h4><p>Profession ranks for the current character plus cooldowns you choose to track.</p><span class="cmd-chip" data-cmd="/badb prof">/badb prof</span></div>
+        <div class="card"><h4><a href="#mod-macros">Macros</a></h4><p>6,609 ready-made macros for all 9 classes, 27 talent trees, PvE and PvP.</p><span class="cmd-chip" data-cmd="/badb macro">/badb macro</span></div>
+        <div class="card"><h4><a href="#mod-guides">Guides</a></h4><p>Offline, searchable guides bundled with the addon — no network needed.</p><span class="cmd-chip" data-cmd="/badb guide">/badb guide</span></div>
+        <div class="card"><h4><a href="#mod-suite">Suite</a></h4><p>Shows which installed addons BadbUI already covers, and what you can remove.</p><span class="cmd-chip" data-cmd="/badb suite">/badb suite</span></div>
+        <div class="card"><h4><a href="#mod-backups">Backups</a></h4><p>Named snapshots of your whole BadbUI configuration, restorable in one command.</p><span class="cmd-chip" data-cmd="/badb backup list">/badb backup list</span></div>
+        <div class="card"><h4><a href="#updates">Updates</a></h4><p>Release status inside the game, installed safely by the companion app.</p><span class="cmd-chip" data-cmd="/badb update">/badb update</span></div>
+      </div>
+    </section>
+
+    <!-- ============ BAGS ============ -->
+    <section class="doc-section" id="mod-bags">
+      <div class="module-head"><h3>Bags</h3><button class="cmd-chip" data-cmd="/badb bags">/badb bags</button><span class="tag tag--partial">Replaces Baganator / Syndicator — partially</span></div>
+      <p>A single searchable inventory for bags and bank across all your characters. Open it with <code>/badb bags</code> or from <em>Game → Inventory</em> in the panel. Search ignores case and accents, accepts several words or an item ID, and groups stacks of the same item variant into one row showing character, source and total count. Hover any row for the real item tooltip; shift-click inserts the item link into an open chat.</p>
+      <ul>
+        <li><code>/badb bags &lt;text&gt;</code> — opens the Bags view with the search pre-filled.</li>
+        <li><code>/badb bags bank</code> — opens the Bank view. Visit a banker once so BadbUI can capture your personal bank; afterwards the last capture is shown anywhere.</li>
+        <li>Moving and using items still happens in the client's own bag windows — BadbUI is the finder, not a replacement bag frame. The normal bag key opens the client bags as usual.</li>
+        <li>BadbUI keeps bag and bank snapshots for the last 24 characters, discards captures older than 90 days, and keeps the archive when you switch profiles.</li>
+      </ul>
+      <p>Suite coverage is honest: unified search and viewing replace the common Baganator/Syndicator use, but custom categories, sorting rules, quick transfers, mail, equipped gear and the guild bank are not covered. See <a href="#mod-suite">Suite</a>.</p>
+    </section>
+
+    <!-- ============ AUCTION ============ -->
+    <section class="doc-section" id="mod-auction">
+      <div class="module-head"><h3>Auction</h3><button class="cmd-chip" data-cmd="/badb auction">/badb auction</button><span class="tag tag--partial">Replaces Auctionator — partially</span></div>
+      <p>Talk to an auctioneer, type <code>/badb auction</code> and search by item name. Each <em>Search</em> press sends one request within the client's rate limits and shows the lowest price the client reports, quantity and variants where available. Save a term with <em>Save search</em> and recall it from the menu; menu selections never fire requests on their own.</p>
+      <ul>
+        <li><strong>History</strong> keeps one observation per day per market and variant, per realm, faction and auctioneer location, for up to 21 days. Select an item to compare its observed minimums over time.</li>
+        <li>An optional tooltip line (<em>Game → Auction House → Last observed price</em>) shows the latest observation with place and date, for variant-free commodities, out of combat.</li>
+        <li>Buys and listings always go through Blizzard's native controls — BadbUI helps you pick the price, then you confirm in the standard window.</li>
+        <li>The archive holds up to 500 market/variant combinations and 24 saved searches, shared across profiles.</li>
+      </ul>
+      <p>Coverage vs Auctionator is partial: name search, saved terms, observed-minimum history and the commodity tooltip are in; full scans, structured shopping lists, transaction history, selling automation and profession integration are not. In-game guide: <code>/badb guide open auction:market</code>.</p>
+    </section>
+
+    <!-- ============ COMBAT ============ -->
+    <section class="doc-section" id="mod-combat">
+      <div class="module-head"><h3>Combat</h3><button class="cmd-chip" data-cmd="/badb combat">/badb combat</button><span class="tag tag--partial">Replaces Details! — partially</span></div>
+      <p>A damage and healing meter plus a threat view, built entirely on the client's native <code>C_DamageMeter</code> and threat APIs. Open it with <code>/badb combat</code>, optionally auto-open on login, and drag it by its header or with <code>/badb unlock</code>. Position and size follow your profile.</p>
+      <ul>
+        <li><strong>Report tab</strong> — pick a metric and an encounter: current fight, session total, or up to 30 recent encounters. Select a row to see the spell breakdown when the client exposes a public spell ID.</li>
+        <li><strong>Threat tab</strong> — <code>/badb combat threat</code> with a hostile target selected. Percentages show the aggro threshold at each participant's range; ordering uses raw threat where available, then aggro status.</li>
+        <li>When the client marks values as secret (Forever inherits Midnight-style restrictions), the panel passes them only to the permitted display functions and says so, instead of guessing. Combat data is in-memory only; with the panel closed, no readings happen.</li>
+      </ul>
+      <p>Coverage vs Details!, Details! Tiny Threat and ThreatClassic2 is partial: history depth is whatever the client provides, and there is no cross-player comparison export, persistent logging, streamer panels or Details! plugins. Threat is limited to your target and the APIs the client offers.</p>
+    </section>
+
+    <!-- ============ ENCOUNTERS ============ -->
+    <section class="doc-section" id="mod-encounters">
+      <div class="module-head"><h3>Encounters</h3><button class="cmd-chip" data-cmd="/badb encounters">/badb encounters</button><span class="tag tag--partial">Replaces BigWigs / Capping — partially</span></div>
+      <p>Boss timelines, battleground queues, instance visits and lockouts in one themed window. Open it with <code>/badb encounters</code>; it remembers its position per profile and can auto-open at boss pull.</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Tab</th><th>Command</th><th>What it shows</th></tr></thead>
+        <tbody>
+          <tr><td>Boss</td><td><code>/badb encounters boss</code></td><td>Countdown and status of native encounter-timeline events</td></tr>
+          <tr><td>Battlegrounds</td><td><code>/badb encounters pvp</code></td><td>Time waited, average wait, invite expiry and match duration</td></tr>
+          <tr><td>Visits</td><td><code>/badb encounters visits</code></td><td>Recent instance entries on this account, with character and boss outcome</td></tr>
+          <tr><td>Lockouts</td><td><code>/badb encounters lockouts</code></td><td>Resets and progress of the current character's active lockouts</td></tr>
+        </tbody>
+      </table></div>
+      <p>Timers come from <code>C_EncounterTimeline</code>; if the client hides an ability name, it is only passed to the allowed display function while bars and ordering use public durations. The visit log keeps up to 120 visits from the last 90 days per account. Coverage vs BigWigs, Capping and Nova Instance Tracker is partial — per-boss custom alerts, PvP objective timers, win prediction and log sharing are out of scope.</p>
+    </section>
+
+    <!-- ============ WORLD ============ -->
+    <section class="doc-section" id="mod-world">
+      <div class="module-head"><h3>World</h3><button class="cmd-chip" data-cmd="/badb waypoint">/badb waypoint</button><span class="tag tag--partial">Replaces TomTom — partially</span></div>
+      <p>Save waypoints, follow one on screen, and pin it on the native map. Open the window with <code>/badb waypoint</code>, save your current position, import the pin already on your map, or type a map ID with coordinates from 0 to 100.</p>
+      <ul>
+        <li><code>/badb waypoint 35.7 42.5 My spot</code> — saves a waypoint in your current zone in one line.</li>
+        <li><strong>Follow</strong> shows destination and straight-line distance when both positions are on the same map and the client exposes its scale. The monitor moves with <code>/badb unlock</code> and can be hidden per profile.</li>
+        <li><strong>Pin on map</strong> uses WoW's single personal waypoint; <em>Restore waypoint</em> puts back the pin BadbUI replaced, and disabling the module restores it too (out of combat).</li>
+        <li>Up to 100 waypoints per account; the active destination is session-only.</li>
+      </ul>
+      <p>Coverage vs TomTom is partial: saved waypoints, coordinates, same-map distance and the native pin are in; the guidance arrow, routes and minimap pins are not. Map changes (Leatrix Maps, Atlas), gathering nodes (GatherMate2) and rare alerts (RareScanner) stay outside this module.</p>
+    </section>
+
+    <!-- ============ QUESTS ============ -->
+    <section class="doc-section" id="mod-quests">
+      <div class="module-head"><h3>Quests &amp; Quest Tracker</h3><button class="cmd-chip" data-cmd="/badb quests">/badb quests</button><span class="tag tag--partial">Covers Questie — partially</span></div>
+      <p>A searchable quest journal plus a pinned-quest monitor. Open it with <code>/badb quests</code> (same command for the tracker), search by title, zone or ID, open a row to read its objectives, and pin it with <em>Highlight</em>. The <em>Ready to turn in</em> filter uses the quest log's own state, <em>History</em> shows recent turn-ins and the XP the client reported, and the footer tracks progress on your current level.</p>
+      <ul>
+        <li><strong>Quest Tracker</strong> (the journal's monitor option, also <code>/badb questtracker</code>) shows up to five pinned quests with the next readable objective or turn-in state. Newly accepted quests can be auto-watched. The title reopens the journal; <code>/badb unlock</code> moves the monitor.</li>
+        <li>History starts when you enable the module: up to 25 pinned quests and 50 turn-ins for each of the last 24 characters, shared across that character's profiles. Turned-in or removed quests leave the pinned list automatically.</li>
+        <li>For story text, rewards and objective areas use the WoW quest log and map — native markers depend on your client settings. If the log becomes unreadable, BadbUI keeps the last reading in memory and marks it as such.</li>
+      </ul>
+      <div class="callout callout--warn">
+        <p><strong>Coverage vs Questie is partial.</strong> BadbUI covers the journal, objectives, turn-in filter and active-quest monitor. It has no quest database of its own, so there are no extra map markers for quests you have not picked up, no objective spawn locations and no party sharing of quest data. Guided routes and levelling paths (the Polestar-style use) are likewise not included — your data packs and dedicated guide addons keep their job. See <a href="#limits">Honest limits</a>.</p>
+      </div>
+    </section>
+
+    <!-- ============ LOOT ============ -->
+    <section class="doc-section" id="mod-loot">
+      <div class="module-head"><h3>Loot</h3><button class="cmd-chip" data-cmd="/badb loot">/badb loot</button><span class="tag tag--partial">Replaces Pawn — partially</span></div>
+      <p>Compare items with your own stat weights and keep a wishlist of drops. Open it with <code>/badb loot</code> — optionally <code>/badb loot &lt;item ID&gt;</code> to compare straight away. In the <em>Compare</em> tab, paste an item ID or link; add a second reference of the same equipment type to compare two items directly.</p>
+      <ul>
+        <li><strong>Stat weights</strong> live in your profile and start at zero for every stat — nothing is scored until you say what you value. The score is simply each client-reported stat multiplied by its weight, summed.</li>
+        <li><strong>Loot favourites</strong> holds up to 100 personal targets shared across profiles. <strong>Observed loot</strong> remembers the last 240 item/zone combinations for 90 days when the client exposes loot contents; recording can be turned off per profile.</li>
+        <li>Optional scored and favourite tooltips appear out of combat only.</li>
+      </ul>
+      <p>Coverage vs Pawn, AtlasLootClassic and AtlasBIStooltips is partial: effects, sockets, weapon DPS, automatic upgrade suggestions, drop percentages, precompiled loot sources and best-in-slot lists are not calculated or stored. In-game guide: <code>/badb guide open loot:confronto</code>.</p>
+    </section>
+
+    <!-- ============ QOL ============ -->
+    <section class="doc-section" id="mod-qol">
+      <div class="module-head"><h3>QoL</h3><button class="cmd-chip" data-cmd="/badb qol">/badb qol</button><span class="tag tag--partial">Replaces Leatrix Plus — partially</span></div>
+      <p>Small automations, each switched on individually and stored per profile. Open the page with <code>/badb qol</code> (<em>Game → Quality of life</em>). Holding <strong>Shift</strong> suspends automation for the current interaction.</p>
+      <ul>
+        <li><strong>Auto-loot</strong> uses WoW's native preference. BadbUI restores the previous value when you turn the toggle off, disable the module, or switch to a profile that leaves the preference to the client.</li>
+        <li><strong>Auto-repair</strong> makes one attempt per merchant visit, with personal gold only, when the cost is within your profile's cap and your balance covers it.</li>
+        <li><strong>Sell junk</strong> needs a confirmation from the QoL page at an open merchant and uses the client's own junk classification. If your bags or the merchant change, you confirm again after checking the new count.</li>
+        <li><strong>Quest dialogs</strong> can auto-accept and auto-complete from an open NPC dialog. Item quests, automatic offers, shared quests, turn-ins costing money or currency, and reward choices always stay manual.</li>
+      </ul>
+      <p>Coverage of Leatrix Plus is partial: loot, personal repairs, confirmed native junk selling and simple dialogs are in; guild funds, custom sell exclusions, flight automation and more remain unimplemented. In-game guide: <code>/badb guide open qol:automation</code>.</p>
+    </section>
+
+    <!-- ============ SYSTEM ============ -->
+    <section class="doc-section" id="mod-system">
+      <div class="module-head"><h3>System Profile</h3><button class="cmd-chip" data-cmd="/badb system">/badb system</button></div>
+      <p><code>/badb system</code> classifies the machine you are playing on and prints the result — for example <em>System: balanced (1920×1080, 60 FPS)</em>. <code>/badb system apply</code> (or the options page) applies the matching graphics tier, and <em>Restore</em> puts back the exact values you had before.</p>
+      <ul>
+        <li><strong>Tiers:</strong> <em>performance</em> (under 30 FPS, or very high pixel count with low FPS), <em>balanced</em> (up to 1080p), <em>quality</em> (1440p at 55+ FPS), <em>ultra</em> (4K at 55+ FPS).</li>
+        <li>Each tier suggests a UI scale (see <code>/badb scale</code> in the <a href="#commands">command table</a>) and a small set of candidate graphics CVars — shadow quality, particle density, view distance. CVars that do not exist on the Forever client are skipped and reported as none.</li>
+        <li>Detection uses only legal signals: physical display resolution (<code>GetPhysicalScreenSize</code>) and measured frame rate (<code>GetFramerate</code>, sampled on world entry, never per frame). The same rules apply on macOS, Windows and Linux because they depend on the client, not the OS.</li>
+      </ul>
+      <div class="callout">
+        <p><strong>Why no hardware names?</strong> An addon cannot read your GPU model, CPU, RAM or operating system — WoW exposes none of those to addons, and BadbUI does not pretend otherwise. The tier is an honest estimate from resolution and measured FPS, nothing more. See <a href="#limits">Honest limits</a>.</p>
+      </div>
+    </section>
+
+    <!-- ============ ARENA ============ -->
+    <section class="doc-section" id="mod-arena">
+      <div class="module-head"><h3>Arena</h3><button class="cmd-chip" data-cmd="/badb arena">/badb arena</button><span class="tag tag--partial">Covers Gladius — partially</span></div>
+      <p><code>/badb arena</code> opens a compact, Gladius-style opponent panel: name, class and a health bar for each visible enemy player. Because Forever has no <code>arena1–5</code> units to track, the panel collects opponents from nameplates, plus your target and focus — and arena units opportunistically, if a future client ever exposes them. Health bars are fed by the client's percentage API, never by arithmetic on secret health values.</p>
+      <div class="callout callout--warn">
+        <p><strong>Forever has no arenas and no rated PvP.</strong> There is no arena queue, no rating and no arena opponents to frame. This module exists for battlegrounds (Warsong Gulch 10v10, Arathi Basin and Darkspear Islands 15v15, Alterac Valley 40v40) and world PvP, which is where a Gladius-style list is actually useful on this client. If you came looking for arena frames, that feature cannot exist on Forever — for anyone's addon, not just ours.</p>
+      </div>
+      <p>Coverage vs Gladius is partial: the opponent list for battlegrounds and world PvP is covered; trinket tracking, cooldown tracking from the combat log (unreadable by addons on Forever) and arena frames are not, because the underlying data does not exist here.</p>
+    </section>
+
+    <!-- ============ PROFESSIONS ============ -->
+    <section class="doc-section" id="mod-professions">
+      <div class="module-head"><h3>Professions</h3><button class="cmd-chip" data-cmd="/badb prof">/badb prof</button></div>
+      <p><code>/badb prof</code> shows the current character's profession ranks and the cooldowns you chose to track. It contains no recipe database and no invented spell lists — only what the client reports and what you add yourself.</p>
+      <ul>
+        <li><code>/badb prof</code> or <code>/badb prof list</code> — reads ranks via the client's profession APIs and saves a snapshot per character (up to 50 characters, 12 professions each). The snapshot refreshes on login, on skill changes and on logout; <code>/badb prof refresh</code> forces a re-read. If the API is missing, the page says professions are unavailable on this client instead of guessing.</li>
+        <li><code>/badb prof add &lt;spell ID&gt;</code>, <code>/badb prof remove &lt;ID&gt;</code>, <code>/badb prof clear</code> — track up to 20 cooldowns of your choice. BadbUI shows the remaining time or <em>Ready</em>, read live from the client.</li>
+        <li>No daily or weekly cooldown is ever inferred: Forever exposes no verified legal API that lists profession cooldowns, so BadbUI invents none.</li>
+      </ul>
+      <p>The Suite declares no replacement for this module: ranks plus hand-picked cooldowns are at most a partial answer to tradeskill addons, and recipes, materials, crafting queues and auto-learned cooldowns are missing — so no coverage claim is made until an honest mapping exists.</p>
+    </section>
+
+    <!-- ============ MACROS ============ -->
+    <section class="doc-section" id="mod-macros">
+      <div class="module-head"><h3>Macros</h3><button class="cmd-chip" data-cmd="/badb macro">/badb macro</button><span class="tag">6,609 entries</span></div>
+      <p>Ready-made macros for every class and each of its three talent trees, split into PvE and PvP, plus general macros that work for everyone. Open the catalogue with <code>/badb macro</code> or via <em>Macros</em> in the panel. Entries are available to choose from — BadbUI never creates macros automatically, because the game's macro slots are limited and yours.</p>
+      <ul>
+        <li><code>/badb macro</code> — browse by class, tree and PvE/PvP filter. <strong>Turn on</strong> an entry and it appears in the game's <code>/macro</code> panel; <strong>turn off</strong> deletes it. Subcommands: <code>list</code>, <code>on</code>, <code>off</code>, <code>show</code>, <code>alloff</code>, or a macro name.</li>
+        <li><strong>6,609 entries</strong> in total, including 244 general macros. Per class: Warrior 480, Paladin 1,072, Hunter 428, Rogue 457, Priest 1,183, Shaman 644, Mage 444, Warlock 612, Druid 1,045. Everything in the catalogue — names, descriptions, spell names, notes — is in English.</li>
+        <li><strong>Fixed-unit variants</strong> expand targeted spells into single-purpose macros: <code>Foc</code> (focus), <code>MO</code> (mouseover), <code>Me</code> (yourself), <code>TT</code>/<code>FT</code> (target's/focus's target), <code>P1–P4</code> (party), <code>P1T–P4T</code>, <code>R1–R40</code> (raid, PvE), <code>B1–B5</code> (bosses, PvE), <code>B1T–B5T</code>, and <code>A1–A5</code> arena-enemy compatibility templates (PvP). Fixed-unit macros never switch your target and have no fallback unit. Friendly casts require a living friendly unit; interrupts include <code>/stopcasting</code>.</li>
+        <li>Disabling the Macros module does <strong>not</strong> delete macros you already placed on your bars.</li>
+      </ul>
+      <div class="callout callout--warn">
+        <p><strong>Arena macro entries are compatibility templates.</strong> Forever currently has no arenas, so the <code>A1–A5</code> entries are labelled as such and only work on an arena-enabled client. For teammates, use the <code>partyN</code> variants, not <code>arenaN</code>. Raid indices follow the current roster — they do not permanently identify a player, tank or healer — and boss indices depend on encounter frames the client may not expose.</p>
+      </div>
+    </section>
+
+    <!-- ============ GUIDES ============ -->
+    <section class="doc-section" id="mod-guides">
+      <div class="module-head"><h3>Guides</h3><button class="cmd-chip" data-cmd="/badb guide">/badb guide</button></div>
+      <p>Offline, searchable guides bundled inside the addon — they work with no network, no companion and no account. Almost every module registers its own guide, so the answer to “how does this work?” is usually one command away, in game.</p>
+      <ul>
+        <li><code>/badb guide</code> — opens the guide browser. <code>/badb guide open &lt;id&gt;</code> jumps straight to a guide (IDs appear throughout this page, e.g. <code>/badb guide open auction:market</code>).</li>
+        <li><code>/badb guide search &lt;text&gt;</code> — full-text search across all bundled guides; results print in chat with their IDs.</li>
+        <li><code>/badb guide bookmarks</code> — your bookmarked guides for quick return.</li>
+      </ul>
+      <p>Guides are versioned content shipped with the addon, so they always match the BadbUI version you run. They describe what the module does on the Forever client — including, where relevant, what still needs verifying in the real client.</p>
+    </section>
+
+    <!-- ============ SUITE ============ -->
+    <section class="doc-section" id="mod-suite">
+      <div class="module-head"><h3>Suite</h3><button class="cmd-chip" data-cmd="/badb suite">/badb suite</button></div>
+      <p>Suite answers one question: <em>“which of my installed addons does BadbUI already cover?”</em> Each BadbUI module declares what it replaces; Suite cross-references those declarations with the addons actually installed and reports, per addon, the covering module and whether coverage is <strong>full</strong> (the addon can go) or <strong>partial</strong> (the common use is covered; the module text says what is missing).</p>
+      <ul>
+        <li><code>/badb suite</code> — lists every installed addon BadbUI covers, with its module and coverage. Addons not installed are not listed.</li>
+        <li><code>/badb suite disable</code> — disables the fully covered addons for you. Nothing is deleted from disk; removing the folder from <code>Interface/AddOns</code> afterwards is your call. A <code>/reload</code> applies the change.</li>
+        <li>Conflicts are surfaced, not hidden: for example, X-Perl replaces unit frames, so <code>/badb doctor</code> warns if it runs alongside BadbUI's UnitFrames — use <code>/badb disable UnitFrames</code> if you prefer X-Perl.</li>
+      </ul>
+      <p>The module sections above carry the per-addon verdicts (Baganator, Auctionator, Details!, BigWigs, TomTom, Questie, Gladius, Pawn, Leatrix Plus and more) — always with the same rule: partial means partial, and the missing pieces are named.</p>
+    </section>
+
+    <!-- ============ BACKUPS ============ -->
+    <section class="doc-section" id="mod-backups">
+      <div class="module-head"><h3>Backups</h3><button class="cmd-chip" data-cmd="/badb backup list">/badb backup list</button></div>
+      <p>Named snapshots of your entire BadbUI configuration — profiles, module options and layout — that you can restore in one command. BadbUI also takes automatic <em>pre-preset</em> backups before the wizard or a preset changes things, which is what makes <code>/badb undo</code> safe.</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Command</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td><code>/badb backup create [label]</code></td><td>Creates a snapshot, optionally labelled</td></tr>
+          <tr><td><code>/badb backup list</code></td><td>Lists snapshots with their IDs and numbers</td></tr>
+          <tr><td><code>/badb backup restore &lt;id|n&gt;</code></td><td>Restores a snapshot; in combat the restore is deferred until combat ends</td></tr>
+          <tr><td><code>/badb backup delete &lt;id|n&gt;</code></td><td>Deletes a snapshot you no longer need</td></tr>
+        </tbody>
+      </table></div>
+      <p>Backups live in BadbUI's saved data, so they survive addon updates. They are configuration only — they do not back up the game itself, your macros on the action bars, or other addons' settings.</p>
+    </section>
+
+

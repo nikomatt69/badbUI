@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Features — BadbUI 1.2.1 for WoW Forever</title>
+<meta name="description" content="Every BadbUI 1.2.1 module explained: bags, auction, combat, encounters, world, quests, loot, QoL, SystemProfile, Arena, Professions, Suite, Updates, presets, macros, guides and backups — with honest limits for WoW Forever.">
+<style>
+:root{
+  --bg:#050914; --bg-2:#080d1d; --panel:#0a1122; --panel-2:#0d1528;
+  --line:rgba(245,185,77,.16); --line-soft:rgba(255,255,255,.08);
+  --text:#eef1f8; --muted:#9aa3b8; --faint:#6b748c;
+  --amber:#f5b94d; --amber-dim:rgba(245,185,77,.12);
+  --radius:14px;
+  --panel-bg:var(--panel); --panel-border:var(--line-soft); --panel-accent:var(--amber);
+  --mock-bg:#0a1122; --mock-surface:#0d1528; --mock-text:#eef1f8; --mock-muted:#9aa3b8; --mock-accent:#f5b94d;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:var(--amber);text-decoration:none} a:hover{text-decoration:underline}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+.eyebrow{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--amber);font-weight:700;margin:0 0 14px}
+h1{font-size:clamp(36px,6vw,64px);line-height:1.02;letter-spacing:-.03em;margin:0 0 18px;font-weight:750}
+h2{font-size:clamp(24px,3.4vw,36px);letter-spacing:-.02em;line-height:1.12;margin:0 0 12px}
+h3{font-size:16px;margin:0 0 6px;letter-spacing:-.01em}
+p.lead{font-size:18px;color:var(--muted);max-width:680px;margin:0}
+.muted{color:var(--muted)} .small{font-size:13px;color:var(--faint)}
+header.site{position:sticky;top:0;z-index:20;background:rgba(5,9,20,.88);backdrop-filter:blur(14px);border-bottom:1px solid var(--line-soft)}
+.nav{display:flex;align-items:center;gap:28px;height:64px}
+.brand{font-weight:800;letter-spacing:-.02em;color:var(--text);font-size:18px}.brand b{color:var(--amber)}
+.nav nav{display:flex;gap:22px;margin-left:auto;flex-wrap:wrap}
+.nav nav a{color:var(--muted);font-size:14px}.nav nav a[aria-current]{color:var(--text);border-bottom:2px solid var(--amber);padding-bottom:4px}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:999px;border:1px solid var(--line);font-size:14px;font-weight:650;color:var(--text);background:transparent;cursor:pointer}
+.btn.primary{background:var(--amber);color:#171106;border-color:var(--amber)} .btn:hover{text-decoration:none;filter:brightness(1.06)}
+.hero{padding:72px 0 48px;border-bottom:1px solid var(--line-soft)}
+.badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:22px}
+.badge{font-size:12px;border:1px solid var(--line-soft);border-radius:999px;padding:5px 11px;color:var(--muted)} .badge strong{color:var(--text)}
+section{padding:56px 0;border-bottom:1px solid var(--line-soft)}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line-soft);border:1px solid var(--line-soft);border-radius:var(--radius);overflow:hidden;margin-top:28px}
+.card{background:var(--bg-2);padding:22px;min-height:168px}
+.card .cmd{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:var(--amber);background:var(--amber-dim);display:inline-block;padding:2px 7px;border-radius:6px;margin-bottom:10px}
+.card p{font-size:14px;color:var(--muted);margin:0}
+.card .tag{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);display:block;margin-bottom:8px}
+table{width:100%;border-collapse:collapse;font-size:14px;margin-top:20px}
+th,td{text-align:left;padding:11px 12px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+th{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+td:first-child{font-weight:650;color:var(--text)} td{color:var(--muted)}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92em;color:#ffd88a}
+.showcase-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:28px;align-items:start}
+.panel{border:1px solid var(--line-soft);border-radius:var(--radius);background:var(--bg-2);overflow:hidden}
+.panel-head{padding:16px 18px;border-bottom:1px solid var(--line-soft);display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.panel-head h3{margin:0}.panel-body{padding:18px}
+#crystal-stage{position:relative;height:340px;background:radial-gradient(600px 300px at 50% 40%,rgba(245,185,77,.08),transparent 65%),#070b18}
+#crystal-canvas{width:100%;height:100%;display:block}
+.crystal-fallback{position:absolute;inset:0;display:none;align-items:center;justify-content:center;color:var(--muted);font-size:14px;text-align:center;padding:24px}
+.legend{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.legend span{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:7px}
+.dot{width:9px;height:9px;border-radius:50%;flex:none;box-shadow:0 0 10px currentColor}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{appearance:none;border:1px solid var(--line-soft);background:transparent;color:var(--muted);padding:7px 12px;border-radius:999px;font:inherit;font-size:13px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--mock-accent);border-color:var(--mock-accent);color:#171106;font-weight:700}
+.mock{background:var(--mock-bg);color:var(--mock-text);border:1px solid var(--mock-border,var(--line-soft));border-radius:12px;overflow:hidden;transition:background .25s,color .25s}
+.mock-top{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line-soft);background:var(--mock-surface)}
+.mock-top strong{font-size:13px;letter-spacing:.08em;text-transform:uppercase}
+.mock-section{padding:14px;border-bottom:1px solid var(--line-soft)} .mock-section:last-child{border-bottom:0}
+.mock-label{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mock-muted);margin:0 0 10px}
+.kv{display:flex;justify-content:space-between;gap:16px;font-size:13px;padding:5px 0;border-bottom:1px dashed rgba(255,255,255,.06)} .kv:last-child{border-bottom:0}
+.kv span{color:var(--mock-muted)} .kv b{color:var(--mock-text);text-align:right}
+.opp{display:grid;gap:8px}
+.opp-row{display:grid;grid-template-columns:10px 1fr auto;gap:10px;align-items:center;padding:9px 10px;border:1px solid var(--line-soft);border-radius:9px;background:var(--mock-surface);cursor:pointer;text-align:left;width:100%;color:inherit;font:inherit}
+.opp-row[aria-pressed="true"]{border-color:var(--mock-accent);box-shadow:0 0 0 1px var(--mock-accent)}
+.opp-row .bar{height:5px;background:rgba(255,255,255,.1);border-radius:99px;margin-top:6px;overflow:hidden}
+.opp-row .bar i{display:block;height:100%;border-radius:99px}
+.opp-row small{color:var(--mock-muted)}
+input[type="search"]{width:100%;padding:10px 12px;border-radius:9px;border:1px solid var(--line-soft);background:var(--mock-surface);color:var(--mock-text);font:inherit;font-size:14px}
+.bag-list{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:6px;max-height:240px;overflow:auto}
+.bag-list li{display:flex;justify-content:space-between;gap:12px;padding:8px 10px;border:1px solid var(--line-soft);border-radius:8px;background:var(--mock-surface);font-size:13px}
+.bag-list li[hidden]{display:none} .bag-list small{color:var(--mock-muted)}
+.callout{border:1px solid var(--line);background:var(--amber-dim);border-radius:var(--radius);padding:20px 22px;margin-top:24px}
+.callout p{color:#e8dcc2;margin:6px 0 0;font-size:14px}
+footer{padding:36px 0 48px;color:var(--faint);font-size:13px} footer .wrap{display:flex;gap:20px;flex-wrap:wrap;justify-content:space-between}
+:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+@media(max-width:860px){.grid,.showcase-grid{grid-template-columns:1fr}.legend{grid-template-columns:1fr 1fr}.nav nav{gap:14px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<header class="site"><div class="wrap nav">
+  <a class="brand" href="index.html">Badb<b>UI</b></a>
+  <nav aria-label="Main">
+    <a href="index.html">Overview</a>
+    <a href="features.html" aria-current="page">Features</a>
+    <a href="index.html#install">Install</a>
+    <a href="index.html#support">Support</a>
+  </nav>
+  <a class="btn primary" href="index.html#install">Get BadbUI 1.2.1</a>
+</div></header>
+
+<main>
+  <div class="wrap hero">
+    <p class="eyebrow">BadbUI 1.2.1 · WoW Forever · Interface 16001</p>
+    <h1>One addon.<br>Every system covered.</h1>
+    <p class="lead">BadbUI replaces the pile of single-purpose add-ons with one coherent, Polestar-inspired panel — midnight navy, warm amber, 1px hairlines — for bags, auction, combat, encounters, world, quests, loot and quality of life. Everything below runs offline, in English, inside the Forever client.</p>
+    <div class="badges">
+      <span class="badge"><strong>Version</strong> 1.2.1</span>
+      <span class="badge"><strong>Client</strong> WoW Forever 1.60.x</span>
+      <span class="badge"><strong>Command</strong> <code>/badb</code></span>
+      <span class="badge"><strong>Macros</strong> 6,000+ variants</span>
+      <span class="badge"><strong>Presets</strong> 54 templates</span>
+    </div>
+  </div>
+
+  <section id="modules"><div class="wrap">
+    <p class="eyebrow">Modules</p>
+    <h2>Fourteen modules, one design system</h2>
+    <p class="lead" style="font-size:16px">Open <code>/badb</code> and search any setting. Each module can be toggled independently; the Suite page states exactly what it replaces — fully, partly, or not at all.</p>
+    <div class="grid">
+      <article class="card"><span class="tag">Inventory</span><h3>Bags</h3><span class="cmd">/badb · Bags</span><p>Unified bag view with live search, category grouping, item-level display and bank/reagent views. Replaces the default bags without hiding what Forever's API cannot expose.</p></article>
+      <article class="card"><span class="tag">Economy</span><h3>Auction</h3><span class="cmd">/badb · Auction</span><p>Auction House helpers: price history from your own scans, undercut checks and posting guides. No fabricated market data — prices come from scans you run on your realm.</p></article>
+      <article class="card"><span class="tag">Meters</span><h3>Combat</h3><span class="cmd">/badb · Combat</span><p>Native-API combat readouts, cooldown tracking and unit-frame auras. Forever hides secret values and blocks combat-log parsing, so BadbUI degrades gracefully instead of guessing.</p></article>
+      <article class="card"><span class="tag">PvE</span><h3>Encounters</h3><span class="cmd">/badb · Encounters</span><p>Boss guides and native encounter-timeline support for dungeons (5), Barrow Deeps (10), Hyjal Summit (20) and Onyxia's Lair (40). Offline guides for every launch encounter.</p></article>
+      <article class="card"><span class="tag">Open world</span><h3>World</h3><span class="cmd">/badb · World</span><p>Waypoints, minimap tools and zone helpers for leveling, gathering and world PvP across Azeroth. Battleground templates cover Warsong Gulch, Arathi Basin, Alterac Valley and Darkspear Islands.</p></article>
+      <article class="card"><span class="tag">Questing</span><h3>Quests + QuestTracker</h3><span class="cmd">/badb · Quests</span><p>Quest log, tracker and step-by-step guides that work fully offline. Coverage is partial versus Questie — BadbUI says so in the Suite page rather than implying a complete database.</p></article>
+      <article class="card"><span class="tag">Loot</span><h3>Loot</h3><span class="cmd">/badb · Loot</span><p>Loot scoring, upgrade comparisons and roll helpers based on the gear your client actually reports. No invented item database; unknown items are labelled unknown.</p></article>
+      <article class="card"><span class="tag">Comfort</span><h3>QoL</h3><span class="cmd">/badb · QoL</span><p>Small comforts in one place: auto-repair prompts, vendor grays, chat tweaks, tooltip extras and frame unlocking via Edit Mode layouts captured into profiles.</p></article>
+      <article class="card"><span class="tag">Performance</span><h3>SystemProfile</h3><span class="cmd">/badb system</span><p>Classifies your machine from legal signals — display resolution, sampled FPS and existing graphics CVars — into Performance, Balanced, Quality or Ultra, then suggests a UI scale. <code>/badb system apply</code> applies it; restore returns your original values.</p></article>
+      <article class="card"><span class="tag">PvP opponents</span><h3>Arena</h3><span class="cmd">/badb arena</span><p>A Gladius-style opponent panel for battlegrounds and world PvP, built from nameplates plus target/focus. Forever has no arenas, so there are no <code>arena1–5</code> frames — see Honest Limits below.</p></article>
+      <article class="card"><span class="tag">Tradeskills</span><h3>Professions</h3><span class="cmd">/badb prof</span><p>Per-character profession ranks and the cooldowns you choose to track (<code>/badb prof add &lt;spell ID&gt;</code>). No invented recipes, materials or automatically learned cooldowns.</p></article>
+      <article class="card"><span class="tag">Coverage</span><h3>Suite</h3><span class="cmd">/badb · Management → Addons replaced</span><p>The honesty page: for every installed add-on, whether a BadbUI module fully replaces it, partly replaces it, or does not replace it. Check it before deleting anything.</p></article>
+      <article class="card"><span class="tag">Updating</span><h3>Updates</h3><span class="cmd">/badb update</span><p>Checks the official catalogue via the desktop companion, verifies version and SHA-256, and installs only after you confirm in-game and quit WoW. Your previous folder is kept as a backup; SavedVariables in <code>WTF/</code> are untouched.</p></article>
+      <article class="card"><span class="tag">Setup</span><h3>Presets &amp; Wizard</h3><span class="cmd">/badb setup</span><p>Guided first-run wizard with 54 per-class/role presets across Solo/Leveling, Dungeon (5), Raid 10/20/40 and Battleground layouts. When role detection is uncertain, the wizard asks you to confirm.</p></article>
+      <article class="card"><span class="tag">Automation</span><h3>Macros — 6,000+</h3><span class="cmd">/badb · Macros</span><p>More than 6,000 macro variants organised by class, spec and situation, plus an in-game editor. Macros use only secure actions the Forever client allows.</p></article>
+      <article class="card"><span class="tag">Knowledge</span><h3>Guides &amp; Backups</h3><span class="cmd">/badb · Guides / Backups</span><p>Offline English manual and module guides, profile import/export, and one-click backups of your BadbUI settings so an update or a new PC never costs you your layout.</p></article>
+    </div>
+  </div></section>
+
+  <section id="showcase"><div class="wrap">
+    <p class="eyebrow">Interactive showcase</p>
+    <h2>Try the ideas, right here</h2>
+    <p class="lead" style="font-size:16px">Two live demos, no backend and no tracking. The crystals are a lightweight Three.js scene; the panel on the right is a simulation built with plain HTML, CSS and JavaScript — the same interactions BadbUI gives you in game.</p>
+
+    <div class="showcase-grid">
+      <div class="panel">
+        <div class="panel-head"><div><h3>Nine classes, nine crystals</h3><p class="small" style="margin:4px 0 0">Warrior · Paladin · Hunter · Rogue · Priest · Shaman · Mage · Warlock · Druid</p></div><span class="badge">Three.js</span></div>
+        <div id="crystal-stage">
+          <canvas id="crystal-canvas" aria-label="Rotating 3D crystals in the nine WoW class colours"></canvas>
+          <div class="crystal-fallback" id="crystal-fallback">The 3D view needs WebGL. Your class colours are listed below instead.</div>
+        </div>
+        <div class="panel-body">
+          <div class="legend" id="class-legend"></div>
+          <p class="small" style="margin:14px 0 0">Drag to orbit is intentionally omitted to keep the widget light; it idles at a slow rotation and pauses off-screen or when you prefer reduced motion.</p>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><div><h3>Simulated BadbUI panel</h3><p class="small" style="margin:4px 0 0">Theme, SystemProfile tier, opponents and bag search</p></div><span class="badge">Simulation</span></div>
+        <div class="panel-body">
+          <div class="mock" id="panel-mock" data-theme="polestar">
+            <div class="mock-top"><strong>BadbUI · 1.2.1</strong><span class="small" id="mock-theme-name">Polestar</span></div>
+
+            <div class="mock-section">
+              <p class="mock-label">Theme — changes live</p>
+              <div class="seg" role="group" aria-label="Panel theme">
+                <button type="button" data-theme-btn="polestar" aria-pressed="true">Polestar</button>
+                <button type="button" data-theme-btn="night" aria-pressed="false">Night</button>
+                <button type="button" data-theme-btn="elvui" aria-pressed="false">ElvUI</button>
+              </div>
+            </div>
+
+            <div class="mock-section">
+              <p class="mock-label">SystemProfile — <code>/badb system</code></p>
+              <div class="seg" role="group" aria-label="Graphics tier">
+                <button type="button" data-tier-btn="performance" aria-pressed="false">Performance</button>
+                <button type="button" data-tier-btn="balanced" aria-pressed="true">Balanced</button>
+                <button type="button" data-tier-btn="quality" aria-pressed="false">Quality</button>
+                <button type="button" data-tier-btn="ultra" aria-pressed="false">Ultra</button>
+              </div>
+              <div style="margin-top:10px">
+                <div class="kv"><span>Tier</span><b id="tier-name">Balanced</b></div>
+                <div class="kv"><span>Recommended UI scale</span><b id="tier-scale">0.85 · 85%</b></div>
+                <div class="kv"><span>Best for</span><b id="tier-for">Up to 1080p, steady 60 FPS</b></div>
+                <div class="kv"><span>Suggested CVars</span><b id="tier-cvars">Shadows Medium · Particles Medium · View distance 7</b></div>
+              </div>
+              <p class="small" style="margin:10px 0 0" id="tier-note">Balanced is the safe default: native resolution at 1080p with headroom for raids.</p>
+            </div>
+
+            <div class="mock-section">
+              <p class="mock-label">Opponents — <code>/badb arena</code> (battleground mock)</p>
+              <div class="opp" id="opp-list"></div>
+              <p class="small" style="margin:8px 0 0" id="opp-status">Select an opponent to focus. Health uses the client's percentage API only.</p>
+            </div>
+
+            <div class="mock-section">
+              <p class="mock-label">Bags — live search mock</p>
+              <label class="small" for="bag-search" style="display:block;margin-bottom:6px">Filter items by name or category</label>
+              <input type="search" id="bag-search" placeholder="Try: potion, silk, sword…" autocomplete="off">
+              <p class="small" style="margin:8px 0 0"><span id="bag-count">8</span> items shown</p>
+              <ul class="bag-list" id="bag-list"></ul>
+            </div>
+          </div>
+          <p class="small" style="margin:12px 0 0">This is a simulation for the web. In game the same panel is driven by Forever's real APIs, subject to the limits below.</p>
+        </div>
+      </div>
+    </div>
+  </div></section>
+
+  <section id="commands"><div class="wrap">
+    <p class="eyebrow">At a glance</p><h2>Commands you will actually type</h2>
+    <table>
+      <thead><tr><th>Command</th><th>Opens</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td><code>/badb</code></td><td>Main panel</td><td>Search any setting across all modules.</td></tr>
+        <tr><td><code>/badb setup</code></td><td>Setup wizard</td><td>54 class/role presets; confirms your role when detection is unsure.</td></tr>
+        <tr><td><code>/badb unlock</code></td><td>Frame mover</td><td>Edit Mode layouts are captured into your profile.</td></tr>
+        <tr><td><code>/badb system</code></td><td>SystemProfile</td><td><code>/badb system apply</code> applies the suggested tier and scale.</td></tr>
+        <tr><td><code>/badb arena</code></td><td>Opponent panel</td><td>Battlegrounds and world PvP; Forever has no arenas.</td></tr>
+        <tr><td><code>/badb prof</code></td><td>Professions</td><td><code>list</code>, <code>add &lt;ID&gt;</code>, <code>remove &lt;ID&gt;</code>, <code>refresh</code>.</td></tr>
+        <tr><td><code>/badb update</code></td><td>Updates</td><td>Confirm in game, quit WoW, companion installs and verifies SHA-256.</td></tr>
+      </tbody>
+    </table>
+  </div></section>
+
+  <section id="limits"><div class="wrap">
+    <p class="eyebrow">Honest limits</p><h2>What BadbUI cannot do on Forever</h2>
+    <div class="callout"><h3 style="margin-top:0">Stated plainly, before you install</h3>
+      <p><strong style="color:#fff">Forever has no arenas.</strong> There is no rated PvP and no <code>arena1–5</code> unit at launch, so the Arena module is an opponent panel for battlegrounds and world PvP — partial coverage versus Gladius, with no trinket or combat-log cooldown tracking.</p>
+      <p><strong style="color:#fff">Add-ons cannot read your GPU.</strong> WoW exposes no GPU model, CPU, RAM or OS to add-ons. SystemProfile uses display resolution, sampled frame rate and existing graphics CVars only, and skips CVars that do not exist on this client.</p>
+      <p><strong style="color:#fff">Questie coverage is partial.</strong> BadbUI's offline quest guides do not claim Questie's full database. The Suite page (<code>/badb</code> → Management → Addons replaced) grades every replacement claim so you can decide what to uninstall.</p>
+      <p><strong style="color:#fff">Combat data is restricted.</strong> Health and threat can be secret values and the combat log is not readable by add-ons on Forever. BadbUI uses native percentage APIs and never does arithmetic on secret values.</p>
+    </div>
+  </div></section>
+</main>
+
+<footer><div class="wrap">
+  <span>BadbUI 1.2.1 · One addon for bags, auction, combat, encounters, world, quests, loot and QoL on WoW Forever.</span>
+  <span><a href="index.html">Overview</a> · <a href="#modules">Modules</a> · <a href="#showcase">Showcase</a> · <a href="#limits">Honest limits</a></span>
+</div></footer>
+
+<script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+<script src="assets/showcase.js"></script>
+</body>
+</html>
