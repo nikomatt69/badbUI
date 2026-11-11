@@ -32,21 +32,21 @@ T["azioni rapide: elenco completo, ognuna con un'azione"] = function()
     local rows = MP().quickActions()
     eq(#rows, 8)
     for _, r in ipairs(rows) do truthy(r.actions and #r.actions == 1 and type(r.actions[1].func) == "function", r.text) end
-    truthy(act(find(rows, "ElvUI"), "Applica").confirm, "lo stile ElvUI deve chiedere conferma")
-    truthy(act(find(rows, "Ricarica"), "Ricarica").confirm, "il reload deve chiedere conferma")
+    truthy(act(find(rows, "ElvUI"), "Apply").confirm, "lo stile ElvUI deve chiedere conferma")
+    truthy(act(find(rows, "Reload"), "Reload").confirm, "il reload deve chiedere conferma")
 end
 
 T["azione Applica stile ElvUI: tema e moduli"] = function()
     BadbUI.Theme:SetScheme("night")
     BadbUI.Backups.Create = function() end
-    act(find(MP().quickActions(), "ElvUI"), "Applica").func()
+    act(find(MP().quickActions(), "ElvUI"), "Apply").func()
     eq(BadbUI.Theme.state.scheme, "elvui")
 end
 
 T["azione Sblocca: alterna lo sblocco dei frame"] = function()
     local FM = BadbUI.FrameManager
     eq(FM.unlocked, false)
-    act(find(MP().quickActions(), "Sposta"), "Sblocca").func()
+    act(find(MP().quickActions(), "Move and resize"), "Unlock").func()
     eq(FM.unlocked, true)
     FM:SetUnlocked(false)
 end
@@ -54,29 +54,29 @@ end
 T["righe moduli: tutti i moduli, attiva/disattiva funziona, Opzioni solo se ci sono"] = function()
     local rows = MP().moduleRows()
     eq(#rows, #BadbUI.Modules.order, "una riga per modulo")
-    local r = find(rows, "Stile ElvUI")
+    local r = find(rows, "ElvUI style")
     truthy(r, "ElvLook non in elenco")
-    truthy(r.detail:find("attivo"))
-    act(r, "Spegni").func()
+    truthy(r.detail:find("enabled"))
+    act(r, "Turn off").func()
     eq(BadbUI.Modules:Get("ElvLook").enabled, false)
-    r = find(MP().moduleRows(), "Stile ElvUI")
-    truthy(r.detail:find("spento"), "stato non aggiornato")
-    act(r, "Accendi").func()
+    r = find(MP().moduleRows(), "ElvUI style")
+    truthy(r.detail:find("off"), "stato non aggiornato")
+    act(r, "Turn on").func()
     eq(BadbUI.Modules:Get("ElvLook").enabled, true)
-    truthy(act(r, "Opzioni"), "manca Opzioni")
+    truthy(act(r, "Options"), "manca Opzioni")
 end
 
 T["righe script: stato, esegui, accendi/spegni"] = function()
     local S = BadbUI.Scripts
     S:Save("demo", { code = "script.data.ran = true", trigger = "login", enabled = false })
     local row = find(MP().scriptRows(), "demo")
-    truthy(row and row.detail:find("spento"))
-    act(row, "Esegui").func()
+    truthy(row and row.detail:find("off"))
+    act(row, "Run").func()
     eq(S:Record("demo").data.ran, true)
-    act(find(MP().scriptRows(), "demo"), "Accendi").func()
+    act(find(MP().scriptRows(), "demo"), "Turn on").func()
     eq(S:Record("demo").enabled, true)
     S:Save("rotto", { code = "error('x')" }); S:Run("rotto")
-    truthy(find(MP().scriptRows(), "rotto").detail:find("errore"), "errore non mostrato")
+    truthy(find(MP().scriptRows(), "rotto").detail:find("error"), "errore non mostrato")
 end
 
 T["nomi con barre verticali non rompono il testo colorato"] = function()
@@ -88,21 +88,21 @@ T["Aspetto: tema e accento passano da Theme, valori ignoti rifiutati"] = functio
     local opts = MP().appearanceOptions()
     local byLabel = {}
     for _, o in ipairs(opts) do if o.label then byLabel[o.label] = o end end
-    local scheme, accent, op = byLabel["Schema colori"], byLabel["Colore d'accento"], byLabel["Trasparenza degli sfondi"]
+    local scheme, accent, op = byLabel["Color scheme"], byLabel["Accent color"], byLabel["Background opacity"]
     truthy(#scheme.values >= 4, "schemi")
     scheme.set("graphite"); eq(BadbUI.Theme.state.scheme, "graphite"); eq(scheme.get(), "graphite")
     scheme.set("inesistente"); eq(BadbUI.Theme.state.scheme, "graphite")
     accent.set("jade"); eq(accent.get(), "jade")
     accent.set("custom"); eq(BadbUI.Theme.state.accent, "jade", "custom non deve cambiare l'accento")
     op.set(0.5); eq(BadbUI.Theme.state.opacity, 0.5)
-    byLabel["Ripristina il tema ElvUI predefinito"].func()
+    byLabel["Restore the default ElvUI theme"].func()
     eq(BadbUI.Theme.state.scheme, "elvui"); eq(BadbUI.Theme.state.accent, "elvui"); eq(BadbUI.Theme.state.opacity, 1)
 end
 
 T["Aspetto: la scala della finestra passa da ConfigUI"] = function()
     local opts = MP().appearanceOptions()
     local scale
-    for _, o in ipairs(opts) do if o.label == "Scala" then scale = o end end
+    for _, o in ipairs(opts) do if o.label == "Scale" then scale = o end end
     scale.set(1.2)
     eq(scale.get(), 1.2)
 end
@@ -124,12 +124,12 @@ T["Addon: elenco ordinato con stato, attiva/disattiva e 'serve /reload'"] = func
     local rows = MP().addonRows()
     eq(#rows, 3)
     eq(rows[1].text, "Titolo alfa", "ordine alfabetico")
-    truthy(rows[1].detail:find("caricato"))
-    act(rows[1], "Spegni").func()
+    truthy(rows[1].detail:find("loaded"))
+    act(rows[1], "Turn off").func()
     eq(state.alfa, 0)
     rows = MP().addonRows()
-    truthy(rows[1].detail:find("spento") and rows[1].detail:find("reload"), "stato o avviso reload mancanti")
-    act(rows[1], "Accendi").func()
+    truthy(rows[1].detail:find("off") and rows[1].detail:find("reload"), "stato o avviso reload mancanti")
+    act(rows[1], "Turn on").func()
     eq(state.alfa, 2)
 end
 

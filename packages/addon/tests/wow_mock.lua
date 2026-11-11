@@ -5,7 +5,7 @@
 local Mock = { events = {}, cvars = {}, bindings = {}, combat = false, time = 100 }
 unpack = unpack or table.unpack
 
-local NOOP_PREFIXES = { "Set", "Get", "Clear", "Enable", "Register", "Unregister", "Remove",
+local NOOP_PREFIXES = { "Set", "Get", "Clear", "Enable", "Disable", "Register", "Unregister", "Remove",
     "Add", "Start", "Stop", "Play", "Highlight", "Is", "Raise", "Lower" }
 
 local function noop(k)

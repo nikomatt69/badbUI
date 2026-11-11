@@ -122,7 +122,7 @@ function UI:Window(name, w, h, title, opts)
     f.header:SetScript("OnDragStart", function() f:StartMoving() end)
     f.header:SetScript("OnDragStop", function() f:StopMovingOrSizing(); savePosition(f) end)
 
-    f.title = UI:Label(f.header, title, "title", "text")
+    f.title = UI:Label(f.header, title, "title", "accent")
     if opts.subtitle then
         f.title:SetPoint("TOPLEFT", Theme.spacing.lg, -12)
         f.subtitle = UI:Label(f.header, opts.subtitle, "small", "textMuted")

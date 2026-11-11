@@ -120,4 +120,6 @@ code,.code{font-family:var(--mono);font-size:.86em;background:rgba(255,255,255,.
 
 /* Addon window chrome: accent glint + hairline, like UI:Window's header in game. */
 .hero-stage::after{content:"";position:absolute;left:16px;bottom:0;width:44px;height:2px;background:var(--amber)}
-.section-head h2,.hero h1{font-family:Georgia,"Times New Roman",serif;font-weight:600}
+.section-head h2,.hero h1{font-family:Georgia,"Times New Roman",serif;font-weight:600;color:#f2ead8}
+.card h3,.prose h2,.prose h3{color:#f2ead8}
+body{background-image:radial-gradient(1200px 600px at 50% -10%,rgba(245,184,77,.05),transparent 60%)}

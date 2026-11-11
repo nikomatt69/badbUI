@@ -48,10 +48,10 @@ end
 
 T["indice: moduli con page ordinati per categoria e order"] = function()
     local UI = BadbUI.ConfigUI
-    newModule("FakeA", { title = "Alfa", page = { title = "Pagina Alfa", order = 30, category = "Strumenti", build = function() return 50 end } })
-    newModule("FakeB", { title = "Beta", page = { order = 10, category = "Strumenti", build = function() return 50 end } })
-    newModule("FakeC", { title = "Gamma", page = { order = 5, category = "Contenuti", build = function() return 50 end } })
-    newModule("FakeD", { title = "Delta", page = { order = 1, category = "Gestione", build = function() return 50 end } })
+    newModule("FakeA", { title = "Alfa", page = { title = "Pagina Alfa", order = 30, category = "Tools", build = function() return 50 end } })
+    newModule("FakeB", { title = "Beta", page = { order = 10, category = "Tools", build = function() return 50 end } })
+    newModule("FakeC", { title = "Gamma", page = { order = 5, category = "Content", build = function() return 50 end } })
+    newModule("FakeD", { title = "Delta", page = { order = 1, category = "Management", build = function() return 50 end } })
     newModule("FakeE", { title = "Nopage" })
     newModule("FakeF", { title = "Strana", page = { order = 1, category = "Zeta", build = function() return 50 end } })
     newModule("FakeG", { title = "Rotta", page = "non una tabella" })
@@ -73,18 +73,18 @@ T["indice: categoria/order mancanti hanno valori di ripiego"] = function()
     local UI = BadbUI.ConfigUI
     newModule("FakeA", { page = { build = function() return 10 end } })
     local rec = UI:FindPage("mod:FakeA")
-    eq(rec.category, "Strumenti")
+    eq(rec.category, "Tools")
     eq(rec.order, 100)
     eq(rec.title, "FakeA")
 end
 
 T["sidebar: gruppi nell'ordine Gestione, Interfaccia, Strumenti, Contenuti"] = function()
     local UI = BadbUI.ConfigUI
-    newModule("FakeA", { page = { category = "Contenuti", build = function() return 10 end } })
-    newModule("FakeB", { page = { category = "Strumenti", build = function() return 10 end } })
+    newModule("FakeA", { page = { category = "Content", build = function() return 10 end } })
+    newModule("FakeB", { page = { category = "Tools", build = function() return 10 end } })
     local cats = {}
     for _, g in ipairs(UI:GetSidebarModel()) do cats[#cats + 1] = g.category end
-    eq(table.concat(cats, ","), "Gestione,Interfaccia,Strumenti,Contenuti")
+    eq(table.concat(cats, ","), "Management,Interface,Gameplay,Tools,Content")
 end
 
 T["risoluzione: chiave, nome modulo, titolo"] = function()
@@ -95,7 +95,7 @@ T["risoluzione: chiave, nome modulo, titolo"] = function()
     eq(UI:ResolveKey("LibreriaTest"), "mod:LibreriaTest")
     eq(UI:ResolveKey("libreriatest"), "mod:LibreriaTest", "case-insensitive sul nome modulo")
     eq(UI:ResolveKey("LIBRERIA GUIDE TEST"), "mod:LibreriaTest", "titolo pagina")
-    eq(UI:ResolveKey("profili"), "profiles")
+    eq(UI:ResolveKey("Profiles"), "profiles")
     eq(UI:ResolveKey("xyz"), nil)
     eq(UI:ResolveKey(""), nil)
     eq(UI:ResolveKey(nil), nil)
@@ -104,7 +104,7 @@ end
 
 T["RegisterPage: pagine non di modulo"] = function()
     local UI = BadbUI.ConfigUI
-    local ok = UI:RegisterPage("extra", { title = "Extra", category = "Contenuti", order = 1, build = function() return 20 end })
+    local ok = UI:RegisterPage("extra", { title = "Extra", category = "Content", order = 1, build = function() return 20 end })
     eq(ok, true)
     truthy(indexOf(keysOf(UI:CollectPages()), "extra"), "pagina registrata in indice")
     local bad, err = UI:RegisterPage("profiles", { build = function() end })
@@ -157,7 +157,7 @@ T["errore in build: isolato, box errore, Logger:Error"] = function()
     truthy(entry.failed, "pagina marcata fallita")
     truthy(entry.buildError:find("boom nel build", 1, true), "messaggio conservato")
     truthy(entry.errorFrame and entry.errorFrame.message:GetText():find("boom nel build", 1, true), "il box mostra il messaggio")
-    truthy(logHas("ERROR: Pagina 'Rotta'"), "Logger:Error chiamato")
+    truthy(logHas("ERROR: Page 'Rotta'"), "Logger:Error chiamato")
     noThrow(function() UI:SelectPage("mod:Good") end)
     eq(UI.current, "mod:Good")
     eq(UI.pageFrames["mod:Good"].failed, nil)
@@ -343,7 +343,7 @@ T["ricerca: titoli pagina, titoli modulo e label opzioni (case-insensitive)"] = 
     local mp = UI:Search("modulo con")
     eq(mp[1].key, "mod:Pgm", "modulo con pagina porta alla sua pagina")
     -- parole chiave delle pagine core
-    truthy(#UI:Search("sblocca") >= 1, "keyword pagina Frame")
+    truthy(#UI:Search("unlock") >= 1, "keyword pagina Frame")
 end
 
 T["ricerca: query vuote o strane, limite risultati"] = function()
@@ -379,7 +379,7 @@ T["ricerca: UI (box, risultati cliccabili, apertura pagina)"] = function()
     UI.searchBox.__scripts.OnTextChanged(UI.searchBox, true)
     eq(UI.searchPanel:IsShown(), false)
     -- Invio apre il primo risultato
-    UI.searchBox:SetText("profili")
+    UI.searchBox:SetText("profiles")
     UI.searchBox.__scripts.OnTextChanged(UI.searchBox, true)
     UI.searchBox.__scripts.OnEnterPressed(UI.searchBox)
     eq(UI.current, "profiles")
@@ -430,17 +430,17 @@ T["avvisi: frame sbloccati e combattimento"] = function(Mock)
     local function has(sub)
         for _, w in ipairs(UI:GetWarnings()) do if w.text:find(sub, 1, true) then return w end end
     end
-    eq(has("sbloccati"), nil)
+    eq(has("unlocked"), nil)
     BadbUI.FrameManager:SetUnlocked(true)
-    local w = has("sbloccati")
+    local w = has("unlocked")
     truthy(w and w.action, "avviso con azione")
     w.action()
     eq(BadbUI.FrameManager.unlocked, false)
     Mock.combat = true
-    truthy(has("In combattimento"))
+    truthy(has("In combat"))
     Mock.combat = false
     BadbUI.Logger:Error("qualcosa")
-    truthy(has("errori nel log"))
+    truthy(has("errors in the log"))
 end
 
 T["ultime azioni: eventi registrati"] = function()
@@ -477,11 +477,11 @@ T["TextBox: firma storica (. e :), accept, chiusura"] = function()
     truthy(f, "frame creato")
     eq(f.edit:GetText(), "contenuto")
     eq(f.title:GetText(), "Titolo")
-    eq(f.ok:GetText(), "Chiudi")
+    eq(f.ok:GetText(), "Close")
     eq(f:IsShown(), true)
     local got
-    UI:TextBox("Importa", "", function(txt) got = txt end)
-    eq(f.ok:GetText(), "Importa")
+    UI:TextBox("Import", "", function(txt) got = txt end)
+    eq(f.ok:GetText(), "Import")
     f.edit:SetText("stringa incollata")
     click(f.ok)
     eq(got, "stringa incollata")
@@ -663,7 +663,7 @@ T["widget: builder con descrittori errati o mancanti non lanciano"] = function()
     end
     local fs, h = W.Builders.toggle(parent, nil, nil)
     truthy(h > 0, "ritorna comunque una riga (errore)")
-    truthy(logHas("Opzione non valida"), "problema registrato")
+    truthy(logHas("Invalid option"), "problema registrato")
 end
 
 T["widget: Build, altezze, hidden/disabled/tooltip"] = function()
@@ -858,7 +858,7 @@ T["widget: color con ColorPicker"] = function()
     -- picker assente: errore registrato, non lanciato
     ColorPickerFrame = nil
     noThrow(function() click(box.button) end)
-    truthy(logHas("Selettore colore"))
+    truthy(logHas("Color picker"))
     -- API legacy
     ColorPickerFrame = { SetColorRGB = function() end, Show = function() end, GetColorRGB = function() return 0.9, 0.9, 0.9 end }
     click(box.button)

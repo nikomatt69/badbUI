@@ -10,7 +10,7 @@ local M = Badb.Modules:New("SystemProfile", {
     title = L["Profilo PC e grafica"],
     category = L["Interfaccia"],
     description = L["Classifica il PC da risoluzione e FPS misurati e applica scala e qualita' consigliate."],
-    defaults = { enabled = true, tier = "auto", samples = {} },
+    defaults = { enabled = true, tier = "auto", samples = {}, cameraLock = true },
     page = { title = L["Profilo PC e grafica"], order = 40, category = L["Interfaccia"],
         keywords = { "pc", "gpu", "graphics", "fps", L["Grafica"], L["Prestazioni"] } },
 })
@@ -91,8 +91,18 @@ function M:Apply(tier)
     return true, tier
 end
 
+-- Camera distance sempre a 0.4 (default dell'addon): zoom factor bloccato.
+function M:ApplyCamera()
+    if not self:Get("cameraLock") then return end
+    if Badb.CVars and Badb.CVars:Exists("cameraDistanceMaxZoomFactor") then
+        Badb.CVars:Set("SystemProfile", "cameraDistanceMaxZoomFactor", "0.4")
+    end
+end
+
 function M:OnEnable()
+    self:ApplyCamera()
     self:On("PLAYER_ENTERING_WORLD", function()
+        self:ApplyCamera()
         local avg = self:Sample()
         local tier = self:Detect()
         if tier then Logger:Debug("SystemProfile: tier=%s fps=%s", tier, tostring(avg)) end
@@ -101,6 +111,7 @@ end
 function M:OnDisable() if Badb.CVars then Badb.CVars:Restore("SystemProfile") end end
 
 M.options = {
+    { type = "toggle", path = "cameraLock", label = L["Distanza camera sempre 0.4"] },
     { type = "label", text = function()
         local tier, p = M:Detect()
         if not tier then return L["Dati dello schermo non disponibili su questo client."] end

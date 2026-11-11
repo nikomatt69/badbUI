@@ -1,6 +1,7 @@
 local _, ns = ...
 ns.Badb.Localization:RegisterLocale("enUS", {
     ["Profilo PC e grafica"] = "PC & graphics profile",
+    ["Distanza camera sempre 0.4"] = "Camera distance always 0.4",
     ["Classifica il PC da risoluzione e FPS misurati e applica scala e qualita' consigliate."] = "Classify this PC from measured resolution and FPS, then apply recommended scale and quality.",
     ["Grafica"] = "Graphics", ["Prestazioni"] = "Performance",
     ["Dati dello schermo non disponibili su questo client."] = "Display data is unavailable on this client.",
