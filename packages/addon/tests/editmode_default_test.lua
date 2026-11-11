@@ -123,9 +123,12 @@ T["un profilo nuovo riceve il predefinito al cambio profilo; comando /badb layou
     eq(B():Get("layoutName"), "BadbUI")
     eq(#env.layouts, 1)
     env.layouts[1].source = "toccato"
-    B().commands.layout.fn("default")
+    eq(BadbUI.Slash:Dispatch("layout default"), true)
     eq(env.layouts[1].source, B():GetDefault().layout)
-    B().commands.layout.fn("")
+    env.layouts[1].source = "toccato di nuovo"
+    eq(BadbUI.Slash:Dispatch("editmode default"), true)
+    eq(env.layouts[1].source, B():GetDefault().layout)
+    eq(BadbUI.Slash:Dispatch("editmode"), true)
 end
 
 return T

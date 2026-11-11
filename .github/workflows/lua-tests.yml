@@ -19,6 +19,8 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.4
+      - name: Install LuaJIT for release packaging
+        run: sudo apt-get update -q && sudo apt-get install -y -q luajit
       - run: bun install --frozen-lockfile
       - run: bun run typecheck
       - run: bun run test

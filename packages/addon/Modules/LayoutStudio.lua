@@ -1166,7 +1166,7 @@ local function parseArgs(str)
     return t
 end
 
-local COMMAND_HELP = L["layout undo | redo | grid <n> | nudge <chiave> <dx> <dy> | snap"]
+local COMMAND_HELP = L["layout undo | redo | grid <n> | nudge <chiave> <dx> <dy> | snap"] .. " | default"
 
 M.commands = {
     layout = {
@@ -1175,7 +1175,14 @@ M.commands = {
             local t = parseArgs(args)
             local sub = (t[1] or ""):lower()
             local ok, err
-            if sub == "undo" then ok, err = M:Undo()
+            if sub == "default" then
+                local bridge = Badb.EditModeBridge
+                if bridge and bridge.ApplyDefault then
+                    ok, err = bridge:ApplyDefault(true)
+                else
+                    err = L["Layout predefinito non disponibile"]
+                end
+            elseif sub == "undo" then ok, err = M:Undo()
             elseif sub == "redo" then ok, err = M:Redo()
             elseif sub == "grid" then
                 local n

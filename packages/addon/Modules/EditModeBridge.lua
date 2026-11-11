@@ -27,10 +27,14 @@ local M = Badb.Modules:New("EditModeBridge", {
           func = function() Badb.Modules:Get("EditModeBridge"):ApplyDefault(true) end },
     },
     commands = {
-        layout = { help = L["layout default - ripristina e attiva il layout Edit Mode predefinito di BadbUI"], fn = function(args)
+        editmode = { help = L["editmode [default] - mostra il layout Edit Mode o ripristina il predefinito di BadbUI"], fn = function(args)
             local m = Badb.Modules:Get("EditModeBridge")
-            if strtrim(args or ""):lower() == "default" then m:ApplyDefault(true)
-            else Logger:Info(L["Layout Edit Mode del profilo: %s"], tostring(m:Get("layoutName") or L["nessuno"])) end
+            if strtrim(args or ""):lower() == "default" then
+                local ok, err = m:ApplyDefault(true)
+                if not ok and err then Logger:Warn("%s", err) end
+            else
+                Logger:Info(L["Layout Edit Mode del profilo: %s"], tostring(m:Get("layoutName") or L["nessuno"]))
+            end
         end },
     },
 })

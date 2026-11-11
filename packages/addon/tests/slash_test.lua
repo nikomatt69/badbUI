@@ -158,6 +158,25 @@ T["moduli: voci non valide ignorate con un solo avviso"] = function(Mock)
     noThrow(function() BadbUI.Slash:Resolve() end)
 end
 
+T["layout inoltra i comandi allo studio e ripristina il predefinito dal bridge"] = function()
+    local studio, bridge = BadbUI.LayoutStudio, BadbUI.EditModeBridge
+    local nudge, defaults
+    studio.Nudge = function(_, key, x, y) nudge = { key, x, y }; return true end
+    bridge.ApplyDefault = function(_, force) defaults = force; return true end
+
+    local map, _, collisions = BadbUI.Slash:Resolve()
+    eq(map.layout.module, "LayoutStudio")
+    eq(map.editmode.module, "EditModeBridge")
+    for _, conflict in ipairs(collisions) do
+        truthy(conflict.name ~= "layout" and conflict.name ~= "editmode", "comandi layout senza collisioni")
+    end
+
+    eq(BadbUI.Slash:Dispatch("layout nudge frame 4 -5"), true)
+    eq(table.concat(nudge, " "), "frame 4 -5")
+    eq(BadbUI.Slash:Dispatch("layout default"), true)
+    eq(defaults, true)
+end
+
 T["collisioni: vince il primo modulo per ordine di caricamento, con warning"] = function(Mock)
     local who = {}
     newModule("Primo", { commands = { dup = { help = "uno", fn = function() who[#who + 1] = "primo" end } } })
@@ -169,7 +188,7 @@ T["collisioni: vince il primo modulo per ordine di caricamento, con warning"] = 
     eq(collisions[1].winner, "Primo"); eq(collisions[1].loser, "Secondo")
     truthy(chatHas(Mock, "Comando 'dup' duplicato: vince Primo, ignorato Secondo"))
     BadbUI.Slash:Dispatch("dup"); BadbUI.Slash:Dispatch("dup")
-    eq(countChat(Mock, "duplicato"), 1, "warning una sola volta")
+    eq(countChat(Mock, "Comando 'dup' duplicato"), 1, "warning una sola volta")
     eq(#BadbUI.Slash.lastCollisions, 1)
 end
 

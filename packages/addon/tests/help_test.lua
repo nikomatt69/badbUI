@@ -3,7 +3,7 @@ local function eq(a, b) assert(a == b, tostring(a) .. " ~= " .. tostring(b)) end
 T["manual covers every module and links resolve"] = function()
     local B, seen = BadbUI, {}
     for _, entry in ipairs(B.Help:ModuleEntries()) do
-        assert(B.HelpData.modules[entry.id], "Missing module documentation: " .. entry.id)
+        assert(entry.documented, "Missing module documentation: " .. entry.id)
         assert(#entry.text > 20); seen[entry.id] = true
     end
     for _, id in ipairs(B.Modules.order) do assert(seen[id], id) end
@@ -14,6 +14,29 @@ T["manual covers every module and links resolve"] = function()
         if section.page then assert(B.ConfigUI:ResolveKey(section.page), section.page) end
     end
     for _, id in ipairs({ "start", "language", "profiles", "layout", "macros", "contexts", "scripts", "guild", "chatbot", "guides", "troubleshooting", "limits", "modules", "commands" }) do assert(topics[id], id) end
+end
+T["module descriptions supply localized manual text without a static entry"] = function()
+    local B = BadbUI
+    local key = "A fixture describing the new module"
+    B.Localization:RegisterLocale("itIT", { [key] = "Descrizione ricercabile del modulo di prova." })
+    B.Modules:New("ManualFixture", { title = "Fixture", description = B.L[key] })
+    eq(B.HelpData.modules.ManualFixture, nil)
+
+    local fixture, suite
+    for _, entry in ipairs(B.Help:ModuleEntries()) do
+        if entry.id == "ManualFixture" then fixture = entry end
+        if entry.id == "Suite" then suite = entry end
+    end
+    assert(fixture and fixture.documented and suite and suite.documented)
+    eq(fixture.text, "Descrizione ricercabile del modulo di prova.")
+    eq(suite.text, B.Modules:Get("Suite").description)
+
+    B.Help:Select("modules", "ricercabile")
+    eq(B.Help:MatchesModule(fixture), true)
+    eq(B.Help:MatchesModule(suite), false)
+    for _, section in ipairs(B.Help:Sections()) do
+        if section.id == "modules" then eq(B.Help:Matches(section), true) end
+    end
 end
 T["manual builds filters resizes and handles empty searches"] = function()
     local B = BadbUI

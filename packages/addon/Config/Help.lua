@@ -3,6 +3,7 @@ local _, ns = ...
 local Badb = ns.Badb
 local L, UI, W = Badb.L, Badb.ConfigUI, Badb.Widgets
 local Help = { topic = "start", query = "" }
+local DEFAULT_MODULE_TEXT = L["Open this module's options to inspect its available settings."]
 Badb.Help = Help
 
 function Help:Sections()
@@ -14,13 +15,19 @@ function Help:Sections()
     return sections
 end
 
+local function description(value)
+    if type(value) == "string" and value:find("%S") then return value end
+end
+
 function Help:ModuleEntries()
     local entries = {}
     for _, id in ipairs(Badb.Modules.order) do
         local module = Badb.Modules:Get(id)
         if module then
-            entries[#entries + 1] = { id = id, title = module.title or id,
-                text = Badb.HelpData.modules[id] or module.description or L["Open this module's options to inspect its available settings."] }
+            local text = description(Badb.HelpData.modules[id]) or description(module.description)
+            entries[#entries + 1] = {
+                id = id, title = module.title or id, text = text or DEFAULT_MODULE_TEXT, documented = text ~= nil,
+            }
         end
     end
     return entries
@@ -34,16 +41,27 @@ function Help:CommandText()
     return table.concat(lines, "\n\n")
 end
 
+local function contains(entry, query)
+    local text = entry.title .. " " .. entry.text .. " " .. entry.id
+    return text:lower():find(query, 1, true) ~= nil
+end
+
+function Help:MatchesModule(entry)
+    local query = self.query:lower()
+    if query == "" then return self.topic == "all" or self.topic == "modules" end
+    return contains(entry, query)
+end
+
 function Help:Matches(section)
     local query = self.query:lower()
     if query == "" then return self.topic == "all" or self.topic == section.id end
-    local text = section.title .. " " .. section.text .. " " .. section.id
+    if contains(section, query) then return true end
     if section.id == "modules" then
-        for _, module in ipairs(self:ModuleEntries()) do
-            text = text .. " " .. module.id .. " " .. module.title .. " " .. module.text
+        for _, entry in ipairs(self:ModuleEntries()) do
+            if contains(entry, query) then return true end
         end
     end
-    return text:lower():find(query, 1, true) ~= nil
+    return false
 end
 
 function Help:Select(topic, query)
@@ -99,9 +117,11 @@ local function build(parent, ctx)
         if entry.id == "modules" then
             for _, module in ipairs(Help:ModuleEntries()) do
                 local item = module
-                add({ type = "header", label = item.title .. " (" .. item.id .. ")" }, entry)
-                add({ type = "label", text = item.text }, entry)
-                add({ type = "execute", label = L["Open options"], func = function() UI:OpenPage(item.id) end }, entry)
+                local function hidden() return not Help:MatchesModule(item) end
+                options[#options + 1] = { type = "header", label = item.title .. " (" .. item.id .. ")", hidden = hidden }
+                options[#options + 1] = { type = "label", text = item.text, hidden = hidden }
+                options[#options + 1] = { type = "execute", label = L["Open options"], hidden = hidden,
+                    func = function() UI:OpenPage(item.id) end }
             end
         end
     end
