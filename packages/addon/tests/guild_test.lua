@@ -61,6 +61,21 @@ T["coda: settimana dal server, maschere validate e limite"] = function()
     for i = #BadbUI_GuildExport.actions + 1, 200 do BadbUI_GuildExport.actions[i] = { id = tostring(i) } end
     eq(G:Signup("id", "yes"), false)
 end
+T["export roster: stringa ordinata, campi sanificati, vuoto onesto"] = function()
+    BadbUI_GuildExport.roster = {
+        { name = "Zed;X", cls = "mage", level = 60, guildRank = "Officer|1" },
+        { name = "Anna", cls = "priest", level = 42, guildRank = "Member" },
+    }
+    local str, err = BadbUI.Guild:ExportRoster()
+    assert(str and not err, tostring(err))
+    eq(str:match("^[^\n]*"), "name;class;level;rank")
+    assert(str:find("Anna;priest;42;Member", 1, true))
+    assert(str:find("Zed X;mage;60;Officer 1", 1, true))
+    assert(str:find("Anna") < str:find("Zed"))
+    BadbUI_GuildExport.roster = {}
+    local empty, eerr = BadbUI.Guild:ExportRoster()
+    eq(empty, nil); assert(eerr)
+end
 local function runWithGuild(test)
     return function(Mock)
         assert(not BadbUI.Guild and not BadbUI_GuildExport and not BadbUI_GuildSync)

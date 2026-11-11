@@ -119,6 +119,21 @@ function M:Queue(action)
     out(L["Azione accodata. /reload per esportare; attendi il companion e poi /reload per ricevere la risposta."])
     return true
 end
+-- Esportazione di sola lettura del roster gia' catturato: nessuna API protetta.
+function M:ExportRoster()
+    local s = store()
+    local roster = type(s.roster) == "table" and s.roster or {}
+    if #roster == 0 then return nil, L["Roster vuoto: apri il pannello di gilda in gioco e riprova."] end
+    local rows = { "name;class;level;rank" }
+    local sorted = {}
+    for _, r in ipairs(roster) do if type(r) == "table" then sorted[#sorted + 1] = r end end
+    table.sort(sorted, function(a, b) return tostring(a.name or "") < tostring(b.name or "") end)
+    for _, r in ipairs(sorted) do
+        local function f(v) return tostring(v or ""):gsub("[;\r\n|]", " ") end
+        rows[#rows + 1] = f(r.name) .. ";" .. f(r.cls) .. ";" .. f(r.level) .. ";" .. f(r.guildRank)
+    end
+    return table.concat(rows, "\n")
+end
 function M:Signup(id, status)
     if status ~= "yes" and status ~= "no" and status ~= "maybe" and status ~= "bench" then return false end
     local name = fullName("player")
@@ -243,7 +258,16 @@ function M:Show()
     content:SetHeight(math.max(500, -y + 20)); f:Show()
 end
 M.commands = {
-    guild = { help = L["Calendario, disponibilità e tattiche della gilda"], fn = function() M:Show() end },
+    guild = { help = L["Calendario, disponibilità e tattiche della gilda"], fn = function(args)
+        if type(args) == "string" and args:match("^%s*export%s*$") then
+            local str, err = M:ExportRoster()
+            if not str then out(err); return end
+            if Badb.ConfigUI and Badb.ConfigUI.TextBox then Badb.ConfigUI.TextBox(L["Esporta roster"], str)
+            else out(str) end
+            return
+        end
+        M:Show()
+    end },
     gilda = { help = L["Calendario, disponibilità e tattiche della gilda"], fn = function() M:Show() end },
     guildscan = { help = L["Aggiorna lo snapshot Forever; /reload per inviarlo al companion"], fn = function() M:Capture(); M:CaptureRoster(); out(L["Snapshot aggiornato; /reload per esportare."]) end },
 }

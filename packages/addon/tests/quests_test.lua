@@ -38,6 +38,7 @@ local function withLog(Mock, fn)
     GetServerTime = function() return 1800000000 end
 
     local module = BadbUI.Quests
+    if BadbUI.Modules:Get("QuestTracker") then BadbUI.Modules:Disable("QuestTracker") end
     BadbUI.Modules:Disable("Quests")
     BadbUI.Modules:Enable("Quests")
     local ok, err = pcall(fn, module, rows, objectives, function() return reads end)
@@ -199,7 +200,7 @@ T["mostra diario monitor e progresso nella UI con cambio profilo"] = function(Mo
         assert(BadbUI.Slash:Dispatch("quests gemme"))
         local w = m.window
         eq(w:IsShown(), true)
-        eq(w.xp:GetText(), "Livello 14 · 300/1000 XP")
+        eq(w.xp:GetText(), "Level 14 · 300/1000 XP")
         eq(w.entry.id, 12)
         eq(w.detail.list.data[1].text, "Gemme: 2/4")
         w.detail.pin:GetScript("OnClick")(w.detail.pin)

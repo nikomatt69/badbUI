@@ -2,7 +2,7 @@
 ## Title: |cff3fa7ffBadb|rUI
 ## Notes: Modular interface, gameplay tools, profiles, macros and offline guides for WoW Forever.
 ## Author: Nikoemme
-## Version: 1.1.0
+## Version: 1.2.0
 ## SavedVariables: BadbUIDB, BadbUI_ChatbotExport
 ## IconTexture: Interface\Icons\INV_Shield_06
 ## Category: Interface Enhancements
@@ -124,6 +124,8 @@ Locales\Suite\Quests.lua
 Modules\Quests\Journal.lua
 Modules\Quests\Quests.lua
 Modules\Quests\Window.lua
+Locales\Suite\QuestTracker.lua
+Modules\Quests\Tracker.lua
 # <<< quests
 
 # --
@@ -143,6 +145,27 @@ Modules\QoL\Automation.lua
 Modules\QoL\Page.lua
 Data\QoL\Guides.lua
 # <<< qol
+
+# --
+
+# >>> system: profilo PC/grafica adattivo
+Locales\Suite\System.lua
+Modules\System\SystemProfile.lua
+# <<< system
+
+# --
+
+# >>> arena: avversari PvP stile Gladius (BG/world, arena se il client la espone)
+Locales\Suite\Arena.lua
+Modules\Arena\Arena.lua
+# <<< arena
+
+# --
+
+# >>> professions: professioni e cooldown configurati
+Locales\Suite\Professions.lua
+Modules\Professions\Professions.lua
+# <<< professions
 
 # --
 

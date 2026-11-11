@@ -41,6 +41,8 @@ ns.Badb.Localization:RegisterLocale("enUS", {
     ["[Gilda] %s"] = "[Guild] %s",
     ["non valutato"] = "not rated",
     ["spec non rilevata"] = "spec not detected",
+    ["Esporta roster"] = "Export roster",
+    ["Roster vuoto: apri il pannello di gilda in gioco e riprova."] = "Empty roster: open the guild panel in game and try again.",
     ["CALENDARIO RAID"] = "RAID CALENDAR",
     ["DIARIO DI GILDA"] = "GUILD NEWS",
     ["GUIDE DI GILDA"] = "GUILD GUIDES",

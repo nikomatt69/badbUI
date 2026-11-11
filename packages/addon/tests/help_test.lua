@@ -19,7 +19,7 @@ end
 T["module descriptions supply localized manual text without a static entry"] = function()
     local B = BadbUI
     local key = "A fixture describing the new module"
-    B.Localization:RegisterLocale("itIT", { [key] = "Descrizione ricercabile del modulo di prova." })
+    B.Localization:RegisterLocale("enUS", { [key] = "Searchable description of the fixture module." })
     B.Modules:New("ManualFixture", { title = "Fixture", description = B.L[key] })
     eq(B.HelpData.modules.ManualFixture, nil)
 
@@ -29,10 +29,10 @@ T["module descriptions supply localized manual text without a static entry"] = f
         if entry.id == "Suite" then suite = entry end
     end
     assert(fixture and fixture.documented and suite and suite.documented)
-    eq(fixture.text, "Descrizione ricercabile del modulo di prova.")
+    eq(fixture.text, "Searchable description of the fixture module.")
     eq(suite.text, B.Modules:Get("Suite").description)
 
-    B.Help:Select("modules", "ricercabile")
+    B.Help:Select("modules", "searchable")
     eq(B.Help:MatchesModule(fixture), true)
     eq(B.Help:MatchesModule(suite), false)
     for _, section in ipairs(B.Help:Sections()) do
