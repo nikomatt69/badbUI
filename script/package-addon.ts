@@ -10,11 +10,12 @@ try {
   const target = join(stage, "BadbUI")
   await cp(join(root, "packages/addon"), target, {
     recursive: true,
-    filter: (path) => !["tests", "scripts", "docs"].includes(path.split("/").at(-1)!),
+    filter: (path) => !["tests", "scripts", "docs", ".DS_Store"].includes(path.split("/").at(-1)!),
   })
   // Il pacchetto distribuito non deve mai includere lo snapshot privato di un giocatore.
   await Bun.write(join(target, "Data/GuildSync.lua"), "-- Popolato dal companion Badb.\nBadbUI_GuildSync = nil\n")
   await Bun.write(join(target, "Data/ChatbotSync.lua"), "-- Filled by the local nikcli embedded runtime.\nBadbUI_ChatbotSync = nil\n")
+  await Bun.write(join(target, "Data/UpdateStatus.lua"), "-- Generato dal companion BadbUI.\n")
   await mkdir(join(root, "dist"), { recursive: true })
   const destination = join(root, `dist/BadbUI-${version}.zip`)
   await rm(destination, { force: true })

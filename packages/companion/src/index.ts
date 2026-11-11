@@ -5,6 +5,7 @@ import { homedir } from "node:os"
 import { chmod } from "node:fs/promises"
 import { createClient, DEFAULT_SERVER_URL } from "@badb/sdk"
 import { atomic, paths, synchronize, type Paths } from "./sync"
+import { createUpdater } from "./update"
 
 type Settings = { server: string; token: string; paths: Paths }
 const { values, positionals } = parseArgs({
@@ -26,7 +27,9 @@ async function main() {
 
 login <codice> --wow "<cartella client>" --account "<account WTF>" [--server ${DEFAULT_SERVER_URL}]
 sync         Sincronizza una volta; i dati rientrano in gioco al prossimo /reload
-watch        Sincronizza ogni 5 secondi, una richiesta alla volta
+watch        Sincronizza ogni 5 secondi e controlla gli aggiornamenti di BadbUI
+updates --wow "<cartella client>" --account "<account WTF>"
+             Gestisce solo gli aggiornamenti di BadbUI, senza login
 logout       Revoca il token e cancella la configurazione
 
 --config <file>  Configurazione privata (default ~/.config/badb/companion.json)
@@ -54,6 +57,12 @@ L'addon deve essere installato in Interface/AddOns/BadbUI. Non si modifica mai i
     console.log(`Collegato come ${session.user.name}. Ora: bun run --cwd packages/companion start watch`)
     return
   }
+  if (command === "updates") {
+    if (!values.wow || !values.account) throw new Error("Servono --wow e --account. Usa --help")
+    const update = updateTask(paths(resolve(values.wow), values.account))
+    console.log("Aggiornamenti BadbUI in ascolto. Installa dal gioco e chiudi WoW per completare.")
+    return watch(update)
+  }
   if (!["sync", "watch", "logout"].includes(command!)) throw new Error("Comando sconosciuto. Usa --help")
   if (!(await Bun.file(file).exists())) throw new Error("Companion non collegato. Esegui login")
   const settings = (await Bun.file(file).json()) as Settings
@@ -72,6 +81,24 @@ L'addon deve essere installato in Interface/AddOns/BadbUI. Non si modifica mai i
     for (const rejection of bundle.rejected) console.error(`${rejection.id}: ${rejection.error}`)
   }
   if (command === "sync") return once()
+  const update = updateTask(settings.paths)
+  console.log("In ascolto. Esporta con /reload o logout, attendi “Dati pronti”, poi /reload per caricare la risposta.")
+  return watch(async () => {
+    await update().catch((error: Error) => console.error(error.message))
+    await once()
+  })
+}
+
+function updateTask(target: Paths) {
+  const update = createUpdater(target)
+  return async () => {
+    const receipt = await update()
+    if (receipt?.result === "installed") console.log("Aggiornamento BadbUI installato. Puoi riaprire WoW.")
+    if (receipt?.result === "release_changed") console.log("La release BadbUI è cambiata. Riapri WoW per vedere la nuova versione.")
+  }
+}
+
+async function watch(once: () => Promise<void>) {
   let running = true
   process.on("SIGINT", () => {
     running = false
@@ -79,7 +106,6 @@ L'addon deve essere installato in Interface/AddOns/BadbUI. Non si modifica mai i
   process.on("SIGTERM", () => {
     running = false
   })
-  console.log("In ascolto. Esporta con /reload o logout, attendi “Dati pronti”, poi /reload per caricare la risposta.")
   while (running) {
     await once().catch((e: Error) => console.error(e.message))
     if (running) await Bun.sleep(5000)

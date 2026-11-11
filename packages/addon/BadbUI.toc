@@ -3,7 +3,7 @@
 ## Notes: Modular Forever interface and guild companion: armory, availability, raids, tactics and guides.
 ## Notes-itIT: Interfaccia modulare e companion di gilda Forever: armory, disponibilità, raid, tattiche e guide.
 ## Author: Nikoemme
-## Version: 1.0.0
+## Version: 1.0.1
 ## SavedVariables: BadbUIDB, BadbUI_GuildExport, BadbUI_ChatbotExport
 ## IconTexture: Interface\Icons\INV_Shield_06
 ## Category: Interface Enhancements
@@ -119,6 +119,8 @@ Config\Widgets.lua
 Config\ConfigUI.lua
 Config\Wizard.lua
 Config\ScriptEditor.lua
+Data\UpdateStatus.lua
+Modules\Updates.lua
 Config\MainPages.lua
 Config\Slash.lua
 Config\ImportExport.lua

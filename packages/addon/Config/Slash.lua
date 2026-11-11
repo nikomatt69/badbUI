@@ -37,6 +37,7 @@ end
 
 base("", L["apre la finestra di configurazione"], function() openConfig("") end)
 base("config", L["config [pagina|modulo] - apre la configurazione"], openConfig)
+base("update", L["apre gli aggiornamenti di BadbUI"], function() openConfig("addons") end)
 base("unlock", L["sblocca/blocca i frame per spostarli"], function() FM:SetUnlocked(not FM.unlocked) end)
 base("profile", L["profile [nome] - elenca o cambia profilo"], function(name)
     if name == "" then

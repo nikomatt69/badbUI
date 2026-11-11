@@ -71,7 +71,7 @@ Riferimenti e limiti delle API: [provenienza dei dati](docs/data-provenance.md).
 bun run addon:package
 ```
 
-Estrai `dist/BadbUI-0.3.0.zip` in `<client Forever>/Interface/AddOns/`: deve risultare `Interface/AddOns/BadbUI/BadbUI.toc`. Il pacchetto distribuito non contiene snapshot personali.
+Estrai lo ZIP `dist/BadbUI-<versione>.zip` in `<client Forever>/Interface/AddOns/`. Il percorso finale è `Interface/AddOns/BadbUI/BadbUI.toc`. Il pacchetto distribuito non contiene snapshot personali.
 
 1. Dal sito: **Profilo → Collega addon**. Il codice dura 10 minuti ed è monouso.
 2. Usa la cartella **del client** che contiene `Interface` e `WTF`, e il nome esatto dell’account sotto `WTF/Account`:
@@ -85,6 +85,16 @@ bun run --cwd packages/companion start watch
 4. Dopo una modifica fai `/reload` per salvare le SavedVariables. Attendi **“Dati pronti”** nel companion; poi fai `/reload` per caricare la risposta. Servono due passaggi perché l’addon non ha rete e il companion lavora dopo la scrittura del gioco. Logout/login può essere usato allo stesso scopo.
 
 Il companion legge solo `SavedVariables/BadbUI.lua`: non lo modifica mai. Scrive atomicamente `Data/GuildSync.lua`. I file Lua vengono parsati come dati, mai eseguiti dal companion. I token restano nella configurazione privata `~/.config/badb/companion.json` (permessi `0600`), fuori dai file dell’addon. Per un file diverso usa `--config`. Per un server remoto il companion richiede HTTPS.
+
+### Aggiornare BadbUI dal gioco
+
+Con BadbUI 1.0.1 e companion 0.3.1 o successivi, lascia attivo `watch`. Puoi anche avviare il companion solo per gli aggiornamenti, senza account di gilda:
+
+```sh
+bun companion.mjs updates --wow "<cartella client Forever>" --account "<account in WTF/Account>"
+```
+
+Fai `/reload` per leggere lo stato del catalogo, poi apri `/badb update`. Se è disponibile una release, premi **Installa aggiornamento**, conferma ed esci completamente da WoW. Attendi la conferma nel terminale prima di riaprire il gioco. Il companion consulta il catalogo ufficiale, verifica versione e SHA-256 e conserva la cartella precedente in `Interface/.badbui-update-backup`. Le SavedVariables restano in `WTF`.
 
 Le azioni hanno ricevute persistenti: una ripetizione non duplica l’iscrizione e non trasforma un rifiuto in successo. Azioni rifiutate sono mostrate in gioco e rimosse dalla coda. Il companion deve rimanere in esecuzione sul PC. Non c’è sincronizzazione diretta addon→Internet o distribuzione tra giocatori via chat addon.
 

@@ -228,7 +228,7 @@ function MP.addonRows()
 end
 
 function MP.addonOptions()
-    return {
+    local options = {
         { type = "label", text = L["Qui attivi o spegni gli addon gia' installati; le modifiche valgono dopo /reload. "]
             .. L["Il gioco non puo' scaricare file: per installare o aggiornare addon (X-Perl, BigWigs, Details!...) usa dal computer "]
             .. L["scripts/addons.py (vedi docs/addons.md)."] },
@@ -237,6 +237,12 @@ function MP.addonOptions()
             if UI.Confirm then UI:Confirm(L["Ricaricare l'interfaccia ora?"], function() ReloadUI() end) else ReloadUI() end
         end },
     }
+    if Badb.Updates then
+        local updateOptions = Badb.Updates:Options()
+        for _, opt in ipairs(options) do updateOptions[#updateOptions + 1] = opt end
+        return updateOptions
+    end
+    return options
 end
 
 ---------------------------------------------------------------------------

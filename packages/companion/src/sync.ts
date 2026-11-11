@@ -18,16 +18,19 @@ export function paths(wow: string, account: string): Paths {
     addon: join(wow, "Interface", "AddOns", "BadbUI"),
   }
 }
+export async function readSavedVariables(file: string) {
+  const before = await stat(file)
+  if (before.size > 8_000_000) throw new Error("SavedVariables troppo grandi (limite 8 MB)")
+  const text = await readFile(file, "utf8")
+  const after = await stat(file)
+  if (before.ino !== after.ino || before.mtimeMs !== after.mtimeMs || before.size !== after.size)
+    throw new Error("Il gioco sta ancora scrivendo il file: riprova")
+  return text
+}
 export async function synchronize(client: Client, paths: Paths) {
   // Non si creano cartelle di gioco se il percorso è sbagliato.
   await stat(join(paths.addon, "BadbUI.toc"))
-  const before = await stat(paths.saved)
-  if (before.size > 8_000_000) throw new Error("SavedVariables troppo grandi (limite 8 MB)")
-  const text = await readFile(paths.saved, "utf8")
-  const after = await stat(paths.saved)
-  if (before.mtimeMs !== after.mtimeMs || before.size !== after.size)
-    throw new Error("Il gioco sta ancora scrivendo il file: riprova")
-  const input = decode(text)
+  const input = decode(await readSavedVariables(paths.saved))
   const result = await client.addon.sync(input)
   // Rigenera dai dati tipizzati ricevuti; non scrive codice Lua restituito da un server remoto.
   const lua = `-- Dati del server Badb; caricati al prossimo /reload.\n${Lua.stringify("BadbUI_GuildSync", result.bundle)}`

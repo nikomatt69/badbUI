@@ -1,0 +1,1 @@
+-- Il companion genera qui lo stato del catalogo e la ricevuta dell'aggiornamento.
