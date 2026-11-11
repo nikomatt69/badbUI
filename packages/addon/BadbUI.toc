@@ -102,6 +102,11 @@ Data\Combat\Guides.lua
 # --
 
 # >>> encounters: timer boss, campi di battaglia, registro istanze
+Locales\Suite\Encounters.lua
+Modules\Encounters\Source.lua
+Modules\Encounters\Journal.lua
+Modules\Encounters\Encounters.lua
+Data\Encounters\Guides.lua
 # <<< encounters
 
 # --
