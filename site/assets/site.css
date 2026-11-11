@@ -1,11 +1,14 @@
 /* BadbUI — shared site styles. Polestar-inspired: midnight navy, amber, hairlines. */
 :root{
-  --bg:#050914; --bg-2:#080d1f; --bg-3:#0b1126;
-  --panel:rgba(255,255,255,.04); --panel-2:rgba(255,255,255,.06);
-  --ink:#eef1f8; --ink-2:#c6ccdd; --muted:#8b93a9; --faint:#5f6880;
-  --amber:#f5b94d; --amber-2:#ffcf7a; --amber-dim:rgba(245,185,77,.14);
-  --line:rgba(255,255,255,.09); --line-2:rgba(255,255,255,.14);
-  --ok:#7dd8a8; --radius:14px; --radius-s:9px;
+  /* Exact tokens from the addon's Theme.lua (Polestar scheme): bg/panel/panelAlt/header,
+     text/textDim/textMuted, accent polestar amber, ink washes border .12 / divider .08. */
+  --bg:#070a14; --bg-2:#05070f; --bg-3:#0b101c;
+  --panel:#0b101c; --panel-2:#121828;
+  --ink:#f7faff; --ink-2:#b8c2d9; --muted:#8591ad; --faint:#5f6880;
+  --amber:#f5b84d; --amber-2:#ffcf7a; --amber-dim:rgba(245,184,77,.14);
+  --line:rgba(255,255,255,.12); --line-2:rgba(255,255,255,.14);
+  --header:#131c37;
+  --ok:#66d694; --radius:2px; --radius-s:2px;
   --max:1180px; --nav-h:64px;
   --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,"Helvetica Neue",Arial,sans-serif;
   --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
@@ -33,10 +36,10 @@ img,canvas,svg{max-width:100%}
 code,.code{font-family:var(--mono);font-size:.86em;background:rgba(255,255,255,.07);border:1px solid var(--line);border-radius:6px;padding:.12em .42em;color:var(--amber-2);white-space:nowrap}
 
 /* Nav */
-.nav{position:sticky;top:0;z-index:50;height:var(--nav-h);background:rgba(5,9,20,.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.nav{position:sticky;top:0;z-index:50;height:var(--nav-h);background:linear-gradient(180deg,var(--header),var(--bg));border-bottom:1px solid var(--amber-dim);box-shadow:0 1px 0 var(--line)}
 .nav-inner{height:var(--nav-h);display:flex;align-items:center;gap:28px}
 .brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:-.01em;font-size:17px;white-space:nowrap}
-.brand-mark{width:28px;height:28px;border:1px solid rgba(245,185,77,.55);border-radius:8px;display:grid;place-items:center;color:var(--amber);font-size:14px;background:var(--amber-dim)}
+.brand-mark{width:28px;height:28px;border:1px solid rgba(245,184,77,.55);border-radius:var(--radius);display:grid;place-items:center;color:var(--amber);font-size:14px;background:var(--amber-dim)}
 .brand small{color:var(--muted);font-weight:500;font-size:12px;border:1px solid var(--line);border-radius:99px;padding:1px 8px}
 .nav-links{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
 .nav-links a{font-size:14px;color:var(--ink-2);padding:8px 12px;border-radius:8px}
@@ -45,8 +48,8 @@ code,.code{font-family:var(--mono);font-size:.86em;background:rgba(255,255,255,.
 @media(max-width:760px){.nav-links a{padding:8px 8px;font-size:13.5px}.brand small{display:none}}
 
 /* Buttons, badges, pills */
-.btn{display:inline-flex;align-items:center;gap:8px;background:var(--amber);color:#1a1204;font-weight:650;font-size:14.5px;padding:12px 20px;border-radius:10px;border:1px solid var(--amber);transition:background .15s,transform .15s}
-.btn:hover{background:var(--amber-2);color:#1a1204;transform:translateY(-1px)}
+.btn{display:inline-flex;align-items:center;gap:8px;background:var(--amber);color:#0a0d14;font-weight:650;font-size:14.5px;padding:12px 20px;border-radius:var(--radius);border:1px solid var(--amber);transition:background .15s}
+.btn:hover{background:var(--amber-2);color:#0a0d14}
 .btn--ghost{background:transparent;color:var(--ink);border-color:var(--line-2)}
 .btn--ghost:hover{background:rgba(255,255,255,.06);color:var(--ink)}
 .btn--small{padding:8px 14px;font-size:13.5px;border-radius:8px}
@@ -63,7 +66,7 @@ code,.code{font-family:var(--mono);font-size:.86em;background:rgba(255,255,255,.
 .hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:28px}
 .hero-meta{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;color:var(--faint)}
 .hero-meta b{color:var(--ink-2);font-weight:600}
-.hero-stage{position:relative;aspect-ratio:4/3.4;min-height:340px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(160deg,rgba(255,255,255,.05),rgba(255,255,255,.015));overflow:hidden}
+ .hero-stage{position:relative;aspect-ratio:4/3.4;min-height:340px;border:1px solid var(--line);border-radius:var(--radius);background:linear-gradient(160deg,rgba(255,255,255,.05),rgba(255,255,255,.015));overflow:hidden}
 .hero-stage canvas{display:block;width:100%;height:100%}
 .hero-caption{position:absolute;left:14px;right:14px;bottom:12px;display:flex;justify-content:space-between;gap:10px;font-size:11.5px;color:var(--muted);pointer-events:none}
 .hero-caption span{border:1px solid var(--line);background:rgba(5,9,20,.72);border-radius:99px;padding:4px 10px;backdrop-filter:blur(6px)}
@@ -74,8 +77,8 @@ code,.code{font-family:var(--mono);font-size:.86em;background:rgba(255,255,255,.
 .grid-2{grid-template-columns:repeat(2,1fr)} .grid-3{grid-template-columns:repeat(3,1fr)} .grid-4{grid-template-columns:repeat(4,1fr)}
 @media(max-width:980px){.grid-3,.grid-4{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:600px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr}}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:22px;transition:border-color .15s,background .15s,transform .15s}
-.card:hover{border-color:rgba(245,185,77,.35);background:var(--panel-2);transform:translateY(-2px)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:22px;transition:border-color .15s,background .15s}
+.card:hover{border-color:rgba(245,184,77,.45);background:var(--panel-2)}
 .card-icon{width:36px;height:36px;border-radius:9px;display:grid;place-items:center;background:var(--amber-dim);border:1px solid rgba(245,185,77,.28);color:var(--amber);font-size:17px;margin-bottom:14px}
 .card h3{margin:0 0 7px;font-size:16.5px;letter-spacing:-.01em}
 .card p{margin:0;color:var(--muted);font-size:14px;line-height:1.6}
@@ -114,3 +117,7 @@ code,.code{font-family:var(--mono);font-size:.86em;background:rgba(255,255,255,.
 .footer nav{display:flex;gap:20px;flex-wrap:wrap;font-size:14px;color:var(--muted)}
 .footer-bottom{margin-top:28px;padding-top:20px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--faint)}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.card,.btn{transition:none}}
+
+/* Addon window chrome: accent glint + hairline, like UI:Window's header in game. */
+.hero-stage::after{content:"";position:absolute;left:16px;bottom:0;width:44px;height:2px;background:var(--amber)}
+.section-head h2,.hero h1{font-family:Georgia,"Times New Roman",serif;font-weight:600}
