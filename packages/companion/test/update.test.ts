@@ -11,7 +11,8 @@ const at = 1_800_000_000
 const oldVersion = "1.0.9"
 const nextVersion = "1.0.10"
 const request = { id: `${at}-1`, from: oldVersion, version: nextVersion, at }
-const toc = (version: string) => `## Interface: 16001\n## Version: ${version}\n`
+const toc = (version: string, guild = true) =>
+  `## Interface: 16001\n## Version: ${version}\n## SavedVariables: BadbUIDB${guild ? ", BadbUI_GuildExport" : ""}\n`
 const oldSync = "BadbUI_GuildSync = { rev = 7 }\n"
 const saved = Lua.stringify("BadbUIDB", { data: { updates: { request } } })
 const encoder = new TextEncoder()
@@ -28,12 +29,12 @@ async function fixture() {
   return { root, target, cleanup: () => rm(root, { recursive: true, force: true }) }
 }
 
-function release({ extra = {}, hash, version = nextVersion }: {
-  extra?: Record<string, Uint8Array>; hash?: string; version?: string
+function release({ extra = {}, hash, version = nextVersion, guild = true }: {
+  extra?: Record<string, Uint8Array>; hash?: string; version?: string; guild?: boolean
 } = {}) {
   const archive = zipSync({
-    "BadbUI/BadbUI.toc": encode(toc(version)),
-    "BadbUI/Data/GuildSync.lua": encode("BadbUI_GuildSync = nil\n"),
+    "BadbUI/BadbUI.toc": encode(toc(version, guild)),
+    ...(guild ? { "BadbUI/Data/GuildSync.lua": encode("BadbUI_GuildSync = nil\n") } : {}),
     "BadbUI/Data/UpdateStatus.lua": encode("-- stub\n"),
     ...extra,
   })
@@ -107,6 +108,30 @@ test("ripristina un rename interrotto e richiede conferma per un'altra versione"
     expect(await update()).toEqual({ id: request.id, result: "release_changed" })
     expect(downloads).toEqual(["/downloads/release.json"])
     expect(await readFile(join(target.addon, "BadbUI.toc"), "utf8")).toBe(toc(oldVersion))
+  } finally {
+    await cleanup()
+  }
+})
+
+test("l'aggiornamento pubblico usa le SavedVariables core e lascia intatto il modulo gilda separato", async () => {
+  const { root, target, cleanup } = await fixture()
+  const { send } = release({ guild: false })
+  try {
+    const guild = join(dirname(target.addon), "BadbUI_Guild")
+    const guildSync = join(guild, "Data", "GuildSync.lua")
+    const guildSaved = join(dirname(target.saved), "BadbUI_Guild.lua")
+    await mkdir(dirname(guildSync), { recursive: true })
+    await writeFile(join(guild, "BadbUI_Guild.toc"), "## SavedVariables: BadbUI_GuildExport\n")
+    await writeFile(guildSync, "BadbUI_GuildSync = { rev = 8 }\n")
+    await writeFile(guildSaved, "BadbUI_GuildExport = {}\n")
+    const update = createUpdater(target, { send, now: () => at, isGameRunning: () => false })
+    expect(await update()).toEqual({ id: request.id, result: "installed" })
+    expect(await readFile(join(target.addon, "BadbUI.toc"), "utf8")).toBe(toc(nextVersion, false))
+    await expect(readFile(join(target.addon, "Data/GuildSync.lua"))).rejects.toThrow("ENOENT")
+    expect(await readFile(join(root, "Interface/.badbui-update-backup/Data/GuildSync.lua"), "utf8")).toBe(oldSync)
+    expect(await readFile(guildSync, "utf8")).toBe("BadbUI_GuildSync = { rev = 8 }\n")
+    expect(await readFile(guildSaved, "utf8")).toBe("BadbUI_GuildExport = {}\n")
+    expect(await readFile(target.saved, "utf8")).toBe(saved)
   } finally {
     await cleanup()
   }

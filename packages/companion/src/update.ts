@@ -3,7 +3,7 @@ import { DEFAULT_SERVER_URL } from "@badb/sdk"
 import { unzipSync } from "fflate"
 import { copyFile, lstat, mkdir, mkdtemp, open, readFile, rename, rm, writeFile } from "node:fs/promises"
 import { basename, dirname, join } from "node:path"
-import { atomic, readSavedVariables, type Paths } from "./sync"
+import { atomic, declaresGuildExport, readSavedVariables, type Paths } from "./sync"
 
 const CHECK_INTERVAL = 120
 const MAX_ARCHIVE_BYTES = 12 * 1024 * 1024
@@ -207,8 +207,9 @@ async function install(
     throw new Error("Il pacchetto BadbUI non corrisponde alla dimensione o allo SHA-256 del catalogo")
   }
   const files = archiveFiles(data)
-  const toc = files["BadbUI/BadbUI.toc"]
-  if (!toc || tocVersion(new TextDecoder().decode(toc)) !== release.version) {
+  const tocFile = files["BadbUI/BadbUI.toc"]
+  const toc = tocFile && new TextDecoder().decode(tocFile)
+  if (!toc || tocVersion(toc) !== release.version) {
     throw new Error("Il pacchetto BadbUI non contiene il TOC atteso")
   }
   const stage = await mkdtemp(join(dirname(backup), ".badbui-stage-"))
@@ -219,8 +220,10 @@ async function install(
       await mkdir(dirname(file), { recursive: true })
       await writeFile(file, content, { flag: "wx" })
     }
-    // Copia solo i dati locali delle sincronizzazioni. WTF resta fuori dalla transazione.
+    // Conserva un bridge locale solo se la release include ancora quello stesso file.
     for (const path of SYNC_FILES) {
+      if (!Object.hasOwn(files, `BadbUI/${path}`)) continue
+      if (path === "Data/GuildSync.lua" && !declaresGuildExport(toc)) continue
       const file = join(target.addon, path)
       if ((await optionalStat(file))?.isFile()) await copyFile(file, join(next, path))
     }

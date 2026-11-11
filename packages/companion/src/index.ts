@@ -4,7 +4,7 @@ import { resolve, join } from "node:path"
 import { homedir } from "node:os"
 import { chmod } from "node:fs/promises"
 import { createClient, DEFAULT_SERVER_URL } from "@badb/sdk"
-import { atomic, paths, synchronize, type Paths } from "./sync"
+import { atomic, guildPaths, paths, synchronize, type Paths } from "./sync"
 import { createUpdater } from "./update"
 
 type Settings = { server: string; token: string; paths: Paths }
@@ -33,7 +33,9 @@ updates --wow "<cartella client>" --account "<account WTF>"
 logout       Revoca il token e cancella la configurazione
 
 --config <file>  Configurazione privata (default ~/.config/badb/companion.json)
-L'addon deve essere installato in Interface/AddOns/BadbUI. Non si modifica mai il file SavedVariables.`)
+Installa BadbUI in Interface/AddOns/BadbUI.
+Per sincronizzare la gilda serve anche BadbUI_Guild o una versione precedente con la gilda integrata.
+Il companion legge le SavedVariables.`)
     return
   }
   if (command === "login") {
@@ -47,8 +49,7 @@ L'addon deve essere installato in Interface/AddOns/BadbUI. Non si modifica mai i
     )
       throw new Error("Usa HTTPS per il server remoto")
     const target = paths(resolve(values.wow), values.account)
-    if (!(await Bun.file(join(target.addon, "BadbUI.toc")).exists()))
-      throw new Error("Addon non trovato. Installa BadbUI nella cartella client indicata")
+    await guildPaths(target)
     const client = createClient({ url: server })
     const session = await client.auth.redeem({ code: positionals[1], label: "Companion WoW Forever" })
     const settings: Settings = { server, token: session.token, paths: target }
