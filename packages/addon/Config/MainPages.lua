@@ -115,7 +115,7 @@ end
 -- Aspetto
 ---------------------------------------------------------------------------
 
-local ACCENT_LABELS = { elvui = L["Azzurro ElvUI"], gold = L["Oro"], badb = L["Blu BadbUI"], jade = L["Giada"],
+local ACCENT_LABELS = { polestar = "Polestar Amber", elvui = L["Azzurro ElvUI"], gold = L["Oro"], badb = L["Blu BadbUI"], jade = L["Giada"],
                         violet = L["Viola"], ember = L["Brace"], frost = L["Ghiaccio"] }
 
 function MP.schemeChoices()
@@ -135,16 +135,7 @@ end
 function MP.appearanceOptions()
     return {
         { type = "header", label = L["Language"] },
-        { type = "select", label = L["Language"], values = {
-            { value = "auto", label = L["Automatic (client language)"] },
-            { value = "enUS", label = "English" },
-            { value = "itIT", label = "Italiano" },
-          }, get = function() return Badb.Localization:GetPreference() end,
-          set = function(value)
-              local ok, needsReload = Badb.Localization:SetPreference(value)
-              if ok then UI:Toast(needsReload and L["Language saved. Use /reload to apply it."] or L["Language saved."], "info") end
-          end },
-        { type = "label", text = L["Language changes take effect after /reload. Macro spell names stay in English."] },
+        { type = "label", text = L["BadbUI is English-only on every client. Macro spell names stay in English."] },
         { type = "header", label = L["Tema"] },
         { type = "select", label = L["Schema colori"], values = MP.schemeChoices(),
           get = function() return Theme.state.scheme end, set = function(v) Theme:SetScheme(v) end },

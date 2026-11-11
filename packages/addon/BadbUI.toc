@@ -1,7 +1,6 @@
 ## Interface: 16001
 ## Title: |cff3fa7ffBadb|rUI
 ## Notes: Modular interface, gameplay tools, profiles, macros and offline guides for WoW Forever.
-## Notes-itIT: Interfaccia modulare, strumenti di gioco, profili, macro e guide offline per WoW Forever.
 ## Author: Nikoemme
 ## Version: 1.1.0
 ## SavedVariables: BadbUIDB, BadbUI_ChatbotExport

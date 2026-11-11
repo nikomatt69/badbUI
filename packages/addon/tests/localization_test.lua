@@ -20,11 +20,11 @@ local function withLocale(locale, saved, full, Mock, fn)
     GetLocale, BadbUI, BadbUIDB = oldLocale, oldAddon, oldDB
     assert(ok, err)
 end
-T["automatic language: Italian, English and unsupported clients"] = function()
+T["English-only on Italian, English and unsupported clients"] = function()
     for _, locale in ipairs({ "itIT", "enUS", "enGB", "frFR", "deDE", "koKR", "zhCN" }) do
         withLocale(locale, nil, false, nil, function(B)
-            eq(B.Localization.language, locale == "itIT" and "itIT" or "enUS")
-            eq(B.L["Gestione"], locale == "itIT" and "Gestione" or "Management")
+            eq(B.Localization.language, "enUS")
+            eq(B.L["Gestione"], "Management")
         end)
     end
 end
@@ -50,8 +50,8 @@ T["saved override applies before modules and guides load"] = function(Mock)
         assert(not B.ConfigUI.pageFrames.appearance.failed)
     end)
     withLocale("enUS", { global = { language = "itIT" } }, true, Mock, function(B)
-        eq(B.ConfigUI:FindPage("profiles").title, "Profili")
-        eq(B.ConfigUI:FindPage("help").title, "Aiuto")
+        eq(B.ConfigUI:FindPage("profiles").title, "Profiles")
+        eq(B.ConfigUI:FindPage("help").title, "Help")
     end)
 end
 T["missing entries fall back without caching and late registrations work"] = function()
@@ -65,8 +65,8 @@ T["preference persists without mixing live descriptors or touching profile data"
     local saved = { global = {}, profiles = { Default = { marker = "unchanged" } } }
     withLocale("itIT", saved, true, Mock, function(B)
         local ok, needsReload = B.Localization:SetPreference("enUS")
-        eq(ok, true); eq(needsReload, true); eq(saved.global.language, "enUS")
-        eq(B.L["Gestione"], "Gestione"); eq(B.ConfigUI:FindPage("profiles").title, "Profili")
+        eq(ok, true); eq(needsReload, false); eq(saved.global.language, "enUS")
+        eq(B.L["Gestione"], "Management"); eq(B.ConfigUI:FindPage("profiles").title, "Profiles")
         eq(saved.profiles.Default.marker, "unchanged")
         eq(B.Localization:SetPreference("frFR"), false); eq(saved.global.language, "enUS")
         B.DB:SetProfile("Another profile"); eq(B.Localization:GetPreference(), "enUS")
@@ -116,10 +116,10 @@ T["macro bodies and guide IDs stay identical across interface languages"] = func
     for id, body in pairs(snapshots.itIT) do eq(body, snapshots.enUS[id]); count = count + 1 end
     assert(count >= 635)
 end
-T["language command supports aliases and waits for reload"] = function(Mock)
+T["language command stores a preference; display stays English"] = function(Mock)
     withLocale("itIT", nil, true, Mock, function(B)
         eq(B.Slash:Dispatch("language enGB"), true)
-        eq(B.Localization:GetPreference(), "enUS"); eq(B.Localization.language, "itIT")
+        eq(B.Localization:GetPreference(), "enUS"); eq(B.Localization.language, "enUS")
         eq(B.Slash:Dispatch("language itIT"), true); eq(B.Localization:GetPreference(), "itIT")
     end)
 end

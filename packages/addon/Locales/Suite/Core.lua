@@ -2,6 +2,7 @@
 local _, ns = ...
 ns.Badb.Localization:RegisterLocale("enUS", {
     ["Gioco"] = "Gameplay",
+    ["BadbUI is English-only on every client. Macro spell names stay in English."] = "BadbUI is English-only on every client. Macro spell names stay in English.",
     ["il plugin deve essere una tabella"] = "the plugin must be a table",
     ["id del plugin non valido (2-32 caratteri: lettere, numeri, _)"] = "invalid plugin id (2-32 characters: letters, numbers, _)",
     ["plugin gia' registrato: "] = "plugin already registered: ",

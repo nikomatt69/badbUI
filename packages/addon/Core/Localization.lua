@@ -5,9 +5,10 @@ local Badb = ns.Badb
 local Localization = { locales = {}, supported = { enUS = true, itIT = true } }
 Badb.Localization = Localization
 
+-- BadbUI ships English-only: every client, every preference resolves to enUS.
+-- The itIT table stays loaded for legacy saved strings, but is never selected.
 function Localization:Resolve(preference, clientLocale)
-    if self.supported[preference] then return preference end
-    return clientLocale == "itIT" and "itIT" or "enUS"
+    return "enUS"
 end
 
 function Localization:GetPreference()

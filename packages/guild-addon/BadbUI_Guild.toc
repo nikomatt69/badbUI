@@ -1,7 +1,6 @@
 ## Interface: 16001
 ## Title: BadbUI Guild
 ## Notes: Optional guild calendar, roster and armory bridge for WoW Forever.
-## Notes-itIT: Ponte facoltativo per calendario, roster e armory di gilda su WoW Forever.
 ## Author: Nikoemme
 ## Version: 1.0.0
 ## Dependencies: BadbUI

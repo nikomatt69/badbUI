@@ -28,6 +28,7 @@ local pairs, type, unpack, format, floor = pairs, type, unpack, string.format, m
 
 -- Accento predefinito: oro caldo. Le alternative sono offerte dal selettore in config.
 Theme.ACCENTS = {
+    polestar = { 0.96, 0.72, 0.30 }, -- warm amber, Polestar-style signature accent
     elvui  = { 0.09, 0.52, 0.82 }, -- valuecolor di ElvUI (Defaults/Profile.lua)
     gold   = { 0.93, 0.75, 0.42 },
     badb   = { 0.25, 0.65, 1.00 },
@@ -36,7 +37,7 @@ Theme.ACCENTS = {
     ember  = { 1.00, 0.52, 0.34 },
     frost  = { 0.55, 0.86, 0.96 },
 }
-Theme.ACCENT_ORDER = { "elvui", "gold", "badb", "jade", "violet", "ember", "frost" }
+Theme.ACCENT_ORDER = { "polestar", "elvui", "gold", "badb", "jade", "violet", "ember", "frost" }
 
 -- Colori di stato: uguali in ogni schema, cosi' "pericolo" e' sempre lo stesso rosso.
 local STATUS = {
@@ -69,6 +70,20 @@ Theme.SCHEMES = {
         border  = { 0, 0, 0, 1 },    -- override dei velature: bordo e divisori neri pieni
         divider = { 0, 0, 0, 0.85 },
         shadow = { 0, 0, 0, 0.35 },
+    },
+    polestar = {
+        label = "Polestar",
+        bg       = { 0.028, 0.040, 0.078, 0.97 },
+        panel    = { 0.045, 0.062, 0.112, 0.98 },
+        panelAlt = { 0.070, 0.092, 0.158, 1 },
+        sidebar  = { 0.020, 0.028, 0.056, 1 },
+        header   = { 0.075, 0.110, 0.215, 1 },
+        footer   = { 0.024, 0.034, 0.066, 1 },
+        text      = { 0.97, 0.98, 1.00, 1 },
+        textDim   = { 0.72, 0.76, 0.85, 1 },
+        textMuted = { 0.52, 0.57, 0.68, 1 },
+        ink    = { 1, 1, 1 },
+        shadow = { 0, 0, 0.02, 0.6 },
     },
     night = {
         label = L["Notte"],
@@ -113,7 +128,7 @@ Theme.SCHEMES = {
         shadow = { 0, 0, 0, 0.6 },
     },
 }
-Theme.SCHEME_ORDER = { "elvui", "night", "dusk", "graphite" }
+Theme.SCHEME_ORDER = { "elvui", "polestar", "night", "dusk", "graphite" }
 
 -- Velature di "ink" (hairline, hover, selezione) come frazioni di alpha.
 local WASH = { border = 0.12, divider = 0.08, hover = 0.06, selected = 0.10, track = 0.14, control = 0.05 }
