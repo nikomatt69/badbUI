@@ -2,7 +2,7 @@
 ## Title: |cff3fa7ffBadb|rUI
 ## Notes: Modular interface, gameplay tools, profiles, macros and offline guides for WoW Forever.
 ## Author: Nikoemme
-## Version: 1.2.0
+## Version: 1.2.1
 ## SavedVariables: BadbUIDB, BadbUI_ChatbotExport
 ## IconTexture: Interface\Icons\INV_Shield_06
 ## Category: Interface Enhancements
