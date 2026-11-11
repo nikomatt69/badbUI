@@ -112,6 +112,10 @@ Data\Encounters\Guides.lua
 # --
 
 # >>> world: mappa, waypoint, nodi di raccolta, rari
+Locales\Suite\World.lua
+Modules\World\Coordinates.lua
+Modules\World\Waypoints.lua
+Modules\World\Window.lua
 # <<< world
 
 # --
