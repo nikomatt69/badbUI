@@ -16,12 +16,25 @@ local M = Badb.Modules:New("EditModeBridge", {
         layoutName = nil,     -- nome del layout Edit Mode associato al profilo
         layoutString = nil,   -- copia esportata del layout (per import/export portabile)
         autoActivate = true,
+        useDefault = true,    -- installa una volta il layout predefinito di BadbUI se il profilo non ne ha uno
+        defaultApplied = 0,   -- versione del layout predefinito gia' installata in questo profilo
     },
     options = {
         { type = "toggle", path = "autoActivate", label = L["Attiva il layout al cambio profilo"] },
         { type = "execute", label = L["Cattura layout attuale"], func = function() Badb.Modules:Get("EditModeBridge"):Capture() end },
+        { type = "toggle", path = "useDefault", label = L["Usa il layout BadbUI predefinito nei profili senza layout"] },
+        { type = "execute", label = L["Ripristina il layout BadbUI predefinito"],
+          func = function() Badb.Modules:Get("EditModeBridge"):ApplyDefault(true) end },
+    },
+    commands = {
+        layout = { help = L["layout default - ripristina e attiva il layout Edit Mode predefinito di BadbUI"], fn = function(args)
+            local m = Badb.Modules:Get("EditModeBridge")
+            if strtrim(args or ""):lower() == "default" then m:ApplyDefault(true)
+            else Logger:Info(L["Layout Edit Mode del profilo: %s"], tostring(m:Get("layoutName") or L["nessuno"])) end
+        end },
     },
 })
+Badb.EditModeBridge = M
 
 local function getLayouts()
     return C_EditMode.GetLayouts()
@@ -76,12 +89,65 @@ function M:Activate()
     end)
 end
 
+-- Layout predefinito (Data/EditModeDefault.lua). Ritorna la definizione solo se e' ben formata.
+function M:GetDefault()
+    local d = Badb.EditModeDefault
+    if type(d) ~= "table" or type(d.name) ~= "string" or d.name == "" then return nil end
+    if type(d.layout) ~= "string" or #d.layout < 16 or #d.layout > 20000 then return nil end
+    return d
+end
+
+-- Installa il layout predefinito come layout di account e lo associa al profilo attivo.
+--   force = false  solo se il profilo non ha ancora un layout e non l'ha gia' ricevuto (primo avvio)
+--   force = true   richiesta esplicita dell'utente: sovrascrive il layout di account con lo stesso nome
+-- Ritorna true se l'installazione e' partita (in combattimento viene rimandata a fine scontro), altrimenti false, err.
+function M:ApplyDefault(force)
+    if not Compat.hasEditMode then return false, L["Edit Mode non disponibile su questo client: modulo inattivo"] end
+    local d = self:GetDefault()
+    if not d then return false, L["Layout predefinito non disponibile"] end
+    local version = type(d.version) == "number" and d.version or 1
+    if not force then
+        if not self:Get("useDefault") or self:Get("layoutName") ~= nil then return false end
+        if (tonumber(self:Get("defaultApplied")) or 0) >= version then return false end
+    end
+    Events:RunOutOfCombat("editModeDefault", function()
+        local ok, err = pcall(function()
+            local layouts = getLayouts()
+            local idx = findLayoutIndex(layouts, d.name)
+            if force or not idx then
+                local info = C_EditMode.ConvertStringToLayoutInfo(d.layout)
+                if type(info) ~= "table" then error(L["stringa del layout non riconosciuta dal client"], 0) end
+                info.layoutName = d.name
+                info.layoutType = Enum.EditModeLayoutType.Account
+                if idx then layouts.layouts[idx] = info else table.insert(layouts.layouts, info) end
+                C_EditMode.SaveLayouts(layouts)
+            end
+        end)
+        if not ok then
+            Logger:Warn(L["Layout BadbUI predefinito non installato: %s"], tostring(err))
+            return
+        end
+        self:Set("layoutName", d.name)
+        self:Set("layoutString", d.layout)
+        self:Set("defaultApplied", version)
+        self:Activate()
+        Logger:Info(L["Layout Edit Mode '%s' predefinito attivato"], d.name)
+    end)
+    return true
+end
+
 function M:OnEnable()
     if not Compat.hasEditMode then
         Logger:Warn(L["Edit Mode non disponibile su questo client: modulo inattivo"])
         return
     end
+    -- I layout dell'account sono leggibili dopo l'ingresso nel mondo: il predefinito si installa li', una volta.
+    self:On("PLAYER_ENTERING_WORLD", function()
+        self:Off("PLAYER_ENTERING_WORLD")
+        self:ApplyDefault(false)
+    end)
     self:On("BADB_PROFILE_CHANGED", function()
+        if self:ApplyDefault(false) then return end
         if self:Get("autoActivate") then self:Activate() end
     end)
 end

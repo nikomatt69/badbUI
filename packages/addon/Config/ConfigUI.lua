@@ -13,7 +13,7 @@ local DB, Modules, Compat, W, Events, Logger = Badb.DB, Badb.Modules, Badb.Compa
 local UI = { custom = {}, customOrder = {}, actions = {}, pageFrames = {}, sbHeaders = {}, sbButtons = {}, searchRows = {} }
 Badb.ConfigUI = UI
 
-UI.CATEGORIES = { L["Gestione"], L["Interfaccia"], L["Strumenti"], L["Contenuti"] }
+UI.CATEGORIES = { L["Gestione"], L["Interfaccia"], L["Gioco"], L["Strumenti"], L["Contenuti"] }
 local DEFAULT_CATEGORY = L["Strumenti"]
 local FRAME_W, FRAME_H = 880, 600
 local MIN_W, MIN_H, MAX_W, MAX_H = 820, 460, 1300, 950
