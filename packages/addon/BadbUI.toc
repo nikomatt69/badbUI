@@ -3,7 +3,7 @@
 ## Notes: Modular Forever interface and guild companion: armory, availability, raids, tactics and guides.
 ## Notes-itIT: Interfaccia modulare e companion di gilda Forever: armory, disponibilità, raid, tattiche e guide.
 ## Author: Nikoemme
-## Version: 0.3.1
+## Version: 1.0.0
 ## SavedVariables: BadbUIDB, BadbUI_GuildExport, BadbUI_ChatbotExport
 ## IconTexture: Interface\Icons\INV_Shield_06
 ## Category: Interface Enhancements
@@ -26,6 +26,8 @@ Core\Modules.lua
 Core\FrameManager.lua
 Core\CVars.lua
 Core\PlayerInfo.lua
+Locales\Suite\Core.lua
+Core\Extensions.lua
 
 # Design system (Theme + widget). Prima dei moduli: tutti possono usarlo.
 UI\Theme.lua
@@ -67,6 +69,49 @@ Modules\Macros.lua
 Data\Macros.lua
 Data\MacroVariants.lua
 Modules\Diagnostics.lua
+
+# ===== Suite 1.0: un blocco per area. Ogni area modifica SOLO le righe dentro il proprio blocco. =====
+Modules\Suite.lua
+
+# >>> bags: borse, banca e inventario di tutti i personaggi
+# <<< bags
+
+# --
+
+# >>> auction: casa d'aste (prezzi, liste, vendita)
+# <<< auction
+
+# --
+
+# >>> combat: contatore danni/cure e minaccia
+# <<< combat
+
+# --
+
+# >>> encounters: timer boss, campi di battaglia, registro istanze
+# <<< encounters
+
+# --
+
+# >>> world: mappa, waypoint, nodi di raccolta, rari
+# <<< world
+
+# --
+
+# >>> quests: missioni e leveling
+# <<< quests
+
+# --
+
+# >>> loot: bottini, punteggio oggetti, best in slot
+# <<< loot
+
+# --
+
+# >>> qol: automazioni, finestre mobili, errori Lua, ordine dei gruppi
+# <<< qol
+
+# --
 
 # Configurazione
 Config\Widgets.lua
