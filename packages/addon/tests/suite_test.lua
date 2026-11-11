@@ -90,6 +90,7 @@ T["Suite: copertura piena e parziale, addon mancanti, modulo spento"] = function
     for _, r in ipairs(S:ListCoverage()) do by[r.addon] = r end
     eq(by.Borse.removable, true); eq(by.Borse.title, "Borse!"); eq(by.Borse.installed, true)
     eq(by.Mezzo.removable, false); eq(by.Mezzo.note, "manca X")
+    eq(by.Spento.removable, false, "una copertura omessa non autorizza lo spegnimento")
     eq(by.Assente.installed, false)
     eq(by.BadbUI, nil)
     local rem = S:ListRemovable()
@@ -101,11 +102,54 @@ end
 
 T["Suite: DisableCovered spegne solo gli addon coperti per intero e segnala il reload"] = function()
     local off = fakeAddons({ Borse = { enabled = true, loaded = true }, Mezzo = { enabled = true, loaded = true } })
-    BadbUI.API:RegisterPlugin({ id = "Cov", module = { replaces = { { addon = "Borse" }, { addon = "Mezzo", coverage = "partial" } } } })
+    BadbUI.API:RegisterPlugin({ id = "Cov", module = { replaces = { { addon = "Borse", coverage = "full" }, { addon = "Mezzo", coverage = "partial" } } } })
     local done = BadbUI.Suite:DisableCovered()
     eq(#done, 1); eq(done[1], "Borse"); eq(off[1], "Borse")
     eq(BadbUI.Suite.pendingReload, true)
     eq(#BadbUI.Suite:DisableCovered(), 0)
+end
+
+T["Suite: inventario degli addon e azioni solo per copertura disponibile"] = function()
+    fakeAddons({ Borse = { enabled = true, loaded = true }, Mezzo = { enabled = true, loaded = true } })
+    BadbUI.API:RegisterPlugin({ id = "Cov", module = { replaces = {
+        { addon = "Borse", coverage = "full", available = function() return false end },
+        { addon = "Mezzo", coverage = "partial" },
+    } } })
+    BadbUI.MainPages.addonList = function()
+        return { { name = "Assente", title = "Senza dichiarazione" }, { name = "BadbUI", title = "BadbUI" } }
+    end
+    eq(#BadbUI.Suite:ListRemovable(), 0)
+    local rows = BadbUI.Suite.rows()
+    eq(#rows, 3)
+    eq(#rows[1].actions, 0)
+    eq(#rows[2].actions, 0)
+    eq(rows[3].detail, BadbUI.L["Copertura non dichiarata"])
+end
+
+T["Suite: sostituzione UIScalaMinima e ripristino scala originale"] = function(Mock)
+    fakeAddons({ UIScalaMinima = { enabled = true, loaded = true } })
+    local actual = 0.82
+    local get, set = UIParent.GetScale, UIParent.SetScale
+    UIParent.GetScale = function() return actual end
+    UIParent.SetScale = function(_, value) actual = value; Mock.Fire("UI_SCALE_CHANGED") end
+    local ok, err = pcall(function()
+        eq(#BadbUI.Suite:ListRemovable(), 0)
+        BadbUI.Slash:Dispatch("scale 0.38")
+        eq(actual, 0.38)
+        local removable = BadbUI.Suite:ListRemovable()
+        eq(#removable, 1); eq(removable[1].addon, "UIScalaMinima")
+        Mock.combat = true
+        BadbUI.Slash:Dispatch("scale 0.2")
+        eq(actual, 0.38)
+        Mock.combat = false
+        Mock.Fire("PLAYER_REGEN_ENABLED")
+        eq(actual, 0.2)
+        BadbUI.Modules:SetEnabled("Scaling", false)
+        eq(actual, 0.82)
+    end)
+    UIParent.GetScale, UIParent.SetScale = get, set
+    Mock.combat = false
+    assert(ok, err)
 end
 
 T["Suite: API addon assenti non producono errori"] = function()

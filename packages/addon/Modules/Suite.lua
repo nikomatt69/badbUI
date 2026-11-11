@@ -15,7 +15,7 @@ local MAX_NOTE = 240
 local M = Modules:New("Suite", {
     title = L["Suite"],
     category = L["Gestione"],
-    description = L["Mostra quali addon installati sono coperti dai moduli di BadbUI e possono essere spenti."],
+    description = L["Mostra quali funzioni di BadbUI coprono gli addon installati e quali puoi spegnere."],
     defaults = { enabled = true },
     page = { title = L["Addon sostituiti"], order = 15, category = L["Gestione"],
              keywords = { "addon", L["sostituisce"], L["rimuovi"], L["copertura"], "suite" } },
@@ -68,7 +68,12 @@ function M:ListCoverage()
             for _, e in ipairs(m.replaces) do
                 if validEntry(e) then
                     local installed, enabled, loaded = addonState(e.addon)
-                    local coverage = e.coverage == "partial" and "partial" or "full"
+                    local coverage = e.coverage == "full" and "full" or "partial"
+                    local available = true
+                    if type(e.available) == "function" then
+                        local ok, result = pcall(e.available, m)
+                        available = ok and result == true
+                    end
                     out[#out + 1] = {
                         addon = e.addon,
                         title = type(e.title) == "string" and e.title ~= "" and e.title or e.addon,
@@ -76,7 +81,8 @@ function M:ListCoverage()
                         coverage = coverage,
                         note = type(e.note) == "string" and e.note:sub(1, MAX_NOTE) or nil,
                         installed = installed, enabled = enabled, loaded = loaded,
-                        removable = coverage == "full" and (m.enabled and true or false),
+                        available = available,
+                        removable = coverage == "full" and available and m.enabled == true,
                     }
                 end
             end
@@ -123,12 +129,14 @@ end
 local function esc(s) return (tostring(s or ""):gsub("|", "||")) end
 
 function M.rows()
-    local rows = {}
+    local rows, declared = {}, {}
     for _, row in ipairs(M:ListCoverage()) do
         if row.installed then
+            declared[row.addon] = true
             local state
             if not row.enabled then state = L["|cff888888gia' spento|r"]
             elseif not row.moduleEnabled then state = L["|cffffcc00modulo BadbUI spento|r"]
+            elseif not row.available then state = L["Modulo non disponibile su questo client"]
             elseif row.coverage == "partial" then state = L["|cffffcc00coperto in parte|r"]
             else state = L["|cff5fd068coperto: puoi rimuoverlo|r"] end
             local detail = state .. " - " .. esc(row.moduleTitle)
@@ -136,12 +144,20 @@ function M.rows()
             local acts = {}
             if not row.moduleEnabled then
                 acts[#acts + 1] = { label = L["Accendi"], width = 64, func = function() Modules:SetEnabled(row.module, true) end }
-            elseif row.enabled then
+            elseif row.enabled and row.removable then
                 acts[#acts + 1] = { label = L["Spegni"], width = 64, func = function()
                     if setAddonEnabled(row.addon, false) then M.pendingReload = true end
                 end }
             end
             rows[#rows + 1] = { text = esc(row.title), detail = detail, actions = acts }
+        end
+    end
+    local mp = Badb.MainPages
+    if mp and mp.addonList then
+        for _, addon in ipairs(mp.addonList()) do
+            if addon.name ~= Badb.name and not declared[addon.name] then
+                rows[#rows + 1] = { text = esc(addon.title), detail = L["Copertura non dichiarata"] }
+            end
         end
     end
     return rows
@@ -151,16 +167,19 @@ M.options = {
     { type = "label", text = function()
         local n = #M:ListRemovable()
         local head = n > 0 and string.format(L["%d addon installati sono coperti per intero da BadbUI: puoi spegnerli e poi rimuoverli dalla cartella AddOns."], n)
-            or L["Nessun addon installato e' ancora da spegnere: BadbUI sta gia' facendo il lavoro."]
+            or L["Nessun addon attivo risulta coperto per intero da BadbUI."]
         if M.pendingReload then head = head .. "\n" .. L["|cff3fa7ffRicarica l'interfaccia per applicare le modifiche.|r"] end
         return head
     end },
-    { type = "list", height = 360, empty = L["Nessun addon coperto risulta installato"], items = M.rows },
+    { type = "list", height = 360, empty = L["Nessun altro addon installato rilevato"], items = M.rows },
     { type = "execute", label = L["Spegni tutti gli addon coperti per intero"],
-      confirm = L["Spegnere tutti gli addon coperti per intero? Servira' un /reload."],
+      disabled = function() return #M:ListRemovable() == 0 end,
       func = function()
-          local done = M:DisableCovered()
-          Logger:Info(L["Addon spenti: %s"], #done > 0 and table.concat(done, ", ") or L["nessuno"])
+          Badb.ConfigUI:Confirm(L["Spegnere tutti gli addon coperti per intero? Servira' un /reload."], function()
+              local done = M:DisableCovered()
+              Logger:Info(L["Addon spenti: %s"], #done > 0 and table.concat(done, ", ") or L["nessuno"])
+              Badb.ConfigUI:RefreshPage("mod:Suite")
+          end)
       end },
     { type = "execute", label = L["Ricarica l'interfaccia (/reload)"], func = function() ReloadUI() end },
 }

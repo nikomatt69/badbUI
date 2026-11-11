@@ -83,13 +83,13 @@ function API:RegisterPlugin(def)
         local ok, m = pcall(Modules.New, Modules, name, info)
         if not ok then return nil, tostring(m) end
         plugin.module = name
-        if started then
-            -- Registrazione dopo il login (addon caricato su richiesta): stesso ciclo di vita dei moduli interni.
+        if Badb.DB.sv then
+            -- Un addon dipendente può registrarsi tra ADDON_LOADED di BadbUI e PLAYER_LOGIN.
             if type(m.OnInitialize) == "function" then
                 local okInit, err = pcall(m.OnInitialize, m)
                 if not okInit then Logger:Error("%s:OnInitialize - %s", name, tostring(err)) end
             end
-            if Badb.DB:Get(name, "enabled") then Modules:Enable(name) end
+            if started and Badb.DB:Get(name, "enabled") then Modules:Enable(name) end
         end
     end
 
