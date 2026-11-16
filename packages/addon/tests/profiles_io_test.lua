@@ -395,4 +395,22 @@ T["slash: /badb import e /badb io aprono la pagina"] = function()
     eq(UI.State().page, "io")
 end
 
+T["Initialize: i dati salvati del modulo Chatbot rimosso vengono eliminati"] = function()
+    local DB = BadbUI.DB
+    local sv = BadbUIDB
+    sv.chatbot, sv.global.chatbot = { old = true }, { old = true }
+    sv.profiles.Default.chatbot = { old = true }
+    sv.profiles.Default.modules.Chatbot = { enabled = true }
+    sv.profiles.Legacy = { modules = { Chatbot = { enabled = false }, Scaling = { enabled = true } } }
+    sv.profiles.Broken = { modules = "x" }
+    DB:Initialize()
+    eq(sv.chatbot, nil); eq(sv.global.chatbot, nil)
+    eq(sv.profiles.Default.chatbot, nil)
+    eq(sv.profiles.Default.modules.Chatbot, nil)
+    eq(sv.profiles.Legacy.modules.Chatbot, nil)
+    eq(sv.profiles.Legacy.modules.Scaling.enabled, true, "gli altri moduli restano")
+    eq(DB:GetProfileName(), "Default")
+    sv.profiles.Legacy, sv.profiles.Broken = nil, nil
+end
+
 return T

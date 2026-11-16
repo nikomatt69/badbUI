@@ -10,7 +10,7 @@ const MAX_ARCHIVE_BYTES = 12 * 1024 * 1024
 const MAX_EXPANDED_BYTES = 40 * 1024 * 1024
 const VERSION = /^(?:0|[1-9]\d{0,5})\.(?:0|[1-9]\d{0,5})\.(?:0|[1-9]\d{0,5})$/
 const STATUS_FILE = "Data/UpdateStatus.lua"
-const SYNC_FILES = ["Data/GuildSync.lua", "Data/ChatbotSync.lua"]
+const SYNC_FILES = ["Data/GuildSync.lua"]
 const GAME_PROCESS = /^(?:World of Warcraft|Wow(?:Forever|ClassicT?|T)?\.exe)$/i
 
 type Release = { version: string; url: string; bytes: number; sha256: string }

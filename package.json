@@ -13,8 +13,6 @@
     "mobile:dev": "bun run --cwd packages/mobile start",
     "discord:dev": "bun --watch packages/discord/src/index.ts",
     "companion:dev": "bun packages/companion/src/index.ts watch",
-    "chat:dev": "bun packages/wow-chat/src/index.ts",
-    "chat:package": "bun script/package-chat.ts",
     "seed": "bun packages/server/src/seed-cli.ts",
     "typecheck": "bun turbo typecheck",
     "test": "bun turbo test",
@@ -28,7 +26,7 @@
     "cloudflare:deploy": "bun run cloudflare:build && wrangler deploy",
     "cloudflare:test": "bun run cloudflare:build && node --test packages/cloudflare/test/worker.test.mjs",
     "companion:package": "bun script/package-companion.ts",
-    "release:package": "bun run addon:package && bun run guild-addon:package && bun run companion:package && bun run chat:package && bun script/package-release.ts"
+    "release:package": "bun run addon:package && bun run guild-addon:package && bun run companion:package && bun script/package-release.ts"
   },
   "workspaces": {
     "packages": [

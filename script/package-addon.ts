@@ -20,7 +20,6 @@ try {
   if (guild) {
     await Bun.write(join(target, "Data/GuildSync.lua"), "-- Written by the guild companion.\nBadbUI_GuildSync = nil\n")
   } else {
-    await Bun.write(join(target, "Data/ChatbotSync.lua"), "-- Written by the optional local chatbot runtime.\nBadbUI_ChatbotSync = nil\n")
     await Bun.write(join(target, "Data/UpdateStatus.lua"), "-- Written by the BadbUI updater.\n")
   }
   await mkdir(join(root, "dist"), { recursive: true })

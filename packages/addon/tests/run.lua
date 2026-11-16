@@ -26,7 +26,7 @@ local passed, failed = 0, 0
 local function freshEnv()
     -- Ripulisce i globali creati dal caso precedente.
     package.loaded["tests.wow_mock"] = nil
-    for _, k in ipairs({ "BadbUI", "BadbUIDB", "BadbUI_GuildExport", "BadbUI_GuildSync", "BadbUI_ChatbotExport", "BadbUI_ChatbotSync", "MainActionBar", "MultiBarBottomLeft" }) do _G[k] = nil end
+    for _, k in ipairs({ "BadbUI", "BadbUIDB", "BadbUI_GuildExport", "BadbUI_GuildSync", "MainActionBar", "MultiBarBottomLeft" }) do _G[k] = nil end
     local Mock = dofile(root .. "/tests/wow_mock.lua")
     Mock.CreateActionButtons("ActionButton", 12, "ACTIONBUTTON")
     Mock.CreateActionButtons("MultiBarBottomLeftButton", 12, "MULTIACTIONBAR1BUTTON")

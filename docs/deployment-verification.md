@@ -43,8 +43,8 @@ Finché il proprietario non crea l’account e fornisce al companion il codice p
 
 Versione Cloudflare: `43d81cb8-319b-477b-a77d-29d6c74af5c9`.
 
-- Ripubblicati Worker, sito e download: addon 0.3.1, companion 0.3.0 e chatbot 0.3.0. Il catalogo distribuito contiene 6.609 macro.
-- Typecheck riuscito su nove pacchetti; suite Bun di core, server, SDK, companion, Discord e chatbot riuscite. Il test Miniflare del bundle Cloudflare passa, inclusa la persistenza dopo riavvio.
+- Ripubblicati Worker, sito e download: addon 0.3.1 e companion 0.3.0. Il catalogo distribuito contiene 6.609 macro.
+- Typecheck riuscito su nove pacchetti; suite Bun di core, server, SDK, companion e Discord riuscite. Il test Miniflare del bundle Cloudflare passa, inclusa la persistenza dopo riavvio.
 - Verifica HTTP pubblica: home e health 200, disponibilità senza sessione 401. JavaScript e CSS corrispondono esattamente alla build locale; dimensioni e SHA-256 dei sei URL ZIP corrispondono al manifest.
 - `.env`, `.env.production`, `.dev.vars`, `.cloudflare/setup-key.txt`, `.git/config`, `wrangler.jsonc` e i sorgenti server non sono pubblicamente accessibili (404).
 - Gitleaks 8.30.1: nessun segreto rilevato nei 40 commit precedenti, nei 257 file candidati alla pubblicazione, nel bundle Worker, negli asset web e nei contenuti estratti dagli ZIP pubblici. La chiave privata di installazione locale non compare nei file o nei pacchetti controllati.

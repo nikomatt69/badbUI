@@ -17,7 +17,6 @@ dist/
 *.tsbuildinfo
 artifacts/local/
 /.opencode/references/
-/packages/wow-chat/.runtime/
 
 .wrangler/
 .cloudflare/

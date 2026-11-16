@@ -3,7 +3,7 @@
 ## Notes: Modular interface, gameplay tools, profiles, macros and offline guides for WoW Forever.
 ## Author: Nikoemme
 ## Version: 1.2.2
-## SavedVariables: BadbUIDB, BadbUI_ChatbotExport
+## SavedVariables: BadbUIDB
 ## IconTexture: Interface\Icons\INV_Shield_06
 ## Category: Interface Enhancements
 
@@ -182,12 +182,6 @@ Config\ImportExport.lua
 
 # Galleria del design system (dopo Slash: registra /badb gallery e /badb theme)
 UI\Gallery.lua
-
-# nikcli embedded chatbot (in-game interface and character context)
-Data\ChatbotSync.lua
-Modules\ChatbotContext.lua
-Modules\Chatbot.lua
-Config\ChatbotUI.lua
 
 # Offline help (after all module and command registrations)
 Data\Help.lua

@@ -12,12 +12,10 @@ async function addonVersion(path: string) {
 const version = await addonVersion("packages/addon/BadbUI.toc")
 const guildVersion = await addonVersion("packages/guild-addon/BadbUI_Guild.toc")
 const companionVersion = (await Bun.file(join(root, "packages/companion/package.json")).json()).version as string
-const chatVersion = (await Bun.file(join(root, "packages/wow-chat/package.json")).json()).version as string
 const files = [
   { kind: "addon", version, file: `BadbUI-${version}.zip`, latest: "BadbUI-latest.zip" },
   { kind: "guild-addon", version: guildVersion, file: `BadbUI-Guild-${guildVersion}.zip`, latest: "BadbUI-Guild-latest.zip" },
   { kind: "companion", version: companionVersion, file: `Fratelli-Companion-${companionVersion}.zip`, latest: "Fratelli-Companion-latest.zip" },
-  { kind: "chatbot", version: chatVersion, file: `BadbUI-Chatbot-${chatVersion}.zip`, latest: "BadbUI-Chatbot-latest.zip" },
 ]
 const artifacts = []
 for (const { kind, version: artifactVersion, file, latest } of files) {

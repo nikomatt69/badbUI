@@ -27,11 +27,10 @@ The offline manual includes:
 - Class/spec macro browsing, activation, placement, removal and limitations.
 - Context rules, integrations and scripts.
 - Guild snapshots and the companion synchronization cycle.
-- Chatbot setup, providers, quest context and the local runtime cycle.
 - Guides, troubleshooting, recovery and client compatibility.
 - An explanation of every installed module and a live slash-command reference.
 
-Choose a topic, show all topics, or search across the manual. `/badb help macros` opens a topic directly. Stable topic IDs are `start`, `language`, `profiles`, `layout`, `macros`, `contexts`, `scripts`, `guild`, `chatbot`, `guides`, `troubleshooting`, `limits`, `modules`, `commands`, and `all`.
+Choose a topic, show all topics, or search across the manual. `/badb help macros` opens a topic directly. Stable topic IDs are `start`, `language`, `profiles`, `layout`, `macros`, `contexts`, `scripts`, `guild`, `guides`, `troubleshooting`, `limits`, `modules`, `commands`, and `all`.
 
 Settings and guide buttons lead to the corresponding page. Help remains usable when the Guides or Diagnostics modules are disabled. Help content is local; guild synchronization and external links have their own connectivity requirements.
 

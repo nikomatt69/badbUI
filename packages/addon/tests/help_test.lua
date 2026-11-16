@@ -13,7 +13,7 @@ T["manual covers every module and links resolve"] = function()
         if section.guide then assert(B.Guides:Get(section.guide), section.guide) end
         if section.page then assert(B.ConfigUI:ResolveKey(section.page), section.page) end
     end
-    for _, id in ipairs({ "start", "language", "profiles", "layout", "macros", "contexts", "scripts", "chatbot", "guides", "troubleshooting", "limits", "modules", "commands" }) do assert(topics[id], id) end
+    for _, id in ipairs({ "start", "language", "profiles", "layout", "macros", "contexts", "scripts", "guides", "troubleshooting", "limits", "modules", "commands" }) do assert(topics[id], id) end
     assert(not topics.guild)
 end
 T["module descriptions supply localized manual text without a static entry"] = function()

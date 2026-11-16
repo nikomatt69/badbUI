@@ -1903,17 +1903,6 @@ ns.Badb.Localization:RegisterLocale("enUS", {
 })
 
 ns.Badb.Localization:RegisterLocale("enUS", {
-    ["Contenuti"] = "Content",
-    ["Attiva il modulo Chatbot."] = "Enable the Chatbot module.",
-    ["Invia fuori dal combattimento."] = "Send outside combat.",
-    ["Coda piena: attendi il runtime e ricarica l'interfaccia."] = "Queue full: wait for the runtime and reload the interface.",
-    ["Scrivi una domanda (massimo 4000 byte)."] = "Enter a question (4000 bytes maximum).",
-    ["Attendi prima le richieste in coda."] = "Wait for the queued requests to finish first.",
-    ["Apri il chatbot AI con il contesto del PG"] = "Open the AI chatbot with character context",
-    ["Domanda accodata: /reload per inviare, attendi Risposta pronta e poi /reload."] = "Question queued: /reload to send, wait for Reply ready, then /reload.",
-})
-
-ns.Badb.Localization:RegisterLocale("enUS", {
     [" caratteri)"] = " characters)",
     [" (soglia "] = " (threshold ",
     [" (regola "] = " (rule ",

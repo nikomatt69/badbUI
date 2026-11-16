@@ -47,6 +47,18 @@ local function migrate(sv)
     end
 end
 
+-- Dati salvati da un modulo non piu' distribuito: si eliminano al caricamento.
+local function dropRetired(sv)
+    sv.chatbot = nil
+    if type(sv.global) == "table" then sv.global.chatbot = nil end
+    for _, p in pairs(type(sv.profiles) == "table" and sv.profiles or {}) do
+        if type(p) == "table" then
+            p.chatbot = nil
+            if type(p.modules) == "table" then p.modules.Chatbot = nil end
+        end
+    end
+end
+
 function DB:Initialize()
     BadbUIDB = BadbUIDB or {}
     local sv = BadbUIDB
@@ -55,6 +67,7 @@ function DB:Initialize()
     sv.specProfiles = sv.specProfiles or {}
     sv.global = sv.global or {}
     migrate(sv)
+    dropRetired(sv)
     self.sv = sv
     self.char = charKey()
     self:SetProfile(sv.profileKeys[self.char] or "Default", true)
