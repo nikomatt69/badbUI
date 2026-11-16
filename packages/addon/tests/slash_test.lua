@@ -40,7 +40,7 @@ T["comandi base: config apre la finestra, con pagina"] = function()
     eq(BadbUI.Slash:Dispatch(""), true)
     truthy(UI.frame and UI.frame:IsShown(), "finestra aperta")
     UI:Close()
-    BadbUI.Slash:Dispatch("config profili")
+    BadbUI.Slash:Dispatch("config profiles")
     eq(UI.current, "profiles")
     BadbUI.Slash:Dispatch("config")
     eq(UI.frame:IsShown(), true)
@@ -52,9 +52,9 @@ end
 T["comandi base: profile, enable, disable, unlock, debug"] = function(Mock)
     local DB = BadbUI.DB
     BadbUI.Slash:Dispatch("profile")
-    truthy(chatHas(Mock, "Profili: Default (attivo: Default)"))
-    BadbUI.Slash:Dispatch("profile Nuovo")
-    eq(DB:GetProfileName(), "Nuovo")
+    truthy(chatHas(Mock, "Profiles: Default (active: Default)"))
+    BadbUI.Slash:Dispatch("profile New")
+    eq(DB:GetProfileName(), "New")
     BadbUI.Slash:Dispatch("disable Scaling")
     eq(BadbUI.Modules:Get("Hider").enabled, true)
     BadbUI.Slash:Dispatch("disable Hider")
@@ -93,7 +93,7 @@ T["comandi base: setup e undo con guardie"] = function(Mock)
     BadbUI.Wizard, BadbUI.Presets = nil, nil
     eq(BadbUI.Slash:Dispatch("setup"), true)
     eq(BadbUI.Slash:Dispatch("undo"), true)
-    truthy(chatHas(Mock, "non disponibil"))
+    truthy(chatHas(Mock, "not available"))
 end
 
 T["help: elenca comandi base e di modulo"] = function(Mock)
@@ -136,7 +136,7 @@ T["moduli: modulo disattivato segnalato nell'help ma eseguibile"] = function(Moc
     local ran
     newModule("Off", { commands = { fuori = { help = "x", fn = function() ran = true end } } }, false)
     BadbUI.Slash:Dispatch("help")
-    truthy(chatHas(Mock, "modulo disattivato"))
+    truthy(chatHas(Mock, "module disabled"))
     BadbUI.Slash:Dispatch("fuori")
     truthy(ran)
 end
@@ -153,7 +153,7 @@ T["moduli: voci non valide ignorate con un solo avviso"] = function(Mock)
     truthy(map.buono, "voce valida presente")
     eq(map.senzafn, nil); eq(map.stringa, nil); eq(map["nome con spazi"], nil); eq(map["5"], nil, "chiave non stringa ignorata")
     BadbUI.Slash:Resolve(); BadbUI.Slash:Resolve()
-    eq(countChat(Mock, "'senzafn' del modulo Bad non valido"), 1, "avviso una volta sola")
+    eq(countChat(Mock, "'senzafn' of module Bad is invalid"), 1, "avviso una volta sola")
     newModule("Strano", { commands = "non una tabella" })
     noThrow(function() BadbUI.Slash:Resolve() end)
 end
@@ -186,9 +186,9 @@ T["collisioni: vince il primo modulo per ordine di caricamento, con warning"] = 
     local _, _, collisions = BadbUI.Slash:Resolve()
     eq(#collisions, 1)
     eq(collisions[1].winner, "Primo"); eq(collisions[1].loser, "Secondo")
-    truthy(chatHas(Mock, "Comando 'dup' duplicato: vince Primo, ignorato Secondo"))
+    truthy(chatHas(Mock, "Command 'dup' duplicated: Primo wins, Secondo ignored"))
     BadbUI.Slash:Dispatch("dup"); BadbUI.Slash:Dispatch("dup")
-    eq(countChat(Mock, "Comando 'dup' duplicato"), 1, "warning una sola volta")
+    eq(countChat(Mock, "Command 'dup' duplicated"), 1, "warning una sola volta")
     eq(#BadbUI.Slash.lastCollisions, 1)
 end
 
@@ -217,7 +217,7 @@ T["suggerimenti: intendevi X?"] = function(Mock)
     eq(S:Suggest("presset"), "preset", "include i comandi dei moduli")
     local ok, why, sug = S:Dispatch("unlok")
     eq(ok, false); eq(why, "unknown"); eq(sug, "unlock")
-    truthy(chatHas(Mock, "Intendevi 'unlock'?"))
+    truthy(chatHas(Mock, "Did you mean 'unlock'?"))
 end
 
 T["errori: un fn che lancia non rompe la chat"] = function(Mock)
@@ -227,9 +227,9 @@ T["errori: un fn che lancia non rompe la chat"] = function(Mock)
     noThrow(function() ok, why, msg = BadbUI.Slash:Dispatch("boom") end)
     eq(ok, false); eq(why, "error")
     truthy(msg:find("kaboom", 1, true))
-    truthy(chatHas(Mock, "Comando 'boom'"), "Logger:Error in chat")
+    truthy(chatHas(Mock, "Command 'boom'"), "Logger:Error in chat")
     local found
-    for _, l in ipairs(BadbUI.Logger.buffer) do if l:find("ERROR: Comando 'boom'", 1, true) then found = true end end
+    for _, l in ipairs(BadbUI.Logger.buffer) do if l:find("ERROR: Command 'boom'", 1, true) then found = true end end
     truthy(found, "Logger:Error nel buffer")
     noThrow(function() SlashCmdList.BADBUI("nilindex") end)
     -- i comandi successivi funzionano

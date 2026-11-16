@@ -121,7 +121,7 @@ T["ricerca esterna, chiusura e timeout invalidano le risposte pendenti"] = funct
         assert(m:Search("rame"))
         for _, callback in ipairs(c.timers) do callback() end
         eq(m.pending, nil)
-        assert(m.status:find("tempo"))
+        assert(m.status:find("in time"))
     end)
 end
 
@@ -192,7 +192,7 @@ T["metadati in ritardo arricchiscono la rilevazione senza una nuova ricerca"] = 
         Mock.Fire("AUCTION_HOUSE_SHOW")
         c.loading = true
         c:Browse("oggetto", { row(5, 200) })
-        eq(m.results[1].name, "Oggetto #5")
+        eq(m.results[1].name, "Item #5")
         eq(store:GetTooltipQuote(m.scope, 5), nil)
         c.loading = false
         Mock.Fire("ITEM_KEY_ITEM_INFO_RECEIVED", 5)
@@ -261,7 +261,7 @@ T["modulo, pagina e guida disponibili anche senza API del mercato"] = function()
             return
         end
     end
-    error("copertura Auctionator assente")
+    error("copertura Auctionator missing")
 end
 
 return T

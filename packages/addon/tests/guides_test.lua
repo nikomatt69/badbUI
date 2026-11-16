@@ -56,14 +56,14 @@ T["API del contratto presente e Badb.Guides esiste al caricamento"] = function()
 end
 
 T["pack valido: id globali, copie indipendenti, riepiloghi"] = function()
-    local id, info = G():Register(pack("p1", { entry("e1", "Prima"), entry("e2", "Seconda", { tags = { "x" }, zone = "Zona", level = 20 }) }))
+    local id, info = G():Register(pack("p1", { entry("e1", "Prima"), entry("e2", "Seconda", { tags = { "x" }, zone = "Zone", level = 20 }) }))
     eq(id, "p1")
     eq(info.entries, 2)
     eq(info.skipped, 0)
     local e = assert(G():Get("p1:e2"))
     eq(e.id, "p1:e2")
     eq(e.entryId, "e2")
-    eq(e.zone, "Zona")
+    eq(e.zone, "Zone")
     eq(e.level, 20)
     eq(e.confidence, "A", "confidence di default")
     e.body[1].text = "manomesso"
@@ -80,7 +80,7 @@ end
 T["pack e entry invalidi: nil, err e Logger:Warn, mai errori Lua"] = function()
     local g = G()
     local bad = {
-        nil, "stringa", 42, {}, { id = "a:b", title = "t", entries = {} },
+        nil, "string", 42, {}, { id = "a:b", title = "t", entries = {} },
         { id = "ok", title = "t" },                               -- manca entries
         { id = "ok", title = "t", entries = "no" },
         { id = "ok", title = 5, entries = {} },
@@ -128,8 +128,8 @@ T["entry invalide vengono saltate, le altre restano"] = function()
     eq(info.skipped, 7)
     truthy(g:Get("p2:ok1")); truthy(g:Get("p2:ok2"))
     eq(g:Get("p2:video"), nil)
-    truthy(bufferHas("tipo sconosciuto 'video'"), "warning sul tipo di blocco")
-    truthy(bufferHas("id duplicato"), "warning sul duplicato")
+    truthy(bufferHas("unknown type 'video'"), "warning sul tipo di blocco")
+    truthy(bufferHas("duplicate id"), "warning sul duplicato")
     truthy(warnCount() > before)
     eq(g:Get("p2:ok1").title, "Buona", "la prima entry con quell'id resta")
 end
@@ -139,7 +139,7 @@ T["blocchi: tutti i tipi validi, step numerati, errori nei campi"] = function()
     local id = g:Register(pack("blk", { {
         id = "tutti", title = "Tutti i blocchi",
         body = {
-            { type = "h", text = "Titolo" }, { type = "p", text = "Testo" },
+            { type = "h", text = "Titolo" }, { type = "p", text = "Text" },
             { type = "list", items = { "uno", "due" } },
             { type = "step", text = "primo" }, { type = "tip", text = "consiglio" },
             { type = "step", text = "secondo" }, { type = "warn", text = "attenzione" },
@@ -154,7 +154,7 @@ T["blocchi: tutti i tipi validi, step numerati, errori nei campi"] = function()
     -- campi sbagliati
     local bads = {
         { type = "p" }, { type = "p", text = 5 }, { type = "p", text = "   " }, { type = "list" },
-        { type = "list", items = {} }, { type = "list", items = { 1 } }, "stringa", { type = 3 },
+        { type = "list", items = {} }, { type = "list", items = { 1 } }, "string", { type = 3 },
     }
     for i, b in ipairs(bads) do
         local pid, info = g:Register(pack("blk" .. i, { entry("buona", "Buona"), { id = "x", title = "X", body = { b } } }))
@@ -171,7 +171,7 @@ T["limiti: 500 entry per pack, 200 blocchi, 4000 caratteri"] = function()
     many[501] = entry("e501", "Una di troppo")
     local id, err = g:Register(pack("p501", many))
     eq(id, nil)
-    truthy(err:find("troppe entry", 1, true), err)
+    truthy(err:find("too many entries", 1, true), err)
     eq(g:Get("p501:e1"), nil, "nessuna registrazione parziale")
 
     local function withBlocks(n)
@@ -185,13 +185,13 @@ T["limiti: 500 entry per pack, 200 blocchi, 4000 caratteri"] = function()
     eq(info201.skipped, 1, "201 blocchi: entry saltata")
 
     local function withText(n)
-        return { id = "x", title = "Testo", body = { { type = "p", text = string.rep("a", n) } } }
+        return { id = "x", title = "Text", body = { { type = "p", text = string.rep("a", n) } } }
     end
     local _, t4000 = g:Register(pack("t4000", { withText(4000), entry("ok", "ok") }))
     eq(t4000.skipped, 0)
     local _, t4001 = g:Register(pack("t4001", { withText(4001), entry("ok", "ok") }))
     eq(t4001.skipped, 1)
-    local longItem = { id = "x", title = "Lista", body = { { type = "list", items = { string.rep("a", 4001) } } } }
+    local longItem = { id = "x", title = "List", body = { { type = "list", items = { string.rep("a", 4001) } } } }
     local _, tl = g:Register(pack("tl", { longItem, entry("ok", "ok") }))
     eq(tl.skipped, 1, "limite anche sulle voci di lista")
     local longTitle = { id = "x", title = string.rep("t", 201), body = {} }
@@ -323,8 +323,8 @@ T["ricerca: insensibile a maiuscole e accenti"] = function()
     g:Register(pack("ac", {
         entry("a", "Perché i cooldown contano"),
         entry("b", "È tutto qui"),
-        entry("c", "Altro", { body = { { type = "p", text = "Una città piena di perché" } } }),
-        entry("d", "Zona", { zone = "Cittá di Prova" }),
+        entry("c", "Other", { body = { { type = "p", text = "Una città piena di perché" } } }),
+        entry("d", "Zone", { zone = "Cittá di Prova" }),
     }))
     eq(ids(g:Search("perche", { pack = "ac" })), "ac:a,ac:c")
     eq(ids(g:Search("PERCHÉ", { pack = "ac" })), "ac:a,ac:c")
@@ -413,7 +413,7 @@ T["segnalibri: toggle, persistenza nel DB globale, ordine"] = function()
     g:Register(pack("bm", { entry("b", "Bravo"), entry("a", "Alfa") }))
     truthy(g:IsBookmarked("bm:b"))
     -- non dipende dal profilo
-    BadbUI.DB:SetProfile("Altro")
+    BadbUI.DB:SetProfile("Other")
     truthy(g:IsBookmarked("bm:b"), "per account, non per profilo")
 end
 
@@ -443,7 +443,7 @@ T["progresso: step, clamp, persistenza, pulizia"] = function()
     eq(select(2, g:SetStep("pr:s", 2, true)), 1)
     eq(select(2, g:SetStep("pr:s", 3)), 2, "toggle")
     eq(g:GetStepsDone("pr:s")[2], true)
-    eq(g:SetStep("pr:s", 4, true), nil, "step inesistente")
+    eq(g:SetStep("pr:s", 4, true), nil, "step does not exist")
     eq(g:SetStep("pr:s", 0, true), nil)
     eq(g:SetStep("pr:s", 1.5, true), nil)
     g:SetStep("pr:s", 2, false); g:SetStep("pr:s", 3, false)
@@ -473,8 +473,8 @@ T["dati salvati corrotti: tollerati e riparati"] = function()
     -- voci con valori sbagliati
     BadbUIDB.global.guides = {
         bookmarks = { ["cr:s"] = 1, [5] = true, ["nope:x"] = true, ["cr:s2"] = true },
-        progress = { ["cr:s"] = { done = { [1] = true, [99] = true, [0] = true, x = true, [2] = "si" } },
-            ["nope:x"] = { done = { [1] = true } }, ["cr:bad"] = "stringa" },
+        progress = { ["cr:s"] = { done = { [1] = true, [99] = true, [0] = true, x = true, [2] = "yes" } },
+            ["nope:x"] = { done = { [1] = true } }, ["cr:bad"] = "string" },
         lastOpened = "nope:x", recent = { "nope:x", 7, "cr:s" },
     }
     eq(#g:GetBookmarks(), 0, "valore non booleano ignorato")
@@ -537,7 +537,7 @@ T["auto-suggest: un solo avviso per zona, mai finestre"] = function(Mock)
     Mock.Fire("PLAYER_ENTERING_WORLD")
     eq(#toasts, 1, "avviso al primo ingresso")
     truthy(toasts[1].text:find("Guida al Tempio", 1, true), toasts[1].text)
-    truthy(toasts[1].text:find("altre 1", 1, true), "indica le altre guide")
+    truthy(toasts[1].text:find("and 1 more", 1, true), "indica le altre guide")
     Mock.Fire("ZONE_CHANGED_NEW_AREA")
     Mock.Fire("PLAYER_ENTERING_WORLD")
     eq(#toasts, 1, "non si ripete per la stessa zona")
@@ -598,7 +598,7 @@ T["auto-suggest: opzione, instance info, API assenti o secret, fallback sul Logg
     local before = #Mock.chat
     Mock.Fire("PLAYER_ENTERING_WORLD")
     eq(#Mock.chat, before + 1, "fallback sul Logger")
-    truthy(Mock.chat[#Mock.chat]:find("Guide disponibili per Zona Opt", 1, true))
+    truthy(Mock.chat[#Mock.chat]:find("Guides available for Zona Opt", 1, true))
     -- Toast che lancia errore: si ripiega sul Logger
     BadbUI.ConfigUI.Toast = function() error("toast rotto") end
     g:ResetSuggestions()
@@ -642,7 +642,7 @@ T["pack bundled: validi, senza warning, almeno 8 entry vere"] = function()
         if e.confidence ~= "A" then
             local flagged = false
             for _, b in ipairs(e.body) do
-                if b.type == "warn" and b.text:lower():find("da verificare in gioco", 1, true) then flagged = true end
+                if b.type == "warn" and b.text:lower():find("to be verified in game", 1, true) then flagged = true end
             end
             truthy(flagged, s.id .. ": confidenza " .. e.confidence .. " senza avviso 'da verificare in gioco'")
         end
@@ -667,12 +667,12 @@ T["contenuto bundled: coerente con i fatti di Forever (nessuna arena, 4 BG, raid
         return table.concat(out, "\n")
     end
     local pvp = alltext("forever-pvp")
-    for _, needle in ipairs({ "Warsong Gulch", "Arathi Basin", "Alterac Valley", "Darkspear Islands", "10 contro 10", "15 contro 15", "40 contro 40" }) do
+    for _, needle in ipairs({ "Warsong Gulch", "Arathi Basin", "Alterac Valley", "Darkspear Islands", "10 versus 10", "15 versus 15", "40 versus 40" }) do
         truthy(pvp:find(needle, 1, true), "forever-pvp: manca " .. needle)
     end
-    truthy(pvp:find("non ci sono arene", 1, true), "dichiara che non ci sono arene")
+    truthy(pvp:find("there are no arenas", 1, true), "dichiara che non ci sono arene")
     local pve = alltext("forever-pve")
-    for _, needle in ipairs({ "Barrow Deeps", "Hyjal Summit", "Onyxia's Lair", "9 dicembre 2026", "10 giocatori", "20 giocatori", "40 giocatori" }) do
+    for _, needle in ipairs({ "Barrow Deeps", "Hyjal Summit", "Onyxia's Lair", "December 9, 2026", "10-player", "20-player", "40-player" }) do
         truthy(pve:find(needle, 1, true), "forever-pve: manca " .. needle)
     end
     local ui = alltext("forever-ui-nativa")
@@ -681,7 +681,7 @@ T["contenuto bundled: coerente con i fatti di Forever (nessuna arena, 4 BG, raid
     end
     local tpl = alltext("template-classe")
     truthy(tpl:find("/badb role", 1, true), "cita /badb role")
-    truthy(tpl:find("Non esistono template per le arene", 1, true))
+    truthy(tpl:find("There are no arena templates", 1, true))
     local conf = alltext("conflitti-addon")
     for _, needle in ipairs({ "ClassicUI Forever", "Classic UI Forever Reframed", "Forevermore Classic UI", "Forever Unit Frames", "EllesmereUI", "ElvUI", "Clique" }) do
         truthy(conf:find(needle, 1, true), "conflitti-addon: manca " .. needle)
@@ -692,7 +692,7 @@ T["contenuto bundled: coerente con i fatti di Forever (nessuna arena, 4 BG, raid
     for _, s in ipairs(g:ListEntries({ pack = "starter" })) do
         local t = alltext(s.entryId):lower()
         for line in (t .. "\n"):gmatch("(.-)\n") do
-            if line:find("arena", 1, true) and not line:find("arene", 1, true) and not line:find("arena e", 1, true) then
+            if line:find("arena", 1, true) and not line:find("no arena", 1, true) and not line:find("arenas and rated pvp may come", 1, true) then
                 error(s.id .. ": menziona le arene in modo non negativo: " .. line)
             end
         end
@@ -703,14 +703,14 @@ end
 
 T["ricerca sul contenuto bundled"] = function()
     local g = G()
-    local res = g:Search("profili")
+    local res = g:Search("profiles")
     truthy(#res > 0)
     truthy(res[1].id == "starter:profili-preset" or res[2].id == "starter:profili-preset", "titolo in cima: " .. ids(res))
-    eq(g:Search("profili preset")[1].id, "starter:profili-preset", "multi-termine + frase nel titolo")
-    eq(g:Search("risoluzione problemi")[1].id, "starter:problemi-comuni")
+    eq(g:Search("profiles presets")[1].id, "starter:profili-preset", "multi-termine + frase nel titolo")
+    eq(g:Search("troubleshooting")[1].id, "starter:problemi-comuni")
     truthy(#g:Search("perche") >= 0)
-    eq(g:Search("ESPORTARE import")[1].id, "starter:import-export", "accenti/maiuscole/multi-termine")
-    local conf = g:Search("conflitti", { category = "BadbUI" })
+    eq(g:Search("EXPORT import")[1].id, "starter:import-export", "accenti/maiuscole/multi-termine")
+    local conf = g:Search("conflicts", { category = "BadbUI" })
     eq(conf[1].id, "starter:conflitti-addon")
 end
 
@@ -757,8 +757,8 @@ T["viewer: costruzione lazy, ESC, apertura e rendering"] = function(Mock)
     end
     -- Open() senza argomenti riprende dall'ultima guida; OpenLibrary mostra la ricerca
     eq(g:Open(), true)
-    eq(g:OpenLibrary("profili"), true)
-    eq(g.Viewer.query, "profili")
+    eq(g:OpenLibrary("profiles"), true)
+    eq(g.Viewer.query, "profiles")
     truthy(#g.Viewer.rows > 1)
     g:Close()
     falsy(f:IsShown())
@@ -845,7 +845,7 @@ T["viewer: step, progresso e segnalibro dal lettore"] = function()
     local c, total = g:GetProgress("starter:primo-avvio")
     eq(c, 1)
     truthy(total >= 5)
-    eq(V.progressFS:GetText(), string.format("Progresso: 1/%d passi", total))
+    eq(V.progressFS:GetText(), string.format("Progress: 1/%d steps", total))
     row.check.GetChecked = function() return false end
     row.check.__scripts.OnClick(row.check)
     eq(g:GetProgress("starter:primo-avvio"), 0)
@@ -861,9 +861,9 @@ T["viewer: step, progresso e segnalibro dal lettore"] = function()
     falsy(g:IsBookmarked("starter:primo-avvio"))
     -- la confidenza compare nell'intestazione
     g:Open("starter:forever-pvp")
-    truthy(V.metaFS:GetText():find("Confidenza B", 1, true), V.metaFS:GetText())
+    truthy(V.metaFS:GetText():find("Confidence B", 1, true), V.metaFS:GetText())
     g:Open("starter:primo-avvio")
-    truthy(V.metaFS:GetText():find("Confidenza A", 1, true))
+    truthy(V.metaFS:GetText():find("Confidence A", 1, true))
 end
 
 T["viewer: un errore nella UI non esce mai verso il chiamante"] = function()
@@ -886,19 +886,19 @@ T["comando /badb guide: open, search, bookmarks"] = function(Mock)
     local cmd = BadbUI.Modules:Get("Guides").commands.guide
     truthy(cmd and type(cmd.fn) == "function" and cmd.help)
     local n = #Mock.chat
-    cmd.fn("search profili")
+    cmd.fn("search profiles")
     truthy(#Mock.chat > n, "stampa i risultati")
     local found = false
-    for i = n + 1, #Mock.chat do if Mock.chat[i]:find("Profili e preset", 1, true) then found = true end end
+    for i = n + 1, #Mock.chat do if Mock.chat[i]:find("Profiles and presets", 1, true) then found = true end end
     truthy(found, "risultato pertinente")
     truthy(g.Viewer.frame and g.Viewer.frame:IsShown(), "apre la libreria con la ricerca")
-    eq(g.Viewer.query, "profili")
+    eq(g.Viewer.query, "profiles")
     n = #Mock.chat
     cmd.fn("search qwertyuiop")
-    truthy(Mock.chat[n + 1]:find("Nessuna guida", 1, true))
+    truthy(Mock.chat[n + 1]:find("No guide", 1, true))
     cmd.fn("search")
     cmd.fn("bookmarks")
-    truthy(Mock.chat[#Mock.chat]:find("Nessun segnalibro", 1, true))
+    truthy(Mock.chat[#Mock.chat]:find("No bookmarks", 1, true))
     g:Bookmark("starter:usare-guide", true)
     cmd.fn("bookmarks")
     truthy(Mock.chat[#Mock.chat]:find("usare-guide", 1, true))
@@ -919,14 +919,14 @@ end
 T["pagina ConfigUI: ricerca rapida, recenti, segnalibri, apri libreria"] = function()
     local g = G()
     local mod = BadbUI.Modules:Get("Guides")
-    truthy(mod.page and mod.page.title and mod.page.category == "Contenuti" and type(mod.page.build) == "function")
+    truthy(mod.page and mod.page.title and mod.page.category == "Content" and type(mod.page.build) == "function")
     eq(mod.page.refresh(), nil, "refresh prima della build: nessun errore")
     local parent = CreateFrame("Frame", nil, UIParent)
     local h = mod.page.build(parent, { UI = BadbUI.ConfigUI, W = BadbUI.Widgets })
     eq(type(h), "number")
     truthy(h > 100)
     local page = mod._page
-    page.search:SetText("conflitti")
+    page.search:SetText("conflicts")
     page.search.__scripts.OnEnterPressed(page.search)
     eq(page.results[1].id, "starter:conflitti-addon")
     eq(page.rResults[1].id, "starter:conflitti-addon")
@@ -980,7 +980,7 @@ T["disattivazione: viewer nascosto, nessun suggerimento, Open rifiutato, riattiv
     falsy(f:IsShown())
     -- i dati restano consultabili e i segnalibri salvati
     truthy(g:Get("starter:primo-avvio"))
-    eq(#g:Search("profili") > 0, true)
+    eq(#g:Search("profiles") > 0, true)
     BadbUI.Modules:SetEnabled("Guides", true)
     eq(g:Open("starter:primo-avvio"), true)
     Mock.Fire("PLAYER_ENTERING_WORLD")

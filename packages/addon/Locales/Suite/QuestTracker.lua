@@ -21,7 +21,6 @@ ns.Badb.Localization:RegisterLocale("enUS", {
     ["Apri monitor obiettivi"] = "Open Objective Tracker",
     ["Segui automaticamente le nuove missioni accettate"] = "Automatically track newly accepted quests",
     ["Guida al monitor obiettivi"] = "Objective Tracker guide",
-    ["quests - apri il monitor obiettivi delle missioni"] = "quests - open the quest objective tracker",
     ["questtracker - apri il monitor obiettivi delle missioni"] = "questtracker - open the quest objective tracker",
     ["Apri Gioco > Monitor obiettivi in BadbUI oppure digita /badb questtracker."] = "Open Gameplay > Objective Tracker in BadbUI or type /badb questtracker.",
     ["Le missioni accettate vengono seguite automaticamente se l'opzione è attiva. Dal monitor puoi smettere di seguire una missione."] = "Accepted quests are tracked automatically when the option is on. You can stop tracking a quest from the tracker.",

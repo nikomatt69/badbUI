@@ -44,7 +44,7 @@ T["il modulo e' registrato e crea il backup automatico al login"] = function()
     local list = B:List()
     eq(#list, 1, "un backup al primo login")
     eq(list[1].kind, "auto", "kind auto")
-    truthy(B.page and B.page.category == "Gestione", "pagina Gestione")
+    truthy(B.page and B.page.category == "Management", "pagina Gestione")
     truthy(B.commands and B.commands.backup, "comando backup")
 end
 
@@ -130,20 +130,20 @@ T["limite dimensione: rifiuto chiaro, nulla eliminato"] = function(Mock)
     truthy(id1, "primo entra")
     local id2, err = B:Create("due", "manual")
     eq(id2, nil, "secondo rifiutato")
-    truthy(tostring(err):find("spazio insufficiente"), "messaggio chiaro: " .. tostring(err))
+    truthy(tostring(err):find("not enough space"), "messaggio chiaro: " .. tostring(err))
     eq(#B:List(), 1, "il manual esistente e' intatto")
     -- un backup auto, invece, viene ruotato per fare spazio a un altro
     B:Delete(id1)
     local a1 = B:Create("auto", "auto")
     truthy(a1)
-    local m = B:Create("manuale", "manual")
+    local m = B:Create("manual", "manual")
     truthy(m, "il manual prende il posto dell'auto")
     local list = B:List()
     eq(#list, 1); eq(list[1].kind, "manual")
     -- singolo snapshot oltre il limite
     BadbUI.DB.profile.modules.Hider.blob = string.rep("y", 70 * 1024)
     local id3, err3 = B:Create("enorme", "manual")
-    eq(id3, nil); truthy(tostring(err3):find("troppo grande"), tostring(err3))
+    eq(id3, nil); truthy(tostring(err3):find("too large"), tostring(err3))
 end
 
 T["Restore: ripristina, crea pre-restore, evento e profilo"] = function(Mock)
@@ -154,7 +154,7 @@ T["Restore: ripristina, crea pre-restore, evento e profilo"] = function(Mock)
     DB.sv.profiles.Altro = { modules = { Hider = { marker = "altro" } }, frames = {} }
     local id = B:Create("base", "manual")
     -- modifiche successive
-    DB.profile.modules.Hider.marker = "modificato"
+    DB.profile.modules.Hider.marker = "modified"
     DB.sv.global.userNote = "cambiata"
     DB.sv.profiles.Altro = nil
     DB.sv.profiles.Nuovo = { modules = {}, frames = {} }
@@ -178,7 +178,7 @@ T["Restore: ripristina, crea pre-restore, evento e profilo"] = function(Mock)
     local pre
     for _, e in ipairs(B:List()) do if e.kind == "pre-restore" then pre = e.id end end
     eq(B:Restore(pre), true)
-    eq(DB.profile.modules.Hider.marker, "modificato", "annullato il ripristino")
+    eq(DB.profile.modules.Hider.marker, "modified", "annullato il ripristino")
 end
 
 T["Restore: profilo del personaggio da profileKeys, fallback Default"] = function(Mock)
@@ -240,7 +240,7 @@ T["Restore atomico: snapshot corrotto lascia il DB intatto"] = function(Mock)
         corrupt(entry.data)
         local ok, err = B:Restore(id)
         eq(ok, false, "caso " .. i .. " doveva fallire")
-        truthy(tostring(err):find("corrotto"), "errore chiaro (caso " .. i .. "): " .. tostring(err))
+        truthy(tostring(err):find("corrupted"), "errore chiaro (caso " .. i .. "): " .. tostring(err))
         eq(#B:List(), 1, "nessun pre-restore creato (caso " .. i .. ")")
         eq(DB.profile.modules.Hider.marker, "vivo", "DB intatto (caso " .. i .. ")")
         eq(BadbUIDB.global.userNote, before.global.userNote)
@@ -350,7 +350,7 @@ T["Import malevolo: nessun errore, nessuna modifica"] = function(Mock)
     rejected(good:sub(1, #good - 3), "checksum rotto")
     rejected(good:gsub("^BADB1:", "BADB1:AAAA"), "corpo alterato")
     rejected(S:Export("profile", { modules = {} }), "kind sbagliato")
-    rejected(S:Export("backup", "stringa"), "payload non tabella")
+    rejected(S:Export("backup", "string"), "payload non tabella")
     rejected(S:Export("backup", { snapshot = "x" }), "snapshot non tabella")
     rejected(S:Export("backup", { snapshot = { schema = 1, profiles = "x", profileKeys = {}, specProfiles = {}, global = {} } }), "profiles non tabella")
     rejected(S:Export("backup", { snapshot = { schema = 99, profiles = {}, profileKeys = {}, specProfiles = {}, global = {} } }), "schema futuro")
@@ -396,7 +396,7 @@ T["backup automatico: orologio simulato, soglia e opzioni"] = function(Mock)
     eq(M:AutoCheck(), nil, "opzione disattiva")
     -- un manual recente non sostituisce l'auto
     M:Set("autoOnLogin", true)
-    B:Create("manuale", "manual")
+    B:Create("manual", "manual")
     truthy(M:AutoCheck(), "il manual non conta come auto")
 end
 
@@ -484,15 +484,15 @@ T["pagina: crea, ripristina, esporta, importa, elimina"] = function(Mock)
     truthy(type(h) == "number" and h > 0, "altezza ritornata")
     local st = M._page
     st.btnCreate.__scripts.OnClick()
-    eq(#B:List(), 1, "Crea")
+    eq(#B:List(), 1, "Create")
     truthy(st.rows[1], "riga creata")
     BadbUI.DB.profile.modules.Hider.marker = "pagina"
     st.rows[1].restore.__scripts.OnClick()
-    truthy(log.confirm and log.confirm:find("Ripristinare"), "chiede conferma")
+    truthy(log.confirm and log.confirm:find("Restore"), "chiede conferma")
     eq(#B:List(), 2, "ripristino eseguito (pre-restore creato)")
     st.rows[1].export.__scripts.OnClick()
     local box = log.boxes[#log.boxes]
-    eq(box[1], "Esporta backup"); truthy(box[2]:match("^BADB1:"))
+    eq(box[1], "Export backup"); truthy(box[2]:match("^BADB1:"))
     st.btnImport.__scripts.OnClick()
     local ib = log.boxes[#log.boxes]
     eq(type(ib[3]), "function", "import con callback")
@@ -501,7 +501,7 @@ T["pagina: crea, ripristina, esporta, importa, elimina"] = function(Mock)
     ib[3]("spazzatura")
     eq(#B:List(), 3, "import fallito non aggiunge")
     st.rows[1].delete.__scripts.OnClick()
-    eq(#B:List(), 2, "Elimina")
+    eq(#B:List(), 2, "Delete")
     eq(st.rows[3].text:IsShown(), false, "righe in eccesso nascoste")
     M.page.refresh()
     -- senza UI: nessun errore

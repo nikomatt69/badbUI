@@ -43,7 +43,7 @@ T["Salva: nome non valido non salva e segnala l'errore"] = function()
     fill("a/b", "x=1")
     eq(E():Save(), false)
     eq(S():Record("a/b"), nil)
-    truthy(E().status:GetText():find("nome non valido"), "messaggio d'errore mancante")
+    truthy(E().status:GetText():find("invalid name"), "messaggio d'errore mancante")
 end
 
 T["rinominare sposta lo script (il vecchio sparisce)"] = function()
@@ -85,7 +85,7 @@ T["Esporta mostra la stringa, Importa crea uno script spento"] = function()
     truthy(S():Record("exp 2"), "import non creato")
     eq(S():Record("exp 2").enabled, false)
     E().dialog.onOk("spazzatura")
-    truthy(E().status:GetText():find("Import fallito"), "errore import non mostrato")
+    truthy(E().status:GetText():find("Import failed"), "errore import non mostrato")
 end
 
 T["comando /badb script edit apre l'editor"] = function()

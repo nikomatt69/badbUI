@@ -74,7 +74,7 @@ T["Update: barra XP con valore, colore ElvUI, riposo e testo"] = function(Mock)
     truthy(xp:IsShown() and xp.rested:IsShown())
     truthy(xp.text:GetText():find("1,500 / 6,000", 1, true), "testo valore")
     truthy(xp.text:GetText():find("25%%"), "percentuale")
-    truthy(xp.text:GetText():find("riposo 800", 1, true))
+    truthy(xp.text:GetText():find("rested 800", 1, true))
 end
 
 T["Update: al livello massimo l'XP e' nascosta e la reputazione scende"] = function(Mock)

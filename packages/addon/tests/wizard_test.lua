@@ -58,7 +58,7 @@ local function fakePresets(env)
     function P:Build(c) return { title = tostring(c.content) .. " " .. tostring(c.role), modules = {} } end
     function P:Describe() return { "riga uno", "riga due" } end
     function P:RecommendTemplate()
-        if not self.recommendKey then return nil, "nessuna" end
+        if not self.recommendKey then return nil, "none" end
         return self.recommendKey, { role = "healer", variant = self.recommendVariant }, "test"
     end
     function P:Recommend() return { content = "dungeon", role = "healer", pixelPerfect = true, hideClutter = false, friendlyPlates = false } end
@@ -86,7 +86,7 @@ local function fakePresets(env)
     function P:Undo()
         log[#log + 1] = "undo"
         local prev = table.remove(self.stack)
-        if not prev then return false, "niente da annullare" end
+        if not prev then return false, "nothing to undo" end
         BadbUI.DB:SetProfile(prev)
         return true
     end
@@ -124,7 +124,7 @@ local function fakeContexts(env, opts)
     function C:RemoveRule(id)
         env.log[#env.log + 1] = "removerule:" .. tostring(id)
         for i, r in ipairs(self.rules) do if r.id == id then table.remove(self.rules, i); return true end end
-        return false, "regola inesistente"
+        return false, "rule does not exist"
     end
     if not opts.noClassRules then
         function C:AddRulesForClass(class, o)
@@ -182,7 +182,11 @@ local function setup(Mock, opts)
     end
     -- Cattura Compat.After per controllare il ritardo dell'avvio automatico.
     env.timers = {}
-    Badb.Compat.After = function(delay, fn) env.timers[#env.timers + 1] = { delay = delay, fn = fn } end
+    -- Altri moduli pianificano aggiornamenti sotto il secondo: qui conta solo l'avvio del wizard.
+    Badb.Compat.After = function(delay, fn)
+        if type(delay) == "number" and delay < 1 then return end
+        env.timers[#env.timers + 1] = { delay = delay, fn = fn }
+    end
     Mock.Methods.Disable = Mock.Methods.Disable or function() end
     return env
 end
@@ -295,7 +299,7 @@ T["passi saltati se mancano i moduli opzionali"] = function(Mock)
     BadbUI.Presets = fakePresets(env)
     BadbUI.Player = nil
     eq(keys(env.W:GetSteps()), "welcome,role,content,details,summary")
-    -- "Scelta generica" salta il passo template e mostra "content"
+    -- "Generic choice" salta il passo template e mostra "content"
     BadbUI.Player = fakePlayer({ env = env })
     env.W.choices.useTemplate = false
     eq(keys(env.W:GetSteps()), "welcome,role,template,content,details,summary")
@@ -374,7 +378,7 @@ T["ruolo: conferma richiesta se la confidenza non e' alta"] = function(Mock)
     eq(ri.needsConfirm, true)
     truthy(ri.allowed.tank and ri.allowed.dps and ri.allowed.healer)
     W:Start(true)
-    -- "Applica consigliato" non scavalca la conferma del ruolo
+    -- "Apply recommended" non scavalca la conferma del ruolo
     local ok = W:ApplyRecommended()
     eq(ok, false)
     eq(W:GetState().step, "role", "porta al passo ruolo")
@@ -437,7 +441,7 @@ T["esecuzione completa: Entrambi (PvE raid 20 + PvP) con regole di classe"] = fu
     eq(#rec.errors, 0)
     eq(done, 1, "BADB_WIZARD_DONE")
     eq(rec.backup, "bk1")
-    local iBackup = env.index("backup:Prima del wizard:pre-preset")
+    local iBackup = env.index("backup:Before the wizard:pre-preset")
     local iPvp = env.index("apply:priest-pvp-av")
     local iPve = env.index("apply:priest-pve-raid:20:healer")
     local iRules = env.index("classrules:PRIEST:true:true")
@@ -505,7 +509,7 @@ T["fallimento parziale: continua, riepiloga gli errori, completa"] = function(Mo
     truthy(W:CanUndo(), "annullabile")
     local lines = W:FormatResult(rec)
     local joined = table.concat(lines, "\n")
-    truthy(joined:find("Errore"), "il riepilogo cita l'errore")
+    truthy(joined:find("Error"), "il riepilogo cita l'errore")
 end
 
 T["azione che genera un errore Lua: isolata"] = function(Mock)
@@ -654,7 +658,7 @@ T["stato corrotto in sv.global.wizard"] = function(Mock)
     cyc.answers, cyc.chars, cyc.step = cyc, cyc, cyc
     local samples = {
         "spazzatura", 42, true, {},
-        { completed = "si", step = 7, version = "x", answers = { role = {}, hide = 1, templateMode = "arena", ruleRaid = "no",
+        { completed = "yes", step = 7, version = "x", answers = { role = {}, hide = 1, templateMode = "arena", ruleRaid = "no",
             integrations = { x = "y", [1] = true } }, chars = "a", lastProfile = 5 },
         { completed = true, answers = "x", chars = { [1] = true, a = 5 } },
         cyc,
@@ -670,7 +674,7 @@ T["stato corrotto in sv.global.wizard"] = function(Mock)
         eq(type(DB.sv.global.wizard), "table", "normalizzato " .. i)
         eq(type(DB.sv.global.wizard.answers), "table")
     end
-    DB.sv.global.wizard = { completed = "si" }
+    DB.sv.global.wizard = { completed = "yes" }
     eq(W:IsCompleted(), false, "completed non booleano = non completato")
     DB.sv.global.wizard = { answers = { role = string.rep("x", 100000) } }
     W:GetState()
@@ -704,7 +708,7 @@ T["UI: percorre tutti i passi e applica; il riepilogo ha 'Annulla tutto'"] = fun
         click(f.next)
     end
     eq(W:GetState().step, "summary")
-    eq(f.next.text.__text, "Applica", "ultimo passo")
+    eq(f.next.text.__text, "Apply", "ultimo passo")
     click(f.next)
     eq(f.result.__shown, true, "riepilogo finale")
     eq(f.result.undo.__shown, true, "Annulla tutto disponibile")
@@ -712,7 +716,7 @@ T["UI: percorre tutti i passi e applica; il riepilogo ha 'Annulla tutto'"] = fun
     click(f.result.undo)
     truthy(env.DB:GetProfileName() ~= before)
     eq(f.result.undo.__shown, false)
-    eq(f.result.title.__text, "Modifiche annullate")
+    eq(f.result.title.__text, "Changes undone")
     click(f.result.close)
     eq(f.__shown, false)
 end
@@ -830,7 +834,7 @@ T["modulo Wizard: comando wizard, pagina e opzioni"] = function(Mock)
     truthy(m and m.enabled, "modulo registrato e attivo")
     truthy(m.commands.wizardreset and m.commands.wizardreset.help and m.commands.wizardreset.fn)
     eq(m.commands.wizard, nil, "wizard/setup sono comandi base di Slash: nessuna collisione")
-    eq(m.page.title, "Setup guidato")
+    eq(m.page.title, "Guided setup")
     local h = m.page.build(CreateFrame("Frame"), {})
     eq(type(h), "number")
     m.page.refresh()

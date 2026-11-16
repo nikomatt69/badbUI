@@ -184,7 +184,7 @@ end
 
 local function defaultUnits()
     Env.units.player = { name = "Niko", health = 800, healthMax = 1000, power = 300, powerMax = 500,
-        level = 60, isPlayer = true, class = "MAGE", className = "Mago" }
+        level = 60, isPlayer = true, class = "MAGE", className = "Mage" }
     Env.units.target = { name = "Lupo", health = 250, healthMax = 1000, level = 58, reaction = 2 }
 end
 
@@ -327,10 +327,10 @@ case("unita' morta, spirito e offline mostrano lo stato", function(Mock)
     local UF = start(Mock)
     Env.units.target = { name = "X", health = 0, healthMax = 1000, dead = true }
     fire("PLAYER_TARGET_CHANGED")
-    eq(UF.frames.target.HealthText:GetText(), "Morto", "morto")
+    eq(UF.frames.target.HealthText:GetText(), "Dead", "morto")
     Env.units.target = { name = "X", health = 1, healthMax = 1000, ghost = true }
     fire("PLAYER_TARGET_CHANGED")
-    eq(UF.frames.target.HealthText:GetText(), "Spirito", "spirito")
+    eq(UF.frames.target.HealthText:GetText(), "Ghost", "spirito")
     Env.units.target = { name = "X", health = 500, healthMax = 1000, connected = false, isPlayer = true }
     fire("PLAYER_TARGET_CHANGED")
     eq(UF.frames.target.HealthText:GetText(), "Offline", "offline")
@@ -420,7 +420,7 @@ case("castbar: colore interrompibile / non interrompibile", function(Mock)
     fire("UNIT_SPELLCAST_NOT_INTERRUPTIBLE", "target")
     eq(cast.__bar[1], locked, "grigio")
     fire("UNIT_SPELLCAST_INTERRUPTIBLE", "target")
-    ok(cast.__bar[1] ~= locked, "accento")
+    ok(cast.__bar[1] ~= locked, "accent")
 end)
 
 case("castbar disattivata: gli eventi di lancio non la mostrano", function(Mock)
@@ -478,7 +478,7 @@ case("combattimento: vita e icona di combattimento si aggiornano (elementi non p
     enterCombat()
     Env.units.player.health = 123
     fire("UNIT_HEALTH", "player")
-    eq(UF.frames.player.Health:GetValue(), 123, "barra")
+    eq(UF.frames.player.Health:GetValue(), 123, "bar")
     ok(UF.frames.player.Combat:IsShown(), "icona combattimento")
     leaveCombat()
     ok(not UF.frames.player.Combat:IsShown(), "icona nascosta")
@@ -501,7 +501,7 @@ case("anteprima: tutti i frame con dati finti, anche il gruppo da soli", functio
     UF:SetPreview(true)
     ok(UF.partyHeader:IsShown(), "gruppo visibile")
     eq(Env.drivers[UF.partyHeader], nil, "driver sospeso")
-    eq(UF.frames.party1.Name:GetText(), "Compagno 1", "nome finto")
+    eq(UF.frames.party1.Name:GetText(), "Party member 1", "nome finto")
     ok(not Env.watch[UF.frames.focus], "watch sospeso")
     UF:SetPreview(false)
     ok(Env.watch[UF.frames.focus], "watch ripristinato")
@@ -598,7 +598,7 @@ case("config malformata (import corrotto): riparata senza errori", function(Mock
     local units = UF:Get("units")
     units.player.width = "enorme"
     units.player.height = 0 / 0
-    units.player.showName = "si"
+    units.player.showName = "yes"
     units.target.width = 99999
     units.focus = "rotto"
     UF:Apply()
@@ -627,7 +627,7 @@ case("cambio profilo verso un profilo con il modulo spento: tutto ripristinato",
     BadbUI.DB:CopyProfile("Default", "Vanilla")
     BadbUI.DB.sv.profiles.Vanilla.modules.UnitFrames.enabled = false
     BadbUI.DB:SetProfile("Vanilla")
-    ok(not UF.enabled, "spento")
+    ok(not UF.enabled, "off")
     eq(PlayerFrame:GetParent(), UIParent, "PlayerFrame ripristinato")
     noErrors()
 end)
@@ -697,14 +697,14 @@ end)
 case("opzioni: il selettore cambia l'unita' modificata senza riapplicare", function(Mock)
     local UF = start(Mock)
     local widthOpt
-    for _, o in ipairs(UF.options) do if o.label == "Larghezza" then widthOpt = o end end
+    for _, o in ipairs(UF.options) do if o.label == "Width" then widthOpt = o end end
     eq(widthOpt.get(), 270, "player")
     UF:Set("editUnit", "focus")
     eq(widthOpt.get(), 190, "focus")
     widthOpt.set(190)
     eq(UF.frames.focus:GetWidth(), 190, "applicato al focus")
     local auraOpt
-    for _, o in ipairs(UF.options) do if o.label == "Aure" and o.type == "toggle" then auraOpt = o end end
+    for _, o in ipairs(UF.options) do if o.label == "Auras" and o.type == "toggle" then auraOpt = o end end
     ok(not auraOpt.hidden(), "aure visibili per il focus")
     UF:Set("editUnit", "player")
     ok(auraOpt.hidden(), "aure nascoste per il giocatore")
@@ -737,7 +737,7 @@ case("icona di classe solo per i giocatori con classe leggibile", function(Mock)
     CLASS_ICON_TCOORDS = { MAGE = { 0.25, 0.5, 0, 0.25 } }
     UF:Set("units.target.showClassIcon", true)
     ok(not UF.frames.target.ClassIcon:IsShown(), "PNG: nessuna icona")
-    Env.units.target = { name = "Mago", health = 1, healthMax = 1, isPlayer = true, class = "MAGE" }
+    Env.units.target = { name = "Mage", health = 1, healthMax = 1, isPlayer = true, class = "MAGE" }
     fire("PLAYER_TARGET_CHANGED")
     ok(UF.frames.target.ClassIcon:IsShown(), "giocatore: icona")
     eq(UF.frames.target.ClassIcon.__texcoord[1], 0.25, "coordinate della classe")

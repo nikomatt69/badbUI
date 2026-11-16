@@ -178,7 +178,7 @@ T["contesto: Badb.Player assente o che fallisce => default"] = case(function(_, 
     end }
     c = env.M:GetCurrent()
     eq(c.role, "none"); eq(c.spec, 0); eq(c.class, ""); eq(c.roleConfidence, "low")
-    BadbUI.Player = { GetSnapshot = function() return "stringa" end }
+    BadbUI.Player = { GetSnapshot = function() return "string" end }
     eq(env.M:GetCurrent().role, "none")
     env.M:AddRule({ profile = "Raid" })
     env.settle()
@@ -210,7 +210,7 @@ T["API mancanti: valori di default, mai errore"] = case(function(Mock, env)
     eq(c.instance, "none"); eq(c.group, "solo"); eq(c.class, ""); eq(c.pvpFlag, false)
     -- API che ritornano tipi sbagliati o secret value
     IsInInstance = function() return Mock, 42 end
-    IsInGroup = function() return "si" end
+    IsInGroup = function() return "yes" end
     UnitGroupRolesAssigned = function() return 7 end
     UnitIsPVP = function() return 1 end
     UnitClass = function() return 1, {} end
@@ -291,7 +291,7 @@ T["regola con profilo inesistente: rotta e mai applicata"] = case(function(_, en
     local broken = M:AddRule({ name = "Rotta", profile = "Fantasma", priority = 100, when = {} })
     local ok = M:AddRule({ name = "Buona", profile = "Raid", priority = 1, when = {} })
     local list = M:ListRules()
-    eq(list[1].broken, true); eq(list[1].brokenReason, "profilo inesistente"); eq(list[2].broken, false)
+    eq(list[1].broken, true); eq(list[1].brokenReason, "profile does not exist"); eq(list[2].broken, false)
     eq(M:Evaluate(), "Raid", "la rotta non vince nonostante la priorita'")
     env.settle()
     eq(env.DB:GetProfileName(), "Raid")
@@ -310,7 +310,7 @@ T["API regole: input errato non lancia errori"] = case(function(_, env)
         local id, err = M:AddRule(r)
         eq(id, nil, label); assert(type(err) == "string", label .. ": messaggio")
     end
-    bad(nil, "nil"); bad("x", "stringa"); bad(5, "numero"); bad({}, "senza profilo")
+    bad(nil, "nil"); bad("x", "string"); bad(5, "numero"); bad({}, "senza profilo")
     bad({ profile = 3 }, "profilo numerico"); bad({ profile = "" }, "profilo vuoto")
     bad({ profile = "Raid", when = "x" }, "when stringa")
     bad({ profile = "Raid", when = { instance = "luna" } }, "istanza sconosciuta")
@@ -319,7 +319,7 @@ T["API regole: input errato non lancia errori"] = case(function(_, env)
     bad({ profile = "Raid", when = { spec = 1.5 } }, "spec frazionaria")
     bad({ profile = "Raid", when = { spec = 0 / 0 } }, "spec NaN")
     bad({ profile = "Raid", when = { class = "due parole" } }, "classe malformata")
-    bad({ profile = "Raid", when = { resting = "si" } }, "resting stringa")
+    bad({ profile = "Raid", when = { resting = "yes" } }, "resting stringa")
     bad({ profile = "Raid", when = { colore = "rosso" } }, "chiave sconosciuta")
     bad({ profile = "Raid", priority = "alta" }, "priorita' stringa")
     bad({ profile = "Raid", priority = 0 / 0 }, "priorita' NaN")
@@ -334,7 +334,7 @@ T["API regole: input errato non lancia errori"] = case(function(_, env)
     eq(id, "mia")
     eq(M:GetRule("mia").when.instance, "raid", "normalizzato in minuscolo")
     eq(M:GetRule("mia").when.class, "MAGE")
-    bad({ profile = "Raid", id = "mia" }, "id duplicato")
+    bad({ profile = "Raid", id = "mia" }, "duplicate id")
     -- le altre operazioni ritornano false, err
     local ok, err = M:RemoveRule("nope"); eq(ok, false); assert(err)
     ok = M:RemoveRule(nil); eq(ok, false)
@@ -343,7 +343,7 @@ T["API regole: input errato non lancia errori"] = case(function(_, env)
     ok = M:UpdateRule("mia", "x"); eq(ok, false)
     ok = M:UpdateRule("mia", { priority = {} }); eq(ok, false)
     ok = M:UpdateRule("mia", { when = { spec = 99 } }); eq(ok, false)
-    ok = M:SetEnabled("mia", "si"); eq(ok, false)
+    ok = M:SetEnabled("mia", "yes"); eq(ok, false)
     eq(M:GetRule("mia").when.instance, "raid", "regola intatta dopo gli errori")
     -- spostamento oltre i limiti: clamp
     M:AddRule({ profile = "Solo", id = "due" })
@@ -699,7 +699,7 @@ T["persistenza: regole in sv.global.contextRules con version"] = case(function(_
     BadbUI.Modules:SetEnabled("Contexts", false)
     BadbUI.Modules:SetEnabled("Contexts", true)
     eq(#M:ListRules(), 1)
-    -- "Ricarica" simulata: copia profonda della tabella salvata
+    -- "Reload" simulata: copia profonda della tabella salvata
     local function deep(t) local o = {} for k, v in pairs(t) do o[k] = type(v) == "table" and deep(v) or v end return o end
     DB.sv.global.contextRules = deep(DB.sv.global.contextRules)
     local list = M:ListRules()
@@ -730,7 +730,7 @@ T["dati corrotti in contextRules: ripuliti senza errori"] = case(function(Mock, 
         end
     end
 
-    for i, junk in ipairs({ "stringa", 42, true, 0 / 0, function() end }) do
+    for i, junk in ipairs({ "string", 42, true, 0 / 0, function() end }) do
         DB.sv.global.contextRules = junk
         exercise("contextRules = " .. type(junk) .. i)
         eq(#M:ListRules() >= 0, true)
@@ -745,7 +745,7 @@ T["dati corrotti in contextRules: ripuliti senza errori"] = case(function(Mock, 
     local many = {}
     for i = 1, 500 do many[i] = { id = "m" .. i, profile = "Raid", when = {} } end
     local cases = {
-        { rules = "stringa" },
+        { rules = "string" },
         { rules = 5 },
         { rules = { 1, 2, "a", true, false } },
         { rules = { {}, {}, {} } },
@@ -754,7 +754,7 @@ T["dati corrotti in contextRules: ripuliti senza errori"] = case(function(Mock, 
         { version = math.huge, seq = math.huge, rules = {} },
         { rules = { { id = {}, name = 5, profile = {}, priority = "alta", enabled = "yes", when = "x" } } },
         { rules = { { id = "a", profile = "Raid" }, { id = "a", profile = "PvP" }, { id = "a", profile = "Solo" } } },
-        { rules = { { id = "a", profile = "Raid", when = { instance = 5, role = {}, resting = "si", spec = -3,
+        { rules = { { id = "a", profile = "Raid", when = { instance = 5, role = {}, resting = "yes", spec = -3,
             class = "war rior", foo = 1, [1] = "x" } } } },
         { rules = { { id = "a", profile = "Raid", when = cyc, name = hugeName } } },
         { rules = { { id = hugeName, profile = hugeName, priority = 0 / 0 } } },
@@ -868,10 +868,10 @@ T["comandi: status, list, eval"] = case(function(Mock, env)
     out()
     cmd.fn("")
     local s = out()
-    assert(s:find("Contesto:", 1, true), s); assert(s:find("Regola vincente: nessuna", 1, true), s)
+    assert(s:find("Context:", 1, true), s); assert(s:find("Winning rule: none", 1, true), s)
     cmd.fn("list")
     s = out()
-    assert(s:find("Raid tank", 1, true), s); assert(s:find("ROTTA", 1, true), s)
+    assert(s:find("Raid tank", 1, true), s); assert(s:find("BROKEN", 1, true), s)
     env.W.instance, env.W.inInstance, env.W.group, env.W.role = "raid", true, true, "TANK"
     cmd.fn("eval")
     s = out()
@@ -886,7 +886,7 @@ end)
 T["pagina: costruzione, creazione/ordine/eliminazione regole"] = case(function(Mock, env)
     local M = env.M
     local page = M.page
-    eq(page.title, "Contesti"); eq(page.category, "Gestione"); eq(type(page.order), "number")
+    eq(page.title, "Contexts"); eq(page.category, "Management"); eq(type(page.order), "number")
     local parent = CreateFrame("Frame")
     local height = page.build(parent, { UI = nil, W = BadbUI.Widgets })
     assert(type(height) == "number" and height > 100, "altezza ritornata")
@@ -921,14 +921,14 @@ T["pagina: costruzione, creazione/ordine/eliminazione regole"] = case(function(M
     -- regola rotta: messaggio nella riga
     M:AddRule({ profile = "Fantasma" })
     page.refresh()
-    assert(ps.rows[2].label:GetText():find("ROTTA", 1, true), "riga rotta segnalata")
+    assert(ps.rows[2].label:GetText():find("BROKEN", 1, true), "riga rotta segnalata")
     -- errore dal form: messaggio, nessun lancio
     env.DB.sv.profiles = env.DB.sv.profiles
     ps.form.profile = ""
     click(ps.createBtn)
     page.refresh()
-    assert(ps.ctxLine:GetText():find("Contesto:", 1, true))
-    assert(ps.winLine:GetText():find("Regola vincente:", 1, true))
+    assert(ps.ctxLine:GetText():find("Context:", 1, true))
+    assert(ps.winLine:GetText():find("Winning rule:", 1, true))
 end)
 
 T["pagina: refresh prima della build non fa nulla"] = case(function(_, env)

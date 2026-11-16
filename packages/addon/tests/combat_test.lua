@@ -77,7 +77,7 @@ T["combat: scontri, metriche e magie arrivano dalle API native"] = function()
         eq(data.Meter("Hps", "Overall").rows[1].value, 12)
         eq(data.Meter("HealingDone", 7).state, "ready")
         local detail = data.Breakdown("DamageDone", "Current", current.rows[1].identity)
-        eq(detail.rows[1].name, "Magia 116")
+        eq(detail.rows[1].name, "Spell 116")
         eq(detail.rows[1].value, 80)
     end)
 end
@@ -142,7 +142,7 @@ end
 T["combat: limiti su storico e partecipanti"] = function()
     local entries, sessions = {}, {}
     for i = 1, 300 do
-        entries[i] = { name = "Giocatore", totalAmount = i }
+        entries[i] = { name = "Player", totalAmount = i }
         sessions[i] = { sessionID = i, name = "Scontro" }
     end
     withMeter({
@@ -258,10 +258,10 @@ T["combat: slash, widget, guida, aggiornamento accorpato e disattivazione"] = fu
         eq(window.list.rows[1].name:GetText(), "Mira")
         eq(window.list.rows[1].value:GetText(), "240")
         window.list.rows[1]:GetScript("OnClick")(window.list.rows[1])
-        eq(window.columnName:GetText(), "Magia")
-        eq(window.list.rows[1].name:GetText(), "Magia 116")
+        eq(window.columnName:GetText(), "Spell")
+        eq(window.list.rows[1].name:GetText(), "Spell 116")
         assert(BadbUI.Slash:Dispatch("combat"))
-        eq(window.columnName:GetText(), "Partecipante")
+        eq(window.columnName:GetText(), "Participant")
         local secret = Mock.Secret()
         model.combatSources[1].name = secret
         model.combatSources[1].totalAmount = secret

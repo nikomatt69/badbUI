@@ -139,7 +139,7 @@ T["aggiorna il nome quando il client ha caricato i dati dell'oggetto"] = functio
     withInventory(Mock, function(bags, slots, reads)
         slots[0][3] = item(345, 1)
         Mock.Fire("BAG_UPDATE", 0)
-        eq(bags:Find("345")[1].label, "Oggetto 345")
+        eq(bags:Find("345")[1].label, "Item 345")
         local previousReads = reads()
         Mock.Fire("ITEM_DATA_LOAD_RESULT", 222, true)
         eq(reads(), previousReads)
@@ -209,7 +209,7 @@ T["apre dalla configurazione e dalla slash con filtri e pulsante nativo combat-s
         Mock.Methods.GetStringWidth = function(frame) return #(frame:GetText() or "") * 6 end
         Mock.Methods.GetHeight = function() return 200 end
         local foundPage = BadbUI.ConfigUI:FindPage("mod:Bags")
-        eq(foundPage.title, "Inventario")
+        eq(foundPage.title, "Inventory")
         assert(BadbUI.Guides:Get("badb-bags:inventory"))
         assert(BadbUI.Slash:Dispatch("bags rame"))
         local window = bags.window

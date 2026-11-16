@@ -20,8 +20,8 @@ T["Save: crea, valida i nomi, limiti di codice"] = function()
         eq(ok, false, "nome accettato: '" .. bad .. "'")
     end
     local ok, err = S():Save("grande", { code = ("x"):rep(60001) })
-    eq(ok, false); truthy(err:find("lungo"), "messaggio")
-    eq(S():Save("t", { trigger = "inesistente" }), false, "trigger sconosciuto")
+    eq(ok, false); truthy(err:find("too long"), "messaggio")
+    eq(S():Save("t", { trigger = "inesistente" }), false, "unknown trigger")
 end
 
 T["Run: esegue, le globali dello script non finiscono in _G"] = function()
@@ -160,7 +160,7 @@ T["import: stringhe sbagliate rifiutate"] = function()
     eq(name, nil); truthy(err)
     local prof = BadbUI.Serializer:Export("profile", { a = 1 })
     name, err = S():Import(prof)
-    eq(name, nil); truthy(err:find("tipo"), "tipo sbagliato accettato")
+    eq(name, nil); truthy(err:find("type"), "tipo sbagliato accettato")
     eq(S():Import(nil), nil)
 end
 
@@ -176,7 +176,7 @@ T["archivio corrotto: voci non valide ignorate, valide riparate"] = function()
     eq(table.concat(names, ","), "buono")
     local r = S():Record("buono")
     eq(r.trigger, "manual"); eq(r.interval, 5); eq(r.event, "PLAYER_ENTERING_WORLD")
-    BadbUI.DB:Set("Scripts", "scripts", "stringa")
+    BadbUI.DB:Set("Scripts", "scripts", "string")
     eq(#S():List(), 0, "archivio non-tabella non ripulito")
 end
 
@@ -222,7 +222,7 @@ T["client senza loadstring: errore chiaro, nessuna eccezione"] = function()
     loadstring = nil
     local ok, err = S():Compile("x=1", "t")
     loadstring = old
-    eq(ok, nil); truthy(err:find("dinamico"))
+    eq(ok, nil); truthy(err:find("dynamic"))
 end
 
 return T

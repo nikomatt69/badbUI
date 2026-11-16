@@ -21,7 +21,7 @@ ns.Badb.Localization:RegisterLocale("enUS", {
     [" con URL non consentito (solo http/https)"] = " with a URL that is not allowed (http/https only)",
     [" deve essere una tabella"] = " must be a table",
     [" distinti), ultimo: "] = " distinct), last: ",
-    [" e altre "] = " and more ",
+    [" e altre %d"] = " and %d more",
     [" elementi posizionati"] = " elements positioned",
     [" errore/i recente/i, ultimo: "] = " recent errors, last: ",
     [" errore/i, ultimo: "] = " errors, last: ",

@@ -85,11 +85,11 @@ T["addon assenti: loaded=false, nessun errore"] = function(Mock)
     eq(#list, 10, "dieci adapter integrati")
     for _, r in ipairs(list) do eq(r.loaded, false, r.id .. " non caricato") end
     local ok, err = env.I:Capture("elvui")
-    eq(ok, false); has(err, "non e' caricato")
+    eq(ok, false); has(err, "is not loaded")
     ok, err = env.I:Apply("elvui")
-    eq(ok, false); has(err, "non e' caricato")
+    eq(ok, false); has(err, "is not loaded")
     ok, err = env.I:Reset("elvui")
-    eq(ok, false); has(err, "non e' caricato")
+    eq(ok, false); has(err, "is not loaded")
     eq(env.I:Status("elvui").state, "missing")
 end
 
@@ -162,10 +162,10 @@ T["profilo mancante: warning, nessun errore, nessun SetProfile"] = function(Mock
     db.current = "Default"
     local ok, err, warn = env.I:Apply("elvui")
     eq(ok, true, "non e' un errore"); eq(err, nil)
-    has(warn, "profilo mancante")
+    has(warn, "missing profile")
     eq(#db.calls, 0, "SetProfile non chiamato (creerebbe un profilo vuoto)")
     eq(#fired, 0, "nessun evento: nulla applicato")
-    has(env.I:Status("elvui").lastWarning, "profilo mancante")
+    has(env.I:Status("elvui").lastWarning, "missing profile")
 end
 
 T["ElvUI: stringa di export (Distributor) per ricreare un profilo mancante"] = function(Mock)
@@ -200,10 +200,10 @@ T["API parziali: metodi mancanti, nil, errori lanciati"] = function(Mock)
     -- addon presente ma senza ElvUI[1]
     _G.ElvUI = {}
     local ok, err = env.I:Capture("elvui")
-    eq(ok, false); has(err, "non disponibile")
+    eq(ok, false); has(err, "not available")
     -- data senza metodi
     _G.ElvUI = { { data = {} } }
-    ok, err = env.I:Capture("elvui"); eq(ok, false); has(err, "non leggibile")
+    ok, err = env.I:Capture("elvui"); eq(ok, false); has(err, "not readable")
     -- GetCurrentProfile ritorna nil
     _G.ElvUI = { { data = { GetCurrentProfile = function() return nil end } } }
     ok = env.I:Capture("elvui"); eq(ok, false)
@@ -218,14 +218,14 @@ T["API parziali: metodi mancanti, nil, errori lanciati"] = function(Mock)
     local db = installElvUI(env, "Tank")
     eq(env.I:Capture("elvui"), true)
     db.SetProfile = nil
-    db.current = "Altro"
+    db.current = "Other"
     ok, err = env.I:Apply("elvui")
     eq(ok, false); has(err, "SetProfile")
     -- SetProfile che non cambia il profilo
     db.SetProfile = function() end
-    db.current = "Altro"
+    db.current = "Other"
     ok, err = env.I:Apply("elvui")
-    eq(ok, false); has(err, "non ha cambiato")
+    eq(ok, false); has(err, "did not change")
     -- SetProfile che lancia
     db.SetProfile = function() error("kaboom") end
     ok, err = env.I:Apply("elvui")
@@ -249,7 +249,7 @@ T["Details!: profilo, ApplyProfile, API parziale e reset"] = function(Mock)
     -- profilo scomparso
     D.profiles.Tank = nil; D.current = "Default"
     local ok, err, warn = env.I:Apply("details")
-    eq(ok, true); has(warn, "profilo mancante"); eq(#D.applied, 1)
+    eq(ok, true); has(warn, "missing profile"); eq(#D.applied, 1)
     -- reset
     eq(env.I:Reset("details"), true); eq(D.resetName, "Default")
     -- variante con solo GetCurrentProfile e senza ApplyProfile
@@ -265,11 +265,11 @@ T["Plater, Bartender4, BigWigs: AceDB round-trip e reset"] = function(Mock)
     local dbs = {}
     for _, spec in ipairs({ { "plater", "Plater" }, { "bartender4", "Bartender4" }, { "bigwigs", "BigWigs" } }) do
         local id, glob = spec[1], spec[2]
-        dbs[id] = fakeAce("Raid " .. id, { "Raid " .. id, "Altro" })
+        dbs[id] = fakeAce("Raid " .. id, { "Raid " .. id, "Other" })
         _G[glob] = { db = dbs[id] }
         env.loaded[glob] = true
         eq(env.I:Capture(id), true, id)
-        dbs[id].current = "Altro"
+        dbs[id].current = "Other"
         eq(env.I:Apply(id), true, id)
         eq(dbs[id].current, "Raid " .. id, id)
         eq(env.I:Reset(id), true, id)
@@ -290,7 +290,7 @@ T["DBM: profilo da DBM_UsedProfile, ApplyProfile, nessuna scrittura diretta"] = 
     -- profilo assente
     _G.DBM_AllSavedOptions.Tank = nil; _G.DBM_UsedProfile = "Default"
     local ok, _, warn = env.I:Apply("dbm")
-    eq(ok, true); has(warn, "profilo mancante"); eq(_G.DBM_UsedProfile, "Default")
+    eq(ok, true); has(warn, "missing profile"); eq(_G.DBM_UsedProfile, "Default")
     -- ApplyProfile assente: errore pulito, nessuna scrittura diretta sulle SavedVariables
     _G.DBM_AllSavedOptions.Tank = {}
     _G.DBM.ApplyProfile = nil
@@ -298,7 +298,7 @@ T["DBM: profilo da DBM_UsedProfile, ApplyProfile, nessuna scrittura diretta"] = 
     eq(ok2, false); has(err, "ApplyProfile"); eq(_G.DBM_UsedProfile, "Default")
     -- DBM_UsedProfile mancante
     _G.DBM_UsedProfile = nil
-    ok2, err = env.I:Capture("dbm"); eq(ok2, false); has(err, "non determinabile")
+    ok2, err = env.I:Capture("dbm"); eq(ok2, false); has(err, "cannot be determined")
 end
 
 T["payload troppo grande, ciclico, profondo: rifiuto chiaro, dati intatti"] = function(Mock)
@@ -308,7 +308,7 @@ T["payload troppo grande, ciclico, profondo: rifiuto chiaro, dati intatti"] = fu
         capture = function() return payload end, apply = function() return true end })
     payload = { blob = string.rep("x", 70 * 1024) }
     local ok, err = env.I:Capture("big")
-    eq(ok, false); has(err, "troppo grande")
+    eq(ok, false); has(err, "too large")
     eq(BadbUI.Modules:Get("Integrations"):Get("data").big, nil, "nulla salvato")
     -- limite rispettato appena sotto la soglia
     payload = { blob = string.rep("x", 40 * 1024) }
@@ -316,16 +316,16 @@ T["payload troppo grande, ciclico, profondo: rifiuto chiaro, dati intatti"] = fu
     -- ciclico
     local c = {}; c.me = c
     payload = c
-    ok, err = env.I:Capture("big"); eq(ok, false); has(err, "ciclico")
+    ok, err = env.I:Capture("big"); eq(ok, false); has(err, "circular")
     -- troppo profondo
     local deep = {}; local cur = deep
     for _ = 1, 30 do cur.n = {}; cur = cur.n end
     payload = deep
-    ok, err = env.I:Capture("big"); eq(ok, false); has(err, "profonda")
+    ok, err = env.I:Capture("big"); eq(ok, false); has(err, "too deep")
     -- il record valido precedente e' ancora li'
     eq(env.I:Status("big").hasProfile, true)
     -- non-tabella e nil
-    payload = "stringa"
+    payload = "string"
     ok = env.I:Capture("big"); eq(ok, false)
     payload = nil
     ok = env.I:Capture("big"); eq(ok, false)
@@ -335,12 +335,12 @@ T["payload ripulito: funzioni, secret e NaN scartati"] = function(Mock)
     local env = setup(Mock)
     env.I:RegisterAdapter({ id = "dirty", addon = "D", detect = function() return true end,
         capture = function()
-            return { keep = "si", n = 5, f = function() end, s = Mock.Secret(), nan = 0 / 0, inf = math.huge,
+            return { keep = "yes", n = 5, f = function() end, s = Mock.Secret(), nan = 0 / 0, inf = math.huge,
                 nested = { a = 1, g = print }, [1] = "uno", [true] = "chiave-non-valida" }
         end, apply = function() return true end })
     eq(env.I:Capture("dirty"), true)
     local p = BadbUI.Modules:Get("Integrations"):Get("data").dirty.payload
-    eq(p.keep, "si"); eq(p.n, 5); eq(p.nested.a, 1); eq(p[1], "uno")
+    eq(p.keep, "yes"); eq(p.n, 5); eq(p.nested.a, 1); eq(p[1], "uno")
     eq(p.f, nil); eq(p.s, nil); eq(p.nan, nil); eq(p.inf, nil); eq(p.nested.g, nil); eq(p[true], nil)
 end
 
@@ -351,12 +351,12 @@ T["export/import del profilo BadbUI contiene i dati catturati"] = function(Mock)
     local DB = BadbUI.DB
     local str = DB:ExportProfile()
     eq(type(str), "string")
-    local ok, err = DB:ImportProfile(str, "Copia")
+    local ok, err = DB:ImportProfile(str, "Copy")
     eq(ok, true, tostring(err))
-    local rec = DB.sv.profiles.Copia.modules.Integrations.data.elvui
+    local rec = DB.sv.profiles.Copy.modules.Integrations.data.elvui
     eq(rec.payload.profile, "Tank"); eq(rec.version, 1)
     -- passando al profilo importato il payload e' riapplicabile
-    DB:SetProfile("Copia", true)
+    DB:SetProfile("Copy", true)
     db.current = "Healer"
     eq(env.I:Apply("elvui"), true)
     eq(db.current, "Tank")
@@ -369,10 +369,10 @@ T["combattimento: Apply e Reset differiti a fine combattimento"] = function(Mock
     db.current = "Healer"
     Mock.combat = true
     local ok, err, note = env.I:Apply("elvui")
-    eq(ok, true); eq(err, nil); has(note, "differito")
+    eq(ok, true); eq(err, nil); has(note, "deferred")
     eq(db.current, "Healer", "non applicato in combattimento")
     ok, _, note = env.I:Reset("elvui")
-    eq(ok, true); has(note, "differito"); eq(db.resets, nil)
+    eq(ok, true); has(note, "deferred"); eq(db.resets, nil)
     -- Capture e' di sola lettura: consentita
     db.current = "Tank"
     eq(env.I:Capture("elvui"), true)
@@ -388,9 +388,9 @@ T["combattimento: errori immediati restano immediati"] = function(Mock)
     installElvUI(env, "Tank")
     Mock.combat = true
     local ok, err = env.I:Apply("elvui")
-    eq(ok, false); has(err, "nessun dato catturato")
+    eq(ok, false); has(err, "no captured data")
     ok, err = env.I:Apply("nonesiste")
-    eq(ok, false); has(err, "sconosciuta")
+    eq(ok, false); has(err, "unknown")
 end
 
 T["auto-apply al cambio profilo (default disattivo)"] = function(Mock)
@@ -412,10 +412,10 @@ T["auto-apply al cambio profilo (default disattivo)"] = function(Mock)
     eq(db.current, "Tank")
 
     -- profilo senza dati catturati: niente da fare
-    BadbUI.DB:SetProfile("Vuoto", true)
+    BadbUI.DB:SetProfile("Empty", true)
     BadbUI.Modules:Get("Integrations"):Set("autoApplyOnProfileChange", true)
     db.current = "Healer"
-    BadbUI.DB:SetProfile("Vuoto")
+    BadbUI.DB:SetProfile("Empty")
     eq(db.current, "Healer")
 end
 
@@ -457,7 +457,7 @@ T["auto-apply: anti-ricorsione se l'apply provoca un cambio profilo"] = function
         apply = function() inner = { env.I:Apply("re") }; return true end })
     env.I:Capture("re")
     eq(env.I:Apply("re"), true)
-    eq(inner[1], false); has(inner[2], "gia' in corso")
+    eq(inner[1], false); has(inner[2], "already in progress")
 end
 
 T["modulo disattivato: nessun auto-apply, API ancora sicure"] = function(Mock)
@@ -562,7 +562,7 @@ T["dati corrotti nel profilo: nessun errore, Cattura ripara"] = function(Mock)
     local list = env.I:List()
     eq(find(list, "elvui").hasProfile, false)
     local ok, err = env.I:Apply("elvui")
-    eq(ok, false); has(err, "corrott")
+    eq(ok, false); has(err, "corrupted")
     eq(env.I:Capture("elvui"), true, "ripara data")
     eq(type(mod.data), "table"); eq(mod.data.elvui.payload.profile, "Tank")
     -- record con forme sbagliate
@@ -580,11 +580,11 @@ T["dati corrotti nel profilo: nessun errore, Cattura ripara"] = function(Mock)
     -- payload valido ma con profilo di tipo sbagliato: l'adapter rifiuta senza lanciare
     mod.data.elvui = { version = 1, payload = { profile = 5 } }
     ok, err = env.I:Apply("elvui")
-    eq(ok, false); has(err, "nome profilo non valido"); eq(#db.calls, 0)
+    eq(ok, false); has(err, "invalid profile name"); eq(#db.calls, 0)
     -- versione piu' recente
     mod.data.elvui = { version = 99, payload = { profile = "Tank" } }
     ok, err = env.I:Apply("elvui")
-    eq(ok, false); has(err, "piu' recente")
+    eq(ok, false); has(err, "newer version")
     -- Forget elimina il record
     eq(env.I:Forget("elvui"), true)
     eq(mod.data.elvui, nil)
@@ -632,7 +632,7 @@ T["ConfigUI: pagina con una riga per integrazione"] = function(Mock)
     end
     installElvUI(env, "Tank", { "Tank", "Healer" })
     local page = env.I.page
-    eq(page.category, "Strumenti"); eq(type(page.title), "string"); eq(type(page.order), "number")
+    eq(page.category, "Tools"); eq(type(page.title), "string"); eq(type(page.order), "number")
     local h = page.build(Mock.NewObject("Frame"), { UI = BadbUI.ConfigUI, W = BadbUI.Widgets })
     CreateFrame = origCF
     eq(h, 34 + 10 * 46, "altezza = toggle + 10 righe")
@@ -656,25 +656,25 @@ T["ConfigUI: stati icona e pulsanti Cattura/Applica/Reset"] = function(Mock)
     page.build(Mock.NewObject("Frame"), {})
     CreateFrame = origCF
     local function button(row, label)
-        local b = btns[(row - 1) * 3 + ({ Cattura = 1, Applica = 2, Reset = 3 })[label]]
+        local b = btns[(row - 1) * 3 + ({ Capture = 1, Apply = 2, Reset = 3 })[label]]
         eq(b.__text, label)
         return b
     end
     -- riga 1 = ElvUI: installato, non catturato
     has(texs[1].__texture, "Waiting")
-    eq(button(1, "Cattura").__enabled, true); eq(button(1, "Applica").__enabled, false); eq(button(1, "Reset").__enabled, true)
+    eq(button(1, "Capture").__enabled, true); eq(button(1, "Apply").__enabled, false); eq(button(1, "Reset").__enabled, true)
     -- riga 2 = Details: non installato
     has(texs[2].__texture, "NotReady")
-    eq(button(2, "Cattura").__enabled, false); eq(button(2, "Applica").__enabled, false)
+    eq(button(2, "Capture").__enabled, false); eq(button(2, "Apply").__enabled, false)
     -- riga 8 = WeakAuras: non supportato, reset nascosto
-    eq(button(8, "Cattura").__enabled, false); eq(button(8, "Reset").__shown, false)
+    eq(button(8, "Capture").__enabled, false); eq(button(8, "Reset").__shown, false)
     -- click su Cattura
-    button(1, "Cattura").__scripts.OnClick()
+    button(1, "Capture").__scripts.OnClick()
     has(texs[1].__texture, "Ready"); truthy(not texs[1].__texture:find("NotReady", 1, true))
-    eq(button(1, "Applica").__enabled, true)
+    eq(button(1, "Apply").__enabled, true)
     -- click su Applica
     db.current = "Healer"
-    button(1, "Applica").__scripts.OnClick()
+    button(1, "Apply").__scripts.OnClick()
     eq(db.current, "Tank")
     -- click su Reset (senza ConfigUI.Confirm: esegue direttamente)
     local keep = BadbUI.ConfigUI
@@ -698,7 +698,7 @@ T["comandi /badb integration"] = function(Mock)
     truthy(cmd.help and cmd.help:find("capture", 1, true))
     local function out() return table.concat(Mock.chat, "\n") end
     cmd.fn("list")
-    has(out(), "elvui"); has(out(), "installato"); has(out(), "weakauras"); has(out(), "non supportato")
+    has(out(), "elvui"); has(out(), "installed"); has(out(), "weakauras"); has(out(), "not supported")
     cmd.fn("capture elvui")
     eq(env.I:Status("elvui").hasProfile, true)
     db.current = "Healer"
@@ -706,8 +706,8 @@ T["comandi /badb integration"] = function(Mock)
     eq(db.current, "Tank")
     cmd.fn("reset elvui")
     eq(db.resets, 1)
-    cmd.fn("apply nonesiste"); has(out(), "sconosciuta")
-    cmd.fn("capture"); has(out(), "uso:")
+    cmd.fn("apply nonesiste"); has(out(), "unknown")
+    cmd.fn("capture"); has(out(), "usage:")
     cmd.fn("boh"); cmd.fn(nil); cmd.fn(42)
     cmd.fn("forget elvui")
     eq(env.I:Status("elvui").hasProfile, false)
@@ -744,12 +744,12 @@ end
 T["note e confidence esposte da List per ogni voce"] = function(Mock)
     local env = setup(Mock)
     local expect = {
-        elvui = { "build Forever segnalata da una fonte", "B" },
-        details = { "meter real-time limitato nelle istanze (combat log non leggibile)", "B" },
-        plater = { "non verificato", "C" },
-        bigwigs = { "timer dalla timeline nativa, si cattura solo il profilo", "B" },
-        dbm = { "timer dalla timeline nativa, si cattura solo il profilo", "B" },
-        weakauras = { "stato incerto su Forever (restrizioni stile Midnight, build non ufficiali)", "C" },
+        elvui = { "Forever build reported by one source", "B" },
+        details = { "real-time meter limited in instances (combat log not readable)", "B" },
+        plater = { "not verified", "C" },
+        bigwigs = { "timers from the native timeline, only the profile is captured", "B" },
+        dbm = { "timers from the native timeline, only the profile is captured", "B" },
+        weakauras = { "uncertain status on Forever (Midnight-style restrictions, unofficial builds)", "C" },
     }
     for _, r in ipairs(env.I:List()) do
         eq(type(r.note), "string", r.id .. " note"); truthy(r.note ~= "", r.id .. " nota non vuota")
@@ -779,17 +779,17 @@ end
 
 T["Clique: AceDB round-trip e nota su C_ClickBindings"] = function(Mock)
     local env = setup(Mock)
-    local db = fakeAce("Healer", { "Healer", "Altro" })
+    local db = fakeAce("Healer", { "Healer", "Other" })
     _G.Clique = { db = db }
     env.loaded.Clique = true
     eq(env.I:Status("clique").loaded, true)
     eq(env.I:Capture("clique"), true)
-    db.current = "Altro"
+    db.current = "Other"
     eq(env.I:Apply("clique"), true); eq(db.current, "Healer")
-    eq(find(env.I:List(), "clique").note, "non verificato; solo il profilo Clique")
+    eq(find(env.I:List(), "clique").note, "not verified; Clique profile only")
     -- con C_ClickBindings la nota dichiara che il click casting Blizzard non e' catturabile
     _G.C_ClickBindings = {}
-    has(find(env.I:List(), "clique").note, "non e' catturabile")
+    has(find(env.I:List(), "clique").note, "cannot be captured")
     -- il click casting Blizzard non viene mai letto ne' scritto da BadbUI
     _G.C_ClickBindings = setmetatable({}, { __index = function() error("non toccare") end })
     eq(env.I:Capture("clique"), true)

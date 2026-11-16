@@ -857,7 +857,7 @@ end
 
 local function notify(zone, matches)
     local text = string.format(L["Guide disponibili per %s: %s%s. Aprile con /badb guide."], zone,
-        matches[1].title, #matches > 1 and (L[" e altre "] .. (#matches - 1)) or "")
+        matches[1].title, #matches > 1 and string.format(L[" e altre %d"], #matches - 1) or "")
     local UI = Badb.ConfigUI
     if UI and type(UI.Toast) == "function" then
         local ok = pcall(UI.Toast, UI, text, "info")

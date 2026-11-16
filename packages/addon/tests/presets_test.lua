@@ -250,7 +250,7 @@ T["list: filtri per classe, modalita', scenario, ruolo, ricerca"] = function()
     eq(#P:List({ class = "ROGUE", search = "alterac" }), 1)
     eq(#P:List({ tag = "raid" }), 9)
     eq(#P:List("spazzatura"), 54, "filtro non tabella = nessun filtro")
-    eq(P:Get(42), nil); eq(P:Get("nessuno"), nil)
+    eq(P:Get(42), nil); eq(P:Get("none"), nil)
 end
 
 ------------------------------------------------------------------------------
@@ -272,11 +272,11 @@ T["register: rifiuta input errati senza lanciare errori"] = function()
         { { key = "zz-g", title = "x", class = "MAGE", byRole = { tank = {} } }, "mago tank" },
         { { key = "zz-h", title = "x", class = "WARRIOR", scenario = "dungeon", mode = "pve", variants = { ["10"] = {} } }, "varianti fuori raid" },
         { { key = "zz-i", title = "x", mode = "pve", scenario = "raid", variants = { ["25"] = {} } }, "variante 25" },
-        { { key = "zz-j", title = "x", class = "DEATHKNIGHT" }, "classe" },
+        { { key = "zz-j", title = "x", class = "DEATHKNIGHT" }, "class" },
         { { key = "zz-k", title = "x", modules = { EditModeBridge = { layoutName = "a" } } }, "bridge diretto" },
         { { key = "zz-l", title = "x", editMode = { systems = { { system = "Unit Frame" } } } }, "layout" },
         { { key = "zz-m", title = "x", editMode = { systems = { { system = "UnitFrame", anchor = { "MEZZO", "CENTER", 0, 0 } } } } }, "punto" },
-        { { key = "zz-n", title = "x", frames = { MicroMenu = { hidden = "si" } } }, "frame" },
+        { { key = "zz-n", title = "x", frames = { MicroMenu = { hidden = "yes" } } }, "frame" },
     }
     for _, c in ipairs(cases) do
         local ok, key, err = pcall(P.Register, P, c[1])
@@ -324,7 +324,7 @@ T["apply: nuovo profilo, backup, evento e undo"] = function(Mock)
     local name, report = P:Apply("priest-pve-raid", { variant = "40" })
     truthy(name, "applicato: " .. tostring(report))
     eq(DB:GetProfileName(), name)
-    truthy(name:find("Sacerdote"), "nome dal titolo")
+    truthy(name:find("Priest"), "nome dal titolo")
     eq(backups[1], "pre-preset")
     eq(report.backup, "b1")
     eq(fired[1], "priest-pve-raid"); eq(fired[2], "new-profile"); eq(fired[3], name)
@@ -376,7 +376,7 @@ T["apply: rifiutato in combattimento, con modalita' errata o preset ignoto, senz
     local before, count = DB:GetProfileName(), #DB:ListProfiles()
     Mock.combat = true
     local name, err = P:Apply("mage-pve-solo")
-    eq(name, nil); truthy(err:find("combattimento"))
+    eq(name, nil); truthy(err:find("combat"))
     Mock.combat = false
     eq(select(1, P:Apply("mage-pve-solo", { mode = "boh" })), nil)
     eq(select(1, P:Apply("inesistente")), nil)
@@ -445,8 +445,8 @@ T["edit mode: sistemi assenti saltati e riportati, mai inventati"] = withEditMod
     local name, report = BadbUI.Presets:Apply("warlock-pve-solo")
     truthy(name)
     local text = table.concat(report.layout.skipped, ";")
-    truthy(text:find("UnitFrame Focus assente"), text)
-    truthy(text:find("ObjectiveTracker assente"), text)
+    truthy(text:find("UnitFrame Focus missing"), text)
+    truthy(text:find("ObjectiveTracker missing"), text)
     eq(#layoutByName(state, name).systems, 12, "nessun sistema aggiunto")
 end)
 
@@ -455,7 +455,7 @@ T["edit mode: limite layout raggiunto -> opzioni applicate, layout segnalato"] =
     setPlayer("ROGUE", "dps")
     local name, report = P:Apply("rogue-pve-dungeon")
     truthy(name, "applicato comunque")
-    truthy(report.warnings[1]:find("limite di 5"), report.warnings[1])
+    truthy(report.warnings[1]:find("limit of 5"), report.warnings[1])
     eq(#state.layouts.layouts, 5)
     eq(DB:Get("EditModeBridge", "layoutString"), nil)
     eq(DB:Get("Nameplates", "enabled"), true)
@@ -472,10 +472,10 @@ T["edit mode: merge riapplicato sostituisce il layout con lo stesso nome"] = wit
     P:Apply("druid-pvp-bg", { mode = "merge" })
     P:Apply("druid-pvp-bg", { mode = "merge", role = "tank" })
     local n = 0
-    for _, l in ipairs(state.layouts.layouts) do if l.layoutName:find("Druido") then n = n + 1 end end
+    for _, l in ipairs(state.layouts.layouts) do if l.layoutName:find("Druid") then n = n + 1 end end
     eq(n, 1, "un solo layout")
     P:Undo()
-    local l = layoutByName(state, "Badb - Druido · Campo di battaglia")
+    local l = layoutByName(state, "Badb - Druid · Battleground")
     truthy(l, "torna il layout del primo apply")
     eq(findSys(l, 3, 1).anchorInfo.offsetX, -290, "layout healer ripristinato")
 end)
@@ -483,14 +483,14 @@ end)
 T["edit mode non disponibile: opzioni applicate con avviso"] = function()
     local name, report = BadbUI.Presets:Apply("mage-pve-solo")
     truthy(name)
-    truthy(report.warnings[1]:find("Edit Mode non disponibile"), report.warnings[1])
+    truthy(report.warnings[1]:find("Edit Mode not available"), report.warnings[1])
 end
 
 T["wizard: contenuto + ruolo con layout Edit Mode dichiarativo"] = withEditMode(function(Mock, state)
     local P, DB = BadbUI.Presets, BadbUI.DB
     local spec = P:Build({ content = "dungeon", role = "healer" })
     truthy(type(spec.editMode) == "table" and spec.editMode.systems, "layout healer")
-    truthy(table.concat(P:Describe(spec), "\n"):find("elementi posizionati"))
+    truthy(table.concat(P:Describe(spec), "\n"):find("elements positioned"))
     local name = P:Apply(spec)
     truthy(layoutByName(state, name), "layout installato dal percorso wizard")
     eq(DB:Get("EditModeBridge", "layoutName"), name)
@@ -534,7 +534,7 @@ T["custom: esporta -> importa -> applica, persiste e si elimina"] = function()
     DB:Set("Nameplates", "globalScale", 1.4)
     DB:Set("Cooldowns", "pulseSize", 96)
     local str = P:ExportCustom("Il mio PvP", "prova", "dps")
-    truthy(type(str) == "string" and str:find("^BADB1:"), "stringa")
+    truthy(type(str) == "string" and str:find("^BADB1:"), "string")
     DB:Set("Nameplates", "globalScale", 1.0)
     local key, dropped = P:ImportCustom(str)
     eq(key, "custom-il-mio-pvp"); eq(#dropped, 0)
@@ -586,7 +586,7 @@ T["export di un template e reimport come preset personale"] = function()
     local P = BadbUI.Presets
     local str = P:Export("paladin-pve-raid")
     local key = P:ImportCustom(str)
-    eq(key, "custom-paladino-raid")
+    eq(key, "custom-paladin-raid")
     local d = P:Get(key)
     eq(d.class, "PALADIN"); truthy(d.variants["40"]); truthy(d.byRole.healer)
 end
@@ -601,7 +601,7 @@ T["comando /badb preset"] = function(Mock)
     local joined = table.concat(Mock.chat, "\n")
     truthy(joined:find("warrior%-pvp%-bg") and not joined:find("warrior%-pve%-raid"), "elenco filtrato")
     BadbUI.Slash:Dispatch("preset apply warrior-pve-raid tank 10")
-    truthy(DB:GetProfileName():find("Guerriero"), DB:GetProfileName())
+    truthy(DB:GetProfileName():find("Warrior"), DB:GetProfileName())
     eq(DB:Get("GroupFrames", "raidWidth"), 112, "variante 10")
     eq(DB:Get("Nameplates", "globalScale"), 1.15, "ruolo tank")
     BadbUI.Slash:Dispatch("preset undo")

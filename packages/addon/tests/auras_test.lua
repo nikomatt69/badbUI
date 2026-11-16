@@ -188,7 +188,7 @@ test("elenco personale: aggiungi, nascondi, rimuovi, errori", function(Mock, W)
     eq(A:Classify({ spellId = 12294 }), "defensive", "ID come testo")
     ok(changed >= 3, "evento di aggiornamento")
     local okBad, err = A:SetCustom(118, "boh")
-    eq(okBad, false); ok(err:find("categoria"))
+    eq(okBad, false); ok(err:find("category"))
     eq((A:SetCustom("   ", "cc")), false)
     eq((A:SetCustom({}, "cc")), false)
     eq(#A:ListCustom(), 3)
@@ -649,7 +649,7 @@ test("avvisi: cambio gruppo toglie l'avviso, prova e disattivazione", function(M
     local After = BadbUI.Compat.After
     BadbUI.Compat.After = function(_, fn) queued[#queued + 1] = fn end
     ok(M:Test())
-    eq(M.banner:IsShown(), true); eq(M.banner.rows[1].name:GetText(), "Healer di prova")
+    eq(M.banner:IsShown(), true); eq(M.banner.rows[1].name:GetText(), "Test healer")
     ok(M:Test()) -- seconda prova: il primo timer non deve chiudere la seconda
     queued[1]()
     eq(M.banner:IsShown(), true, "timer vecchio ignorato")
@@ -684,7 +684,7 @@ test("preset PvP: aure sulle nameplate e avviso healer attivi, categorie unite a
     local P = BadbUI.Presets
     local spec = P:Build({ content = "pvp", role = "healer" })
     local lines = table.concat(P:Describe(spec), "\n")
-    ok(lines:find("Aure curate"), "riepilogo aure"); ok(lines:find("healer"), "riepilogo avviso")
+    ok(lines:find("Curated auras"), "riepilogo aure"); ok(lines:find("healer"), "riepilogo avviso")
     ok(P:Apply(spec))
     eq(NP().enabled, true); eq(AL().enabled, true)
     eq(NP():Get("categories.snare"), true, "dal preset")

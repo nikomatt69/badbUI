@@ -51,16 +51,16 @@ end
 ---------------------------------------------------------------------------
 T["NewProfile: profilo con i default, non attivato"] = function()
     local DB = BadbUI.DB
-    eq(DB:NewProfile("Vuoto"), true)
+    eq(DB:NewProfile("Empty"), true)
     eq(DB:GetProfileName(), "Default")
-    truthy(BadbUIDB.profiles.Vuoto.modules.Scaling, "default dei moduli presenti")
+    truthy(BadbUIDB.profiles.Empty.modules.Scaling, "default dei moduli presenti")
 end
 
 T["CopyProfile: copia indipendente"] = function()
     local DB = BadbUI.DB
     DB:Set("Scaling", "uiScale", 0.8)
-    DB:CopyProfile("Default", "Copia")
-    BadbUIDB.profiles.Copia.modules.Scaling.uiScale = 0.5
+    DB:CopyProfile("Default", "Copy")
+    BadbUIDB.profiles.Copy.modules.Scaling.uiScale = 0.5
     eq(DB:Get("Scaling", "uiScale"), 0.8)
 end
 
@@ -70,16 +70,16 @@ T["RenameProfile: stessa tabella, personaggi e spec riallineati"] = function()
     DB:SetSpecProfile(2, "Default")
     BadbUIDB.profileKeys["Alt - Forever"] = "Default"
     BadbUIDB.specProfiles["Alt - Forever"] = { [1] = "Default" }
-    local ok, name = DB:RenameProfile("Default", "Principale")
-    eq(ok, true); eq(name, "Principale")
-    eq(DB:GetProfileName(), "Principale")
+    local ok, name = DB:RenameProfile("Default", "Home")
+    eq(ok, true); eq(name, "Home")
+    eq(DB:GetProfileName(), "Home")
     truthy(DB.profile == tbl, "nessuna copia del profilo attivo")
-    truthy(BadbUIDB.profiles.Principale == tbl)
+    truthy(BadbUIDB.profiles.Home == tbl)
     falsy(BadbUIDB.profiles.Default)
-    eq(BadbUIDB.profileKeys[CHAR], "Principale")
-    eq(BadbUIDB.profileKeys["Alt - Forever"], "Principale")
-    eq(DB:GetSpecProfile(2), "Principale")
-    eq(BadbUIDB.specProfiles["Alt - Forever"][1], "Principale")
+    eq(BadbUIDB.profileKeys[CHAR], "Home")
+    eq(BadbUIDB.profileKeys["Alt - Forever"], "Home")
+    eq(DB:GetSpecProfile(2), "Home")
+    eq(BadbUIDB.specProfiles["Alt - Forever"][1], "Home")
 end
 
 T["RenameProfile: collisioni, nome uguale, inesistente, non valido"] = function()
@@ -96,8 +96,8 @@ T["RenameProfile tramite la shell (UI:RenameProfile) usa la logica del DB"] = fu
     local UI, DB = BadbUI.ConfigUI, BadbUI.DB
     DB:NewProfile("Vecchio")
     DB:SetSpecProfile(1, "Vecchio")
-    eq((UI:RenameProfile("Vecchio", "Nuovo")), true)
-    eq(DB:GetSpecProfile(1), "Nuovo")
+    eq((UI:RenameProfile("Vecchio", "New")), true)
+    eq(DB:GetSpecProfile(1), "New")
 end
 
 T["DeleteProfile: attivo rifiutato, riferimenti puliti, doppio delete fallisce"] = function()
@@ -172,10 +172,10 @@ T["import: roundtrip completo con layout Edit Mode"] = function()
     DB:Set("EditModeBridge", "layoutString", "0 50 0 0 7")
     local str = DB:ExportProfile()
     truthy(str:find("^BADB1:"))
-    local ok, name = DB:ImportProfile(str, "Copia")
-    eq(ok, true); eq(name, "Copia")
-    eq(BadbUIDB.profiles.Copia.modules.Scaling.uiScale, 0.83)
-    eq(BadbUIDB.profiles.Copia.modules.EditModeBridge.layoutString, "0 50 0 0 7")
+    local ok, name = DB:ImportProfile(str, "Copy")
+    eq(ok, true); eq(name, "Copy")
+    eq(BadbUIDB.profiles.Copy.modules.Scaling.uiScale, 0.83)
+    eq(BadbUIDB.profiles.Copy.modules.EditModeBridge.layoutString, "0 50 0 0 7")
 end
 
 T["import: stringhe vuote, spazzatura, altri addon, nil"] = function()
@@ -197,13 +197,13 @@ T["import: stringa troncata o modificata rifiutata dal checksum"] = function()
     local c = body:sub(11, 11)
     local tampered = "BADB1:" .. body:sub(1, 10) .. (c == "A" and "B" or "A") .. body:sub(12) .. str:match("(:%x+)$")
     local ok, err = DB:ImportProfile(tampered, "F")
-    falsy(ok); truthy(err:find("checksum") or err:find("base64") or err:find("corrotti"), err)
+    falsy(ok); truthy(err:find("checksum") or err:find("base64") or err:find("corrupted"), err)
 end
 
 T["import: versione futura rifiutata con messaggio chiaro"] = function()
     local DB = BadbUI.DB
     local ok, err = DB:ImportProfile((DB:ExportProfile():gsub("^BADB1:", "BADB9:")), "Futuro")
-    falsy(ok); truthy(err:find("recente"), err)
+    falsy(ok); truthy(err:find("newer"), err)
 end
 
 T["import: spazi e a capo del copia/incolla tollerati"] = function()
@@ -227,7 +227,7 @@ T["import: struttura annidata abnorme rifiutata"] = function()
     cur = deep
     for _ = 1, 60 do cur.x = {}; cur = cur.x end
     local ok, err = DB:ImportProfile(BadbUI.Serializer:Export("profile", deep), "Profondo")
-    falsy(ok); truthy(err:find("profonda"), err)
+    falsy(ok); truthy(err:find("too deep"), err)
 end
 
 T["import: forma errata (modules non tabella, voci non tabella) gestita"] = function()
@@ -277,7 +277,7 @@ T["modulo: export/import e casi d'errore"] = function()
     falsy((DB:ExportModule("Inesistente")))
     falsy((DB:ImportModule(DB:ExportProfile())), "un profilo non e' un modulo")
     local ok2, err = DB:ImportModule(BadbUI.Serializer:Export("module:NonInstallato", { a = 1 }))
-    falsy(ok2); truthy(err:find("sconosciuto"), err)
+    falsy(ok2); truthy(err:find("unknown"), err)
 end
 
 T["PreviewImport: descrive senza applicare"] = function()
@@ -310,11 +310,11 @@ T["IO:Analyze: azioni disponibili per tipo di stringa"] = function()
     local c = IO:Analyze("   ")
     falsy(c.ok); truthy(c.empty)
     local d = IO:Analyze(BadbUI.Serializer:Export("module:NonInstallato", {}))
-    falsy(d.ok); truthy(d.error:find("installato"))
+    falsy(d.ok); truthy(d.error:find("installed"))
     falsy(IO:Analyze(string.rep("A", 500001)).ok, "input enorme rifiutato")
-    truthy(IO:Describe(a):find("Profilo completo"))
-    truthy(IO:Describe(d):find("installato"))
-    truthy(IO:Describe(nil):find("Analizza"))
+    truthy(IO:Describe(a):find("full profile"))
+    truthy(IO:Describe(d):find("installed"))
+    truthy(IO:Describe(nil):find("Analyze"))
 end
 
 T["IO:Apply: nuovo profilo attivato, nome libero automatico"] = function()
@@ -332,8 +332,8 @@ T["IO:Export: profilo e modulo, errori per sorgenti inesistenti"] = function()
     local IO = BadbUI.ImportExport
     truthy(IO:Export("profile"):find("^BADB1:"))
     truthy(IO:Export("module", "Scaling"):find("^BADB1:"))
-    falsy((IO:Export("profile", "Nessuno")))
-    falsy((IO:Export("module", "Nessuno")))
+    falsy((IO:Export("profile", "None")))
+    falsy((IO:Export("module", "None")))
 end
 
 ---------------------------------------------------------------------------
@@ -347,7 +347,7 @@ T["pagina: registrata in Gestione dopo Profili, trovabile con la ricerca"] = fun
     for i, k in ipairs(keys) do if k == "profiles" then iProf = i elseif k == "io" then iIO = i end end
     truthy(iIO, "pagina io presente"); truthy(iProf < iIO, "dopo Profili")
     local found = false
-    for _, r in ipairs(UI:Search("condividi")) do if r.key == "io" then found = true end end
+    for _, r in ipairs(UI:Search("share")) do if r.key == "io" then found = true end end
     truthy(found, "keyword di ricerca")
 end
 

@@ -647,7 +647,6 @@ local function openTracker()
 end
 
 M.commands = {
-    quests = { help = L["quests - apri il monitor obiettivi delle missioni"], fn = function() openTracker() end },
     questtracker = { help = L["questtracker - apri il monitor obiettivi delle missioni"], fn = function() openTracker() end },
 }
 

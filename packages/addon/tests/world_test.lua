@@ -191,7 +191,7 @@ T["comando accetta decimali con virgola e aggiorna finestra e HUD"] = function(M
         eq(world.target.label, "Passo")
         eq(world.target.x, 0.405)
         eq(window.mapInput:GetText(), "2")
-        eq(window.destination:GetText(), "Passo  ·  105 iarde")
+        eq(window.destination:GetText(), "Passo  ·  105 yd")
         eq(world.hud:IsShown(), true)
         assert(BadbUI.FrameManager.registry.BadbUIWaypointHUD)
         state.map = 2
